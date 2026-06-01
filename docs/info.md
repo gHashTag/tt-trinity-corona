@@ -12,16 +12,15 @@ You can also include images in this folder and reference them in the markdown. E
 TRI-1 Corona is a read-only format conformance oracle for the TRI-NET chip line,
 targeting the TTGF26a shuttle on the GlobalFoundries GF180MCU 180nm process.
 
-The chip contains a ~1.2-1.4 KB ROM encoding all 77 numeric-format records from
+The chip contains a ~800-byte ROM encoding all 80 numeric-format records from
 the Single Source of Truth (SSOT) catalog in gHashTag/t27 (PR #1028). Each record
 is 10 bytes (80 bits) and includes fields for sign bits, exponent width, mantissa
-width, exponent bias, cluster ID, claim-status ID, phi-distance (Q16), and a
-source-string index. The ROM is generated mechanically by a Verilog ROM emitter
-(the 17th output language of `tools/gen_formats_catalog.py`), not hand-written.
+width, encoding kind, cluster ID, claim-status ID, phi-distance (Q16), and a
+reference index. The ROM is generated mechanically by `tools/gen_rom.py`.
 
-In addition to the ROM, approximately 12-15 Tier-1 RTL decode modules provide
-on-chip encode/decode for formats not already covered by the companion Gamma die
-(e.g., posit8, posit32, bf16, tf32, mxfp8, lns8, decimal32, fp4, fp6, nf4, bcd).
+15 Tier-1 RTL decode modules convert on-die formats to IEEE 754 FP32 (or INT32),
+covering BF16, TF32, FP8 E5M2, FP8 E4M3, FP8 E4M3 FNUZ, FP6 E3M2, FP6 E2M3,
+FP4 E2M1, Posit8, LNS8, INT8, BCD, NF4, E8M0, and MXINT8.
 
 A die-to-die (D2D) adapter on `uio[3:0]` (TX) and `uio[7:4]` (RX) routes
 queries for Gamma-native formats (GF4-GF256, FP8, INT4/8, NF4, Posit16, BitNet)
@@ -35,7 +34,7 @@ serving as a die-identity sanity check shared across all four TRI-NET chips.
 
 The chip uses Protocol v2, a two-byte CMD serial protocol on the TinyTapeout pins:
 
-- **CMD1** (`ui_in[7]=0`): `ui_in[6:0]` selects a format index (0-76) or the
+- **CMD1** (`ui_in[7]=0`): `ui_in[6:0]` selects a format index (0-79) or the
   anchor probe (`7'h7F`).
 - **CMD2**: `ui_in[3:0]` = byte count (0-15 data bytes to follow).
 - **DATA**: exactly `byte_count` cycles of raw 8-bit data on `ui_in[7:0]`.
@@ -48,7 +47,7 @@ The chip uses Protocol v2, a two-byte CMD serial protocol on the TinyTapeout pin
 2. Read `{uio_out, uo_out}` -- expect `16'h47C0` combinationally (same cycle).
 
 **Tier-1 decode (example: 8-bit format like posit8):**
-1. CMD1: `ui_in = {1'b0, fmt_id[6:0]}` (e.g., `7'd24` for posit8).
+1. CMD1: `ui_in = {1'b0, fmt_id[6:0]}` (e.g., `7'd31` for posit8).
 2. CMD2: `ui_in = 8'h01` (one data byte).
 3. DATA: `ui_in = raw_byte` (any value 0x00-0xFF).
 4. Read 4 result bytes from `uo_out` over 4 clock cycles (FP32, LSB first).
