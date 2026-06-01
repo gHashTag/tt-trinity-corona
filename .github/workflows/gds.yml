@@ -9,12 +9,14 @@ on:
 
 jobs:
   gds:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Harden GDS (GF180MCU)
-        uses: TinyTapeout/tt-gds-action@main
+        uses: TinyTapeout/tt-gds-action@ttgf26a
         with:
           pdk: gf180mcuD
 
@@ -27,3 +29,27 @@ jobs:
       - name: Print warnings
         if: always()
         run: ./tt/tt_tool.py --gf --print-warnings || true
+
+  precheck:
+    needs: gds
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: TinyTapeout/tt-gds-action/precheck@ttgf26a
+
+  gl_test:
+    needs: gds
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: TinyTapeout/tt-gds-action/gl_test@ttgf26a
+
+  viewer:
+    needs: gds
+    permissions:
+      pages: write
+      id-token: write
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: TinyTapeout/tt-gds-action/viewer@ttgf26a

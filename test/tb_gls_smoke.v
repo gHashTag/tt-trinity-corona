@@ -276,9 +276,43 @@ module tb_gls_smoke;
         // --- Test 41: Alias fmt_id=75 (NF4 BnB) == fmt_id=70 (NF4 QLoRA) ---
         decode_1byte(7'd75, 8'h0F, 32'h3F800000, "alias 75=70");
 
+        // ============= Synthesis stress: leading-one encoder (MXINT8) =============
+
+        // --- Test 42: MXINT8 lop=0 (abs=1, smallest magnitude) ---
+        decode_1byte(7'd79, 8'h01, 32'h3C800000, "mxint8 lop0");
+
+        // --- Test 43: MXINT8 lop=1 (abs=2) ---
+        decode_1byte(7'd79, 8'h02, 32'h3D000000, "mxint8 lop1");
+
+        // --- Test 44: MXINT8 lop=2 (abs=4) ---
+        decode_1byte(7'd79, 8'h04, 32'h3D800000, "mxint8 lop2");
+
+        // --- Test 45: MXINT8 lop=5 (abs=32) ---
+        decode_1byte(7'd79, 8'h20, 32'h3F000000, "mxint8 lop5");
+
+        // --- Test 46: MXINT8 lop=6 max (abs=127 -> +127/64) ---
+        decode_1byte(7'd79, 8'h7F, 32'h3FFE0000, "mxint8 max");
+
+        // --- Test 47: MXINT8 negative max (0x81 -> -127/64) ---
+        decode_1byte(7'd79, 8'h81, 32'hBFFE0000, "mxint8 -max");
+
+        // ============= Synthesis stress: subnormal normalization =============
+
+        // --- Test 48: FNUZ subnormal mant=001 (exp=117) ---
+        decode_1byte(7'd14, 8'h01, 32'h3A800000, "fnuz sub001");
+
+        // --- Test 49: FNUZ subnormal mant=100 (exp=119) ---
+        decode_1byte(7'd14, 8'h04, 32'h3B800000, "fnuz sub100");
+
+        // --- Test 50: FP8 E5M2 negative zero (0x80 -> -0.0) ---
+        decode_1byte(7'd10, 8'h80, 32'h80000000, "fp8e5m2 -0");
+
+        // --- Test 51: FP8 E5M2 -Inf (0xFC) ---
+        decode_1byte(7'd10, 8'hFC, 32'hFF800000, "fp8e5m2 -Inf");
+
         // ===================== Infrastructure tests =====================
 
-        // --- Test 42: Reset re-entry (FSM recovery) ---
+        // --- Test 52: Reset re-entry (FSM recovery) ---
         ui_in = 8'h08;  // CMD1: BF16
         @(posedge clk); #1;
         rst_n = 0;       // Assert reset mid-CMD2
