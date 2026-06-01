@@ -266,7 +266,7 @@ module tt_um_trinity_corona (
     );
 
     // =====================================================================
-    // ROM instance (placeholder -- Phase B populates)
+    // ROM instance
     // =====================================================================
     wire [79:0] rom_data;
     format_rom u_rom (
