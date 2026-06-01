@@ -1,7 +1,7 @@
 // Gate-level simulation smoke test (no cocotb dependency).
-// 73 tests: all 18 decoders (positive + negative + boundary + subnormal),
-// NaN/Inf/-0, sign extension, aliases, NOT_IMPL, ROM, synthesis stress,
-// posit8 regime boundary sweep, reset.
+// 76 tests: all 18 decoders (positive + negative + boundary + subnormal),
+// NaN/Inf/-0, sign extension, aliases, NOT_IMPL, ROM golden validation,
+// synthesis stress, posit8 regime boundary sweep, reset.
 // Usage: yosys -> synth_netlist.v, then iverilog + simcells.v + this file.
 `timescale 1ns/1ps
 
@@ -394,9 +394,62 @@ module tb_gls_smoke;
         // --- Test 72: Posit8 smallest negative -1/64 (0xFF) ---
         decode_1byte(7'd31, 8'hFF, 32'hBC800000, "posit8 -1/64");
 
+        // ===================== ROM golden validation =====================
+
+        // --- Test 73: ROM BF16 (fmt_id=8) first 4 bytes golden check ---
+        pre_err = errors;
+        ui_in = {1'b0, 7'd8};
+        @(posedge clk); #1;
+        ui_in = 8'h00;
+        @(posedge clk); #1;
+        ui_in = 8'h80;
+        check(8'h01, 8'h00, "rom8 byte0");
+        @(posedge clk); #1;
+        check(8'h08, 8'h00, "rom8 byte1");
+        @(posedge clk); #1;
+        check(8'h5A, 8'h00, "rom8 byte2");
+        @(posedge clk); #1;
+        check(8'h86, 8'h00, "rom8 byte3");
+        if (errors == pre_err) $display("PASS: rom BF16 golden");
+        repeat(8) begin @(posedge clk); #1; end
+
+        // --- Test 74: ROM Posit8 (fmt_id=31) first 4 bytes golden check ---
+        pre_err = errors;
+        ui_in = {1'b0, 7'd31};
+        @(posedge clk); #1;
+        ui_in = 8'h00;
+        @(posedge clk); #1;
+        ui_in = 8'h80;
+        check(8'h01, 8'h00, "rom31 byte0");
+        @(posedge clk); #1;
+        check(8'h10, 8'h00, "rom31 byte1");
+        @(posedge clk); #1;
+        check(8'hFF, 8'h00, "rom31 byte2");
+        @(posedge clk); #1;
+        check(8'hFF, 8'h00, "rom31 byte3");
+        if (errors == pre_err) $display("PASS: rom Posit8 golden");
+        repeat(8) begin @(posedge clk); #1; end
+
+        // --- Test 75: ROM INT4 (fmt_id=46) first 4 bytes golden check ---
+        pre_err = errors;
+        ui_in = {1'b0, 7'd46};
+        @(posedge clk); #1;
+        ui_in = 8'h00;
+        @(posedge clk); #1;
+        ui_in = 8'h80;
+        check(8'h07, 8'h00, "rom46 byte0");
+        @(posedge clk); #1;
+        check(8'h17, 8'h00, "rom46 byte1");
+        @(posedge clk); #1;
+        check(8'h37, 8'h00, "rom46 byte2");
+        @(posedge clk); #1;
+        check(8'h9E, 8'h00, "rom46 byte3");
+        if (errors == pre_err) $display("PASS: rom INT4 golden");
+        repeat(8) begin @(posedge clk); #1; end
+
         // ===================== Infrastructure tests =====================
 
-        // --- Test 73: Reset re-entry (FSM recovery) ---
+        // --- Test 76: Reset re-entry (FSM recovery) ---
         ui_in = 8'h08;  // CMD1: BF16
         @(posedge clk); #1;
         rst_n = 0;       // Assert reset mid-CMD2

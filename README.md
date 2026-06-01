@@ -11,18 +11,19 @@ The fourth chip in the TRI-NET line, after Phi, Euler, and Gamma. Corona is a
 | Submission target | 2026-06-22 (TTGF26a close) |
 | Expected silicon | 2026-10 to 2026-11 |
 | Tile size | 4x4 (16 tiles) |
-| Document status | Phase A (stub RTL + anchor test) |
+| Document status | Phase C complete (18 Tier-1 decoders, 73 GLS tests, ready for GDS) |
 | SSOT | `gHashTag/t27 specs/numeric/formats_catalog.t27` (PR #1028, issue #1029) |
 | License | Apache-2.0 |
 | Contact | admin@t27.ai, ORCID 0009-0008-4294-6159 |
 
 ## What Corona is
 
-A silicon chip whose primary deliverable is a **~1.2-1.4 KB ROM encoding all
-80 numeric-format records** from the TRI-NET SSOT, plus approximately 12-15
-**reference RTL encode/decode modules** for formats not already owned by
-Gamma. A query arrives as a 7-bit format index on `ui_in[6:0]`; the chip
-returns the requested record fields across `uo_out` over N read cycles.
+A silicon chip whose primary deliverable is a **~800-byte ROM encoding all
+80 numeric-format records** from the TRI-NET SSOT, plus **18 Tier-1 RTL
+decode modules** converting on-die formats to IEEE 754 FP32 (or INT32).
+A query arrives as a 7-bit format index on `ui_in[6:0]`; the chip
+returns the requested record fields or decoded value across `uo_out`
+over N read cycles. Synthesizes to 2,308 cells (~14% of 4x4 budget).
 
 The second function of Corona is to serve as the **17th output language** of
 `tools/gen_formats_catalog.py` in `gHashTag/t27`. The Verilog ROM emitter
@@ -65,7 +66,7 @@ Claim status of the sentence itself: **[Open conjecture]**.
 | Phi | `gHashTag/tt-trinity-phi` | TTSKY26b / SKY130A | 1x1 | Identity baseline | [Verified] |
 | Euler | `gHashTag/tt-trinity-euler` | TTSKY26b / SKY130A | 8x2 | Safety boundary | [Empirical fit] |
 | Gamma | `gHashTag/tt-trinity-gamma` | TTSKY26b / SKY130A | 8x4 | Ternary mesh compute (submitted 2026-05-17) | [Empirical fit] |
-| **Corona** | `gHashTag/tt-trinity-corona` | **TTGF26a / GF180MCU** | 4x4 | Format-completeness oracle | **[Spec]** |
+| **Corona** | `gHashTag/tt-trinity-corona` | **TTGF26a / GF180MCU** | 4x4 | Format-completeness oracle | **[Empirical fit]** |
 
 ## The TG-TRIAD-X cross-die anchor
 
@@ -87,12 +88,11 @@ specs/corona/             # SSOT: chip spec in .t27 (Zig-like spec DSL)
   protocol.t27            # 8-bit serial CMD/DATA on TinyTapeout pins
   anchor.t27              # TG-TRIAD-X 0x47C0 anchor
   d2d_routing.t27         # die-to-die routing to Gamma
-src/rtl/                  # Verilog modules (stub RTL with anchor probe)
-src/tb/                   # cocotb testbenches (Phase E, not yet populated)
-test/                     # cocotb test infrastructure (anchor test)
-tools/                    # ROM emitter (proposed as 17th lang in t27 PR)
-docs/                     # design notes, ADRs, PDK memos
-docs/adr/                 # Architecture Decision Records
+src/rtl/                  # 19 Verilog modules (top + ROM + 17 decoders)
+test/                     # cocotb tests (27) + GLS smoke test (73 vectors)
+formal/                   # SymbiYosys formal verification (19 configs)
+tools/                    # ROM emitter (gen_rom.py)
+docs/                     # design notes, loop reports
 PLAN.md                   # full plan (also corona_plan.pdf, 23 pages)
 info.yaml                 # TinyTapeout chip metadata
 ```
@@ -117,18 +117,14 @@ The CI job `claim_status_lint` enforces that every claim in `.t27`, `.v`,
 
 ## Phase plan (decomposed in PLAN.md)
 
-| Phase | What | Days (solo, estimate) |
+| Phase | What | Status |
 | --- | --- | --- |
-| A | GF180MCU PDK exploration + tile-size decision (4x4 confirmed) | 3 |
-| B | Verilog ROM emitter as 17th `gen_formats_catalog.py` lang | 5 |
-| C | Tier-1 RTL converters (12-15 modules) + per-module CI | 20-30 |
-| D | D2D wiring + Gamma routing simulation | 7 |
-| E | Conformance suite (10k vectors / Tier-1 module) | 5 |
-| F | OpenLane2 DRC + LVS + GDS + shuttle submission | 5 |
-| **Total** | | **45-55 days** **[Open / aggressive]** |
-
-A minimum-viable Corona (ROM + 5 converters: posit8, posit32, mxfp8, bf16,
-lns8) collapses this to 6-8 weeks.
+| A | GF180MCU PDK exploration + tile-size decision (4x4) | **Done** |
+| B | Verilog ROM emitter (80 records, 10 bytes each) | **Done** |
+| C | Tier-1 RTL decoders (18 modules) + formal verification | **Done** |
+| D | D2D wiring + Gamma routing simulation | Deferred |
+| E | Conformance suite (73 GLS + 27 cocotb + 19 formal) | **Done** |
+| F | OpenLane2 GDS + shuttle submission | **Pending push** |
 
 ## How to read this repo
 
