@@ -69,7 +69,7 @@ module tt_um_trinity_corona (
     //
     // IDLE: ui_in[7]=0 -> CMD1 (fmt_id = ui_in[6:0])
     //       ui_in[7]=1 -> ignored (stay idle)
-    // CMD2: ui_in[3:0] = byte_count (1-4 valid, 0 = ROM readback)
+    // CMD2: ui_in[3:0] = byte_count (1-4 valid, clamped to 4; 0 = ROM readback)
     // DATA: accept exactly byte_count raw 8-bit bytes (no mode inspection)
     // STATUS: stream 4 result bytes on uo_out, one per clock
     // DONE: one-cycle gap, then back to IDLE
@@ -102,7 +102,8 @@ module tt_um_trinity_corona (
                 end
 
                 ST_CMD2: begin
-                    data_cnt <= ui_in[3:0];
+                    // Clamp byte_count to 4 (shift register is 32 bits)
+                    data_cnt <= (ui_in[3:0] > 4'd4) ? 4'd4 : ui_in[3:0];
                     if (ui_in[3:0] == 4'd0) begin
                         rom_mode <= 1'b1;    // ROM readback mode
                         state    <= ST_STATUS;
@@ -441,7 +442,7 @@ module tt_um_trinity_corona (
         if (f_past_valid && rst_n && $past(ena) && $past(state) == ST_IDLE && state == ST_CMD2)
             assert(data_in_buf == 32'd0);
 
-    // P10: Bounded liveness — worst case: 1(CMD2)+15(DATA)+4(STATUS)+1(DONE)=21
+    // P10: Bounded liveness — worst case: ROM 1(CMD2)+10(STATUS)+1(DONE)=12
     reg [4:0] f_idle_timer;
     always @(posedge clk or negedge rst_n)
         if (!rst_n) f_idle_timer <= 5'd0;
@@ -450,7 +451,7 @@ module tt_um_trinity_corona (
             else f_idle_timer <= f_idle_timer + 5'd1;
         end
     always @(posedge clk)
-        if (rst_n) assert(f_idle_timer <= 5'd21);
+        if (rst_n) assert(f_idle_timer <= 5'd12);
 
     // Auxiliary invariants for k-induction (unbounded proof)
 
@@ -458,22 +459,22 @@ module tt_um_trinity_corona (
     always @(posedge clk)
         if (rst_n && state == ST_CMD2) assert(f_idle_timer == 5'd0);
 
-    // AI2: Timer + data_cnt conserved in DATA (6-bit to avoid overflow)
+    // AI2: Timer + data_cnt conserved in DATA (data_cnt clamped to 4)
     always @(posedge clk)
         if (rst_n && state == ST_DATA)
-            assert({1'b0, f_idle_timer} + {2'b00, data_cnt} <= 6'd16);
+            assert({1'b0, f_idle_timer} + {2'b00, data_cnt} <= 6'd5);
 
-    // AI3: Timer tracks status_cnt in STATUS (6-bit to avoid overflow)
+    // AI3: Timer tracks status_cnt in STATUS
     always @(posedge clk)
         if (rst_n && state == ST_STATUS && !rom_mode)
-            assert({1'b0, f_idle_timer} <= {2'b00, status_cnt} + 6'd16);
+            assert({1'b0, f_idle_timer} <= {2'b00, status_cnt} + 6'd5);
     always @(posedge clk)
         if (rst_n && state == ST_STATUS && rom_mode)
             assert({1'b0, f_idle_timer} == {2'b00, status_cnt} + 6'd1);
 
     // AI4: Timer bounded in DONE
     always @(posedge clk)
-        if (rst_n && state == ST_DONE) assert(f_idle_timer <= 5'd20);
+        if (rst_n && state == ST_DONE) assert(f_idle_timer <= 5'd11);
 
     // AI5: status_cnt is 0 in CMD2
     always @(posedge clk)
@@ -497,6 +498,10 @@ module tt_um_trinity_corona (
             assert(uio_oe == 8'hFF);
         end
 
+    // P13: data_cnt clamped — never exceeds 4 in DATA
+    always @(posedge clk)
+        if (rst_n && state == ST_DATA) assert(data_cnt <= 4'd4);
+
     // P12: Output quiescent — zero when neither anchor nor STATUS
     always @(posedge clk)
         if (rst_n && !is_anchor_cmd && state != ST_STATUS) begin
@@ -509,7 +514,7 @@ module tt_um_trinity_corona (
     always @(posedge clk) begin
         cover(rst_n && state == ST_IDLE);
         cover(rst_n && state == ST_CMD2);
-        cover(rst_n && state == ST_DATA && data_cnt == 4'd15);
+        cover(rst_n && state == ST_DATA && data_cnt == 4'd4);
         cover(rst_n && state == ST_DATA && data_cnt == 4'd1);
         cover(rst_n && state == ST_STATUS && !rom_mode);
         cover(rst_n && state == ST_STATUS && rom_mode);
