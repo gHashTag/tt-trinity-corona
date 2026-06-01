@@ -90,3 +90,39 @@ async def test_reset_clears_state(dut):
     uo = dut.uo_out.value.to_unsigned()
     assert uo == 0, f"after reset, uo_out expected 0, got 0x{uo:02X}"
     dut._log.info("PASS: reset clears outputs")
+
+
+@cocotb.test()
+async def test_ena_gate_freezes_fsm(dut):
+    """When ena=0, FSM must not advance — TT mux requires this."""
+    clock = Clock(dut.clk, 20, unit="ns")
+    cocotb.start_soon(clock.start())
+    await reset_dut(dut)
+
+    # Start a decode transaction (CMD1)
+    dut.ui_in.value = 0x2F  # fmt_id=47 (INT8)
+    await RisingEdge(dut.clk)
+    # Now in CMD2 state. Deassert ena.
+    dut.ena.value = 0
+    dut.ui_in.value = 0x01  # byte_count=1
+    # Clock 10 cycles with ena=0 — FSM should not advance
+    await ClockCycles(dut.clk, 10)
+    # Re-enable and continue normally
+    dut.ena.value = 1
+    await RisingEdge(dut.clk)
+    # Send data byte
+    dut.ui_in.value = 0x2A  # 42
+    await RisingEdge(dut.clk)
+    # Read result
+    await cocotb.triggers.Timer(1, unit="ns")
+    result = []
+    for _ in range(4):
+        await cocotb.triggers.Timer(1, unit="ns")
+        result.append(dut.uo_out.value.to_unsigned())
+        await RisingEdge(dut.clk)
+    got = result[0] | (result[1] << 8) | (result[2] << 16) | (result[3] << 24)
+    import struct
+    expected = struct.unpack('>I', struct.pack('>i', 42))[0]
+    assert got == expected, \
+        f"ena gate: expected 0x{expected:08X}, got 0x{got:08X}"
+    dut._log.info("PASS: ena=0 freezes FSM, decode correct after re-enable")
