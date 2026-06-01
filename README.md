@@ -11,7 +11,7 @@ The fourth chip in the TRI-NET line, after Phi, Euler, and Gamma. Corona is a
 | Submission target | 2026-06-22 (TTGF26a close) |
 | Expected silicon | 2026-10 to 2026-11 |
 | Tile size | 4x4 (16 tiles) |
-| Document status | Phase C complete (18 Tier-1 decoders, 73 GLS tests, ready for GDS) |
+| Document status | Submission-ready (18 decoders, 44 GL tests PASS, GDS+precheck PASS) |
 | SSOT | `gHashTag/t27 specs/numeric/formats_catalog.t27` (PR #1028, issue #1029) |
 | License | Apache-2.0 |
 | Contact | admin@t27.ai, ORCID 0009-0008-4294-6159 |
@@ -89,8 +89,8 @@ specs/corona/             # SSOT: chip spec in .t27 (Zig-like spec DSL)
   anchor.t27              # TG-TRIAD-X 0x47C0 anchor
   d2d_routing.t27         # die-to-die routing to Gamma
 src/rtl/                  # 19 Verilog modules (top + ROM + 17 decoders)
-test/                     # cocotb tests (27) + GLS smoke test (73 vectors)
-formal/                   # SymbiYosys formal verification (19 configs)
+test/                     # cocotb tests (44) + gate-level simulation (44/44 PASS)
+formal/                   # SymbiYosys formal verification (19 configs, 57 tasks)
 tools/                    # ROM emitter (gen_rom.py)
 docs/                     # design notes, loop reports
 PLAN.md                   # full plan (also corona_plan.pdf, 23 pages)
@@ -123,8 +123,8 @@ The CI job `claim_status_lint` enforces that every claim in `.t27`, `.v`,
 | B | Verilog ROM emitter (80 records, 10 bytes each) | **Done** |
 | C | Tier-1 RTL decoders (18 modules) + formal verification | **Done** |
 | D | D2D wiring + Gamma routing simulation | Deferred |
-| E | Conformance suite (73 GLS + 27 cocotb + 19 formal) | **Done** |
-| F | OpenLane2 GDS + shuttle submission | **Pending push** |
+| E | Conformance suite (44 cocotb + 57 formal tasks + 44 GL tests) | **Done** |
+| F | LibreLane GDS + shuttle submission | **GDS+precheck PASS** |
 
 ## How to read this repo
 

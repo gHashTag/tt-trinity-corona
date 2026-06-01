@@ -4,7 +4,7 @@ Project repo: gHashTag/tt-trinity-corona
 Target shuttle: TTGF26a (GlobalFoundries GF180MCU, 180nm)
 Target submission: 2026-06-22 (TTGF26a shuttle close)
 Expected silicon delivery: 2026-10-01 (approximately 4 months post-submission)
-Document status: post-Phase-C, GDS iteration (18 RTL modules, CI 6/6 green, GDS hardening OK)
+Document status: SUBMISSION-READY (18 RTL modules, CI green, GDS+precheck+GL PASS, 57 formal tasks)
 Document version: corona_plan-v1.0 (merged from corona_plan_skeleton.md and corona_research.md)
 
 Claim-status key used throughout: [Verified], [Empirical fit], [Open conjecture], [Risk], [Retracted], [Experimental], [Historical], [Spec].
