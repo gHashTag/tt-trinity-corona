@@ -83,7 +83,7 @@ jobs:
     container: hdlc/formal:min
     steps:
       - uses: actions/checkout@v4
-      - name: Run SymbiYosys formal proofs (17 decoders + FSM)
+      - name: Run SymbiYosys formal proofs (17 decoders + FSM + ROM)
         working-directory: formal
         run: make all SBY=sby
 

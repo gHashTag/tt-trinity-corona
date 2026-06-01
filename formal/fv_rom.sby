@@ -1,0 +1,18 @@
+[tasks]
+bmc
+
+[options]
+bmc: mode bmc
+bmc: depth 2
+
+[engines]
+smtbmc z3
+
+[script]
+read -formal fv_rom.sv
+read -formal format_rom.v
+prep -top fv_rom
+
+[files]
+fv_rom.sv
+../src/rtl/format_rom.v
