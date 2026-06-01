@@ -8,6 +8,7 @@ Document status: SUBMISSION-READY (18 RTL modules, CI green, GDS+precheck+GL PAS
 Document version: corona_plan-v1.0 (merged from corona_plan_skeleton.md and corona_research.md)
 
 Claim-status key used throughout: [Verified], [Empirical fit], [Open conjecture], [Risk], [Retracted], [Experimental], [Historical], [Spec].
+NOTE: References to "OpenLane2" below predate its rebrand to LibreLane 3.x (FOSSi Foundation, July 2025). The actual GDS flow is LibreLane.
 ASCII only. No smart quotes. No em-dashes (use `--`). No Cyrillic. No banned words (see docs/CLAIM_STATUS.md for the full list).
 
 ---

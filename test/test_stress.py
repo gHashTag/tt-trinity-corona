@@ -359,3 +359,29 @@ async def test_last_valid_rom_entry(dut):
     assert got == expected, \
         f"MXINT8 decode after ROM[79]: expected 0x{expected:08X}, got 0x{got:08X}"
     dut._log.info("PASS: last ROM entry (79) valid, decode still works")
+
+
+@cocotb.test()
+async def test_byte_count_clamping(dut):
+    """Sending byte_count > 4 is clamped to 4; only first 4 data bytes are used."""
+    clock = Clock(dut.clk, 40, units="ns")
+    cocotb.start_soon(clock.start())
+    await reset_dut(dut)
+
+    dut.ui_in.value = FMT_INT8
+    await RisingEdge(dut.clk)
+    dut.ui_in.value = 0x0F  # byte_count=15, should clamp to 4
+    await RisingEdge(dut.clk)
+
+    for i in range(4):
+        dut.ui_in.value = 0x01 if i == 0 else 0x00
+        await RisingEdge(dut.clk)
+
+    result = await read_result_bytes(dut, 4)
+    got = bytes_to_u32(result)
+    expected = ref_int8(0x01)
+    assert got == expected, \
+        f"Clamped decode: expected 0x{expected:08X}, got 0x{got:08X}"
+    dut.ui_in.value = 0x80
+    await RisingEdge(dut.clk)
+    dut._log.info("PASS: byte_count=15 clamped to 4, decode correct")
