@@ -441,7 +441,7 @@ module tt_um_trinity_corona (
         if (f_past_valid && rst_n && $past(ena) && $past(state) == ST_IDLE && state == ST_CMD2)
             assert(data_in_buf == 32'd0);
 
-    // P10: Bounded liveness — never more than 28 cycles from IDLE
+    // P10: Bounded liveness — worst case: 1(CMD2)+15(DATA)+4(STATUS)+1(DONE)=21
     reg [4:0] f_idle_timer;
     always @(posedge clk or negedge rst_n)
         if (!rst_n) f_idle_timer <= 5'd0;
@@ -450,7 +450,7 @@ module tt_um_trinity_corona (
             else f_idle_timer <= f_idle_timer + 5'd1;
         end
     always @(posedge clk)
-        if (rst_n) assert(f_idle_timer <= 5'd28);
+        if (rst_n) assert(f_idle_timer <= 5'd21);
 
     // Auxiliary invariants for k-induction (unbounded proof)
 
