@@ -1,7 +1,9 @@
 {
   "CLOCK_PERIOD": 40,
   "CLOCK_PORT": "clk",
+  "BASE_SDC_FILE": "dir::constraint.sdc",
   "FP_SIZING": "absolute",
   "DIE_AREA": "0 0 1440.32 736.96",
-  "RT_MAX_LAYER": "Metal4"
+  "RT_MAX_LAYER": "Metal4",
+  "FP_PDN_MULTILAYER": false
 }
