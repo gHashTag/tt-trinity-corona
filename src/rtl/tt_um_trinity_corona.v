@@ -46,6 +46,11 @@ module tt_um_trinity_corona (
     localparam [6:0] FMT_FP6_E2M3     = 7'd77;   // cluster 2: Blackwell sub-8-bit
     localparam [6:0] FMT_E8M0         = 7'd78;   // cluster 5: OCP MX shared scale
     localparam [6:0] FMT_MXINT8       = 7'd79;   // cluster 5: OCP MX integer
+    // Aliases: same encoding as MX variants, different catalog cluster
+    localparam [6:0] FMT_FP8_E4M3    = 7'd11;   // cluster 2: same as MXFP8 E4M3
+    localparam [6:0] FMT_FP6_E3M2_ML = 7'd12;   // cluster 2: same as MXFP6 E3M2
+    localparam [6:0] FMT_FP4_ML      = 7'd13;   // cluster 2: same as MXFP4 E2M1
+    localparam [6:0] FMT_NF4_BNB     = 7'd75;   // cluster 12: same LUT as NF4 QLoRA
 
     // =====================================================================
     // Anchor probe (combinational, always active)
@@ -263,6 +268,10 @@ module tt_um_trinity_corona (
             FMT_INT8:        begin decode_result = int8_i32;    has_decoder = 1'b1; end
             FMT_E8M0:        begin decode_result = e8m0_fp32;   has_decoder = 1'b1; end
             FMT_MXINT8:      begin decode_result = mxint8_fp32; has_decoder = 1'b1; end
+            FMT_FP8_E4M3:   begin decode_result = mxfp8_fp32;  has_decoder = 1'b1; end
+            FMT_FP6_E3M2_ML:begin decode_result = fp6_fp32;    has_decoder = 1'b1; end
+            FMT_FP4_ML:     begin decode_result = fp4_fp32;    has_decoder = 1'b1; end
+            FMT_NF4_BNB:    begin decode_result = nf4_fp32;    has_decoder = 1'b1; end
             default:         begin decode_result = 32'd0;       has_decoder = 1'b0; end
         endcase
     end

@@ -22,6 +22,10 @@ FMT_INT8        = 47
 FMT_FP6_E2M3    = 77
 FMT_E8M0         = 78
 FMT_MXINT8       = 79
+FMT_FP8_E4M3    = 11
+FMT_FP6_E3M2_ML = 12
+FMT_FP4_ML      = 13
+FMT_NF4_BNB     = 75
 
 
 async def reset_dut(dut):
@@ -804,3 +808,87 @@ async def test_mxint8_exhaustive(dut):
             fail_count += 1
     assert fail_count == 0, f"MXINT8: {fail_count}/256 values failed"
     dut._log.info("PASS: MXINT8 exhaustive (256/256)")
+
+
+# =========================================================================
+# Alias decoder tests: same encoding, different fmt_id
+# =========================================================================
+
+@cocotb.test()
+async def test_fp8_e4m3_alias(dut):
+    """FP8 E4M3 (fmt_id=11) uses same decoder as MXFP8 E4M3 (fmt_id=39)."""
+    clock = Clock(dut.clk, 20, unit="ns")
+    cocotb.start_soon(clock.start())
+
+    fail_count = 0
+    for inp in range(256):
+        await reset_dut(dut)
+        expected = ref_mxfp8_e4m3(inp)
+        await send_cmd(dut, FMT_FP8_E4M3, 1)
+        await send_data(dut, [inp])
+        result = await read_result_bytes(dut, 4)
+        got = bytes_to_u32(result)
+        if got != expected:
+            dut._log.error(
+                f"FP8_E4M3 0x{inp:02X}: expected 0x{expected:08X}, got 0x{got:08X}")
+            fail_count += 1
+    assert fail_count == 0, f"FP8 E4M3: {fail_count}/256 values failed"
+    dut._log.info("PASS: FP8 E4M3 alias exhaustive (256/256)")
+
+
+@cocotb.test()
+async def test_fp6_e3m2_ml_alias(dut):
+    """FP6 E3M2 ML (fmt_id=12) uses same decoder as MXFP6 E3M2 (fmt_id=40)."""
+    clock = Clock(dut.clk, 20, unit="ns")
+    cocotb.start_soon(clock.start())
+
+    fail_count = 0
+    for inp in range(64):
+        await reset_dut(dut)
+        expected = ref_fp6_e3m2(inp)
+        await send_cmd(dut, FMT_FP6_E3M2_ML, 1)
+        await send_data(dut, [inp])
+        result = await read_result_bytes(dut, 4)
+        got = bytes_to_u32(result)
+        if got != expected:
+            dut._log.error(
+                f"FP6_E3M2_ML 0x{inp:02X}: expected 0x{expected:08X}, got 0x{got:08X}")
+            fail_count += 1
+    assert fail_count == 0, f"FP6 E3M2 ML: {fail_count}/64 values failed"
+    dut._log.info("PASS: FP6 E3M2 ML alias exhaustive (64/64)")
+
+
+@cocotb.test()
+async def test_fp4_ml_alias(dut):
+    """FP4 ML (fmt_id=13) uses same decoder as MXFP4 E2M1 (fmt_id=41)."""
+    clock = Clock(dut.clk, 20, unit="ns")
+    cocotb.start_soon(clock.start())
+
+    for inp in range(16):
+        await reset_dut(dut)
+        expected = ref_fp4(inp)
+        await send_cmd(dut, FMT_FP4_ML, 1)
+        await send_data(dut, [inp])
+        result = await read_result_bytes(dut, 4)
+        got = bytes_to_u32(result)
+        assert got == expected, \
+            f"FP4_ML 0x{inp:X}: expected 0x{expected:08X}, got 0x{got:08X}"
+    dut._log.info("PASS: FP4 ML alias exhaustive (16/16)")
+
+
+@cocotb.test()
+async def test_nf4_bnb_alias(dut):
+    """NF4 bitsandbytes (fmt_id=75) uses same LUT as NF4 QLoRA (fmt_id=70)."""
+    clock = Clock(dut.clk, 20, unit="ns")
+    cocotb.start_soon(clock.start())
+
+    for inp in range(16):
+        await reset_dut(dut)
+        expected = ref_nf4(inp)
+        await send_cmd(dut, FMT_NF4_BNB, 1)
+        await send_data(dut, [inp])
+        result = await read_result_bytes(dut, 4)
+        got = bytes_to_u32(result)
+        assert got == expected, \
+            f"NF4_BNB 0x{inp:X}: expected 0x{expected:08X}, got 0x{got:08X}"
+    dut._log.info("PASS: NF4 bitsandbytes alias exhaustive (16/16)")
