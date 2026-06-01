@@ -51,5 +51,10 @@ module fv_fp8_e5m2;
         // Normal range: FP32 exponent must be in [113, 142]
         if (exp > 5'd0 && exp < 5'h1F)
             assert(fp32_out[30:23] >= 8'd113 && fp32_out[30:23] <= 8'd142);
+
+        cover(e5m2_in == 8'h00);  // +0.0
+        cover(e5m2_in == 8'h7C);  // +Inf
+        cover(e5m2_in == 8'h7F);  // NaN
+        cover(e5m2_in == 8'h01);  // smallest subnormal
     end
 endmodule

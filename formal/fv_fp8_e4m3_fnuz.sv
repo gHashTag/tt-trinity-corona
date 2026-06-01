@@ -45,5 +45,10 @@ module fv_fp8_e4m3_fnuz;
         if (e4m3_in == 8'h80) assert(fp32_out == 32'h7FC00000);
         // No negative zero in FNUZ
         assert(fp32_out != 32'h80000000 || e4m3_in == 8'h00);
+
+        cover(e4m3_in == 8'h00);  // zero
+        cover(e4m3_in == 8'h80);  // NaN
+        cover(e4m3_in == 8'h7F);  // max positive
+        cover(e4m3_in == 8'h01);  // smallest subnormal
     end
 endmodule

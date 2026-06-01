@@ -30,5 +30,10 @@ module fv_tf32;
         assert(fp32_out[31] == sign);
         // Lower 13 mantissa bits always zero
         assert(fp32_out[12:0] == 13'b0);
+
+        cover(tf32_in == 19'h00000);  // +0.0
+        cover(tf32_in == 19'h1FC00);  // +1.0
+        cover(tf32_in == 19'h3FC00);  // +Inf
+        cover(tf32_in == 19'h3FC01);  // NaN
     end
 endmodule

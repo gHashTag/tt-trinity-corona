@@ -54,5 +54,10 @@ module fv_lns8;
         // log_val=0x40 (int=4, frac=0): 2^4=16, magnitude = 256<<4 = 4096
         if (lns_in[6:0] == 7'h40 && lns_in != 8'h00)
             assert(magnitude == 16'd4096);
+
+        cover(lns_in == 8'h00);  // zero
+        cover(lns_in == 8'h01);  // smallest positive
+        cover(lns_in == 8'h7F);  // max positive (int=7, frac=15)
+        cover(lns_in == 8'h80);  // negative zero (sign=1, log=0)
     end
 endmodule

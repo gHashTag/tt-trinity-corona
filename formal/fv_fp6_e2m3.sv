@@ -43,5 +43,10 @@ module fv_fp6_e2m3;
         assert(fp32_out[30:23] != 8'hFF);
         // Normal range: exp 1-3 maps to FP32 exp 127-129
         if (exp > 2'd0) assert(fp32_out[30:23] >= 8'd127);
+
+        cover(fp6_in == 6'h00);  // +0.0
+        cover(fp6_in == 6'h1F);  // max positive
+        cover(fp6_in == 6'h20);  // -0.0
+        cover(fp6_in == 6'h01);  // smallest subnormal
     end
 endmodule

@@ -27,5 +27,10 @@ module fv_e8m0;
         // Non-NaN, non-zero: mantissa is always zero (pure power of 2)
         if (e8m0_in != 8'hFF && e8m0_in != 8'h00)
             assert(fp32_out[22:0] == 23'b0);
+
+        cover(e8m0_in == 8'h00);  // 2^(-127) subnormal
+        cover(e8m0_in == 8'h7F);  // 2^0 = 1.0
+        cover(e8m0_in == 8'hFE);  // 2^127 (max finite)
+        cover(e8m0_in == 8'hFF);  // NaN
     end
 endmodule

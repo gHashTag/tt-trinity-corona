@@ -25,5 +25,10 @@ module fv_bf16;
         assert(!(is_zero && is_inf));
         assert(!(is_zero && is_nan));
         assert(!(is_inf && is_nan));
+
+        cover(bf16_in == 16'h0000);  // +0.0
+        cover(bf16_in == 16'h3F80);  // +1.0
+        cover(bf16_in == 16'h7F80);  // +Inf
+        cover(bf16_in == 16'h7FC0);  // NaN
     end
 endmodule

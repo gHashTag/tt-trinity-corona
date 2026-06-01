@@ -25,5 +25,10 @@ module fv_bcd;
         if (bcd_in == 8'h00) assert(bin_out == 7'd0);
         if (bcd_in == 8'h42) assert(bin_out == 7'd42);
         if (bcd_in == 8'h99) assert(bin_out == 7'd99);
+
+        cover(bcd_in == 8'h00);  // 0
+        cover(bcd_in == 8'h42);  // 42
+        cover(bcd_in == 8'h99);  // 99 (max valid)
+        cover(bcd_in == 8'hAA);  // invalid BCD
     end
 endmodule

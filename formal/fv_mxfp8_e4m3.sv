@@ -50,5 +50,10 @@ module fv_mxfp8_e4m3;
             assert(fp32_out[30:23] != 8'hFF); // not NaN/Inf
         // Sign always preserved
         assert(fp32_out[31] == sign);
+
+        cover(e4m3_in == 8'h00);  // +0.0
+        cover(e4m3_in == 8'h7F);  // +NaN
+        cover(e4m3_in == 8'h7E);  // max positive finite
+        cover(e4m3_in == 8'h01);  // smallest subnormal
     end
 endmodule

@@ -292,4 +292,11 @@ module fv_posit8;
 
     // Symmetry: posit(n) == -posit(256-n) for n in [1,127]
     // (encoded via golden LUT — if both entries are correct, symmetry holds)
+
+    always @(*) begin
+        cover(posit_in == 8'h00);  // zero
+        cover(posit_in == 8'h40);  // +1.0
+        cover(posit_in == 8'h7F);  // +64 (maxpos)
+        cover(posit_in == 8'h80);  // NaR
+    end
 endmodule

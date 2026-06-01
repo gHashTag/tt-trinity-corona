@@ -39,5 +39,10 @@ module fv_fp6_e3m2;
         // No NaN or Inf in FP6 E3M2
         if (exp != 3'd0 || mant != 2'd0)
             assert(fp32_out[30:23] != 8'hFF);
+
+        cover(fp6_in == 6'h00);  // +0.0
+        cover(fp6_in == 6'h1F);  // max positive
+        cover(fp6_in == 6'h20);  // -0.0
+        cover(fp6_in == 6'h01);  // smallest subnormal
     end
 endmodule

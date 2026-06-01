@@ -17,5 +17,10 @@ module fv_int8;
         // Structural: positive inputs produce positive outputs
         if (!int8_in[7]) assert(int32_out[31] == 1'b0);
         if (int8_in[7])  assert(int32_out[31] == 1'b1);
+
+        cover(int8_in == 8'd0);    // zero
+        cover(int8_in == 8'd127);  // max positive
+        cover(int8_in == 8'h80);   // min negative (-128)
+        cover(int8_in == 8'hFF);   // -1
     end
 endmodule

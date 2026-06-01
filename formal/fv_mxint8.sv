@@ -137,6 +137,11 @@ module fv_mxint8;
         if (mxint8_in == 8'hC0) assert(fp32_out == 32'hBF800000);
         if (mxint8_in == 8'hFE) assert(fp32_out == 32'hBD000000);
         if (mxint8_in == 8'hFF) assert(fp32_out == 32'hBC800000);
+
+        cover(mxint8_in == 8'h00);  // zero
+        cover(mxint8_in == 8'h40);  // +1.0 (64/64)
+        cover(mxint8_in == 8'h7F);  // max positive (+127/64)
+        cover(mxint8_in == 8'h80);  // reserved (NaN)
     end
 
 endmodule
