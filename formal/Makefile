@@ -21,4 +21,4 @@ $(TARGETS): %:
 	$(SBY) -f $@.sby
 
 clean:
-	rm -rf $(addsuffix _bmc, $(TARGETS))
+	rm -rf $(addsuffix _bmc, $(TARGETS)) $(addsuffix _prove, $(TARGETS)) $(addsuffix _cover, $(TARGETS))

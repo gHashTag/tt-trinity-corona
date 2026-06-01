@@ -275,3 +275,87 @@ async def test_rapid_format_cycling(dut):
             assert got == expected, \
                 f"Cycle[{i}] fmt={fmt}: expected 0x{expected:08X}, got 0x{got:08X}"
     dut._log.info("PASS: rapid format cycling (13 formats, no reset)")
+
+
+def not_impl_u32(fmt_id):
+    return 0xFF | ((fmt_id & 0x7F) << 8) | (0x07 << 16) | (0x4E << 24)
+
+
+@cocotb.test()
+async def test_not_impl_response(dut):
+    """Decode with fmt_id that has no decoder returns NOT_IMPL sentinel."""
+    clock = Clock(dut.clk, 40, units="ns")
+    cocotb.start_soon(clock.start())
+    await reset_dut(dut)
+
+    no_decoder_ids = [5, 6, 7, 15, 20, 50, 60]
+    for fmt_id in no_decoder_ids:
+        got = await transact_decode(dut, fmt_id, [0x00])
+        expected = not_impl_u32(fmt_id)
+        assert got == expected, \
+            f"NOT_IMPL fmt_id={fmt_id}: expected 0x{expected:08X}, got 0x{got:08X}"
+    dut._log.info(f"PASS: NOT_IMPL sentinel for {len(no_decoder_ids)} decoder-less fmt_ids")
+
+
+@cocotb.test()
+async def test_out_of_range_decode(dut):
+    """Decode with fmt_id > 79 (beyond ROM) returns NOT_IMPL gracefully."""
+    clock = Clock(dut.clk, 40, units="ns")
+    cocotb.start_soon(clock.start())
+    await reset_dut(dut)
+
+    for fmt_id in [80, 100, 126]:
+        got = await transact_decode(dut, fmt_id, [0x42])
+        expected = not_impl_u32(fmt_id)
+        assert got == expected, \
+            f"Out-of-range fmt_id={fmt_id}: expected 0x{expected:08X}, got 0x{got:08X}"
+    dut._log.info("PASS: out-of-range fmt_ids produce NOT_IMPL")
+
+
+@cocotb.test()
+async def test_rom_out_of_range(dut):
+    """ROM readback for fmt_id > 79 returns all zeros (ROM default case)."""
+    clock = Clock(dut.clk, 40, units="ns")
+    cocotb.start_soon(clock.start())
+    await reset_dut(dut)
+
+    rom_result = await transact_rom(dut, 100)
+    assert all(b == 0 for b in rom_result), \
+        f"ROM[100] expected all zeros, got {[hex(b) for b in rom_result]}"
+    dut._log.info("PASS: ROM readback beyond entry 79 returns zeros")
+
+
+@cocotb.test()
+async def test_consecutive_rom_readbacks(dut):
+    """Three ROM readbacks in a row without reset."""
+    clock = Clock(dut.clk, 40, units="ns")
+    cocotb.start_soon(clock.start())
+    await reset_dut(dut)
+
+    r0 = await transact_rom(dut, 0)
+    assert r0[7] == 16, f"ROM[0] byte7 expected 16 (FP16 total_bits), got {r0[7]}"
+
+    r79 = await transact_rom(dut, 79)
+    assert r79[0] != 0 or r79[1] != 0, "ROM[79] should not be all-zero (MXINT8 is valid)"
+
+    r0_again = await transact_rom(dut, 0)
+    assert r0 == r0_again, "ROM[0] second read must match first read"
+    dut._log.info("PASS: 3 consecutive ROM readbacks, data consistent")
+
+
+@cocotb.test()
+async def test_last_valid_rom_entry(dut):
+    """ROM readback for fmt_id=79 (MXINT8, last entry) returns valid data."""
+    clock = Clock(dut.clk, 40, units="ns")
+    cocotb.start_soon(clock.start())
+    await reset_dut(dut)
+
+    rom_result = await transact_rom(dut, 79)
+    assert rom_result[7] == 8, f"ROM[79] byte7 (total_bits) expected 8 (MXINT8), got {rom_result[7]}"
+    assert not all(b == 0 for b in rom_result), "ROM[79] should contain valid MXINT8 metadata"
+
+    got = await transact_decode(dut, FMT_MXINT8, [0x40])
+    expected = ref_mxint8(0x40)
+    assert got == expected, \
+        f"MXINT8 decode after ROM[79]: expected 0x{expected:08X}, got 0x{got:08X}"
+    dut._log.info("PASS: last ROM entry (79) valid, decode still works")
