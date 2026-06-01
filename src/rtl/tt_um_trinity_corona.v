@@ -42,6 +42,7 @@ module tt_um_trinity_corona (
     localparam [6:0] FMT_TF32          = 7'd9;    // cluster 2: ML low-precision
     localparam [6:0] FMT_FP8_E5M2     = 7'd10;   // cluster 2: ML low-precision
     localparam [6:0] FMT_NF4           = 7'd70;   // cluster 10: compression
+    localparam [6:0] FMT_FP6_E2M3     = 7'd77;   // cluster 2: Blackwell sub-8-bit
 
     // =====================================================================
     // Anchor probe (combinational, always active)
@@ -195,6 +196,13 @@ module tt_um_trinity_corona (
         .is_zero(fp8e5m2_zero), .is_inf(fp8e5m2_inf), .is_nan(fp8e5m2_nan)
     );
 
+    wire [31:0] fp6e2m3_fp32;
+    wire        fp6e2m3_zero;
+    fp6_e2m3_decode u_fp6e2m3 (
+        .fp6_in(data_in_buf[5:0]), .fp32_out(fp6e2m3_fp32),
+        .is_zero(fp6e2m3_zero)
+    );
+
     // =====================================================================
     // ROM instance (placeholder -- Phase B populates)
     // =====================================================================
@@ -223,6 +231,7 @@ module tt_um_trinity_corona (
             FMT_NF4:         begin decode_result = nf4_fp32;    has_decoder = 1'b1; end
             FMT_TF32:        begin decode_result = tf32_fp32;   has_decoder = 1'b1; end
             FMT_FP8_E5M2:   begin decode_result = fp8e5m2_fp32; has_decoder = 1'b1; end
+            FMT_FP6_E2M3:   begin decode_result = fp6e2m3_fp32; has_decoder = 1'b1; end
             default:         begin decode_result = 32'd0;       has_decoder = 1'b0; end
         endcase
     end
@@ -289,6 +298,7 @@ module tt_um_trinity_corona (
                      mxfp8_zero, mxfp8_nan, lns8_zero, posit8_zero, posit8_nar,
                      tf32_zero, tf32_inf, tf32_nan,
                      fp8e5m2_zero, fp8e5m2_inf, fp8e5m2_nan,
+                     fp6e2m3_zero,
                      1'b0};
 
 endmodule

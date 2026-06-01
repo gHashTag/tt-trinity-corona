@@ -18,6 +18,7 @@ FMT_BCD         = 53
 FMT_TF32        = 9
 FMT_FP8_E5M2    = 10
 FMT_NF4         = 70
+FMT_FP6_E2M3    = 77
 
 
 async def reset_dut(dut):
@@ -439,7 +440,7 @@ def rom_bytes_to_u80(b):
 
 @cocotb.test()
 async def test_rom_readback_all(dut):
-    """ROM readback: verify all 77 records match expected packed values."""
+    """ROM readback: verify all ROM records match expected packed values."""
     clock = Clock(dut.clk, 20, units="ns")
     cocotb.start_soon(clock.start())
 
@@ -454,8 +455,8 @@ async def test_rom_readback_all(dut):
             dut._log.error(
                 f"ROM[{fmt_id}]: expected 0x{expected:020X}, got 0x{got:020X}")
             fail_count += 1
-    assert fail_count == 0, f"ROM readback: {fail_count}/77 records failed"
-    dut._log.info("PASS: ROM readback all 77 records correct")
+    assert fail_count == 0, f"ROM readback: {fail_count}/{len(CATALOG)} records failed"
+    dut._log.info(f"PASS: ROM readback all {len(CATALOG)} records correct")
 
 
 @cocotb.test()
@@ -486,7 +487,7 @@ async def test_rom_readback_key_fields(dut):
 
 @cocotb.test()
 async def test_rom_unused_address(dut):
-    """ROM address >= 77 returns zero."""
+    """ROM unused address returns zero."""
     clock = Clock(dut.clk, 20, units="ns")
     cocotb.start_soon(clock.start())
     await reset_dut(dut)
@@ -604,3 +605,57 @@ async def test_fp8_e5m2_exhaustive(dut):
             fail_count += 1
     assert fail_count == 0, f"FP8 E5M2: {fail_count}/256 values failed"
     dut._log.info("PASS: FP8 E5M2 exhaustive (256/256)")
+
+
+# =========================================================================
+# FP6 E2M3 reference model
+# =========================================================================
+
+def ref_fp6_e2m3(val):
+    """FP6 E2M3 (bias=1, no Inf/NaN) -> FP32."""
+    sign = (val >> 5) & 1
+    exp = (val >> 3) & 0x3
+    mant = val & 0x7
+    if exp == 0 and mant == 0:
+        return sign << 31
+    elif exp == 0:
+        if mant & 4:
+            fp32_exp = 126
+            fp32_mant = (mant & 3) << 21
+        elif mant & 2:
+            fp32_exp = 125
+            fp32_mant = (mant & 1) << 22
+        else:
+            fp32_exp = 124
+            fp32_mant = 0
+        return (sign << 31) | (fp32_exp << 23) | fp32_mant
+    else:
+        fp32_exp = exp + 126
+        fp32_mant = mant << 20
+        return (sign << 31) | (fp32_exp << 23) | fp32_mant
+
+
+# =========================================================================
+# FP6 E2M3 Exhaustive (64 values)
+# =========================================================================
+
+@cocotb.test()
+async def test_fp6_e2m3_exhaustive(dut):
+    """FP6 E2M3 (Blackwell): exhaustive test of all 64 values."""
+    clock = Clock(dut.clk, 20, units="ns")
+    cocotb.start_soon(clock.start())
+
+    fail_count = 0
+    for inp in range(64):
+        await reset_dut(dut)
+        expected = ref_fp6_e2m3(inp)
+        await send_cmd(dut, FMT_FP6_E2M3, 1)
+        await send_data(dut, [inp])
+        result = await read_result_bytes(dut, 4)
+        got = bytes_to_u32(result)
+        if got != expected:
+            dut._log.error(
+                f"FP6_E2M3 0x{inp:02X}: expected 0x{expected:08X}, got 0x{got:08X}")
+            fail_count += 1
+    assert fail_count == 0, f"FP6 E2M3: {fail_count}/64 values failed"
+    dut._log.info("PASS: FP6 E2M3 exhaustive (64/64)")
