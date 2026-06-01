@@ -387,3 +387,65 @@ async def test_byte_count_clamping(dut):
     dut.ui_in.value = 0x80
     await RisingEdge(dut.clk)
     dut._log.info("PASS: byte_count=15 clamped to 4, decode correct")
+
+
+@cocotb.test()
+async def test_mid_transaction_reset(dut):
+    """Reset during CMD2, DATA, and STATUS states; verify FSM recovers."""
+    from cocotb.triggers import ClockCycles
+    clock = Clock(dut.clk, 40, units="ns")
+    cocotb.start_soon(clock.start())
+
+    # Case 1: Reset during CMD2 (after CMD1, before byte_count)
+    await reset_dut(dut)
+    dut.ui_in.value = FMT_INT8  # CMD1
+    await RisingEdge(dut.clk)
+    # Now in ST_CMD2 — assert reset
+    dut.rst_n.value = 0
+    await ClockCycles(dut.clk, 2)
+    dut.rst_n.value = 1
+    await ClockCycles(dut.clk, 2)
+    # Verify: anchor probe works (FSM back in IDLE)
+    dut.ui_in.value = 0x7F
+    await Timer(1, units="ns")
+    assert dut.uo_out.value.integer == 0xC0, "Reset in CMD2: anchor failed"
+
+    # Case 2: Reset during DATA (after CMD2, during byte collection)
+    await reset_dut(dut)
+    dut.ui_in.value = FMT_INT8  # CMD1
+    await RisingEdge(dut.clk)
+    dut.ui_in.value = 0x02  # CMD2: byte_count=2
+    await RisingEdge(dut.clk)
+    dut.ui_in.value = 0xAA  # First data byte
+    await RisingEdge(dut.clk)
+    # Now in ST_DATA with 1 byte remaining — assert reset
+    dut.rst_n.value = 0
+    await ClockCycles(dut.clk, 2)
+    dut.rst_n.value = 1
+    await ClockCycles(dut.clk, 2)
+    dut.ui_in.value = 0x7F
+    await Timer(1, units="ns")
+    assert dut.uo_out.value.integer == 0xC0, "Reset in DATA: anchor failed"
+
+    # Case 3: Reset during STATUS (during result readback)
+    await reset_dut(dut)
+    await send_cmd(dut, FMT_FP4, 1)
+    await send_data(dut, [0x05])
+    # Now in ST_STATUS — read 1 byte then reset
+    await Timer(1, units="ns")
+    _ = dut.uo_out.value.integer  # read first status byte
+    dut.rst_n.value = 0
+    await ClockCycles(dut.clk, 2)
+    dut.rst_n.value = 1
+    await ClockCycles(dut.clk, 2)
+    dut.ui_in.value = 0x7F
+    await Timer(1, units="ns")
+    assert dut.uo_out.value.integer == 0xC0, "Reset in STATUS: anchor failed"
+
+    # Case 4: Verify a full transaction works after all resets
+    await reset_dut(dut)
+    got = await transact_decode(dut, FMT_FP4, [0x05])
+    expected = ref_fp4(0x05)
+    assert got == expected, f"Post-reset decode: expected 0x{expected:08X}, got 0x{got:08X}"
+
+    dut._log.info("PASS: mid-transaction reset recovery (CMD2, DATA, STATUS, post-reset decode)")
