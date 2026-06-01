@@ -18,9 +18,9 @@ is 10 bytes (80 bits) and includes fields for sign bits, exponent width, mantiss
 width, encoding kind, cluster ID, claim-status ID, phi-distance (Q16), and a
 reference index. The ROM is generated mechanically by `tools/gen_rom.py`.
 
-15 Tier-1 RTL decode modules convert on-die formats to IEEE 754 FP32 (or INT32),
+18 Tier-1 RTL decode modules convert on-die formats to IEEE 754 FP32 (or INT32),
 covering BF16, TF32, FP8 E5M2, FP8 E4M3, FP8 E4M3 FNUZ, FP6 E3M2, FP6 E2M3,
-FP4 E2M1, Posit8, LNS8, INT8, BCD, NF4, E8M0, and MXINT8.
+FP4 E2M1, Posit8, LNS8, INT4, INT8, BCD, NF4, E8M0, MXINT8, and BitNet 1.58b.
 
 A die-to-die (D2D) adapter on `uio[3:0]` (TX) and `uio[7:4]` (RX) routes
 queries for Gamma-native formats (GF4-GF256, FP8, INT4/8, NF4, Posit16, BitNet)

@@ -13,6 +13,7 @@ FMT_FP8_E5M2    = 10
 FMT_E4M3_FNUZ   = 14
 FMT_MXFP8_E4M3 = 39
 FMT_FP4         = 41
+FMT_INT4        = 46
 FMT_INT8        = 47
 FMT_BCD         = 53
 FMT_BITNET      = 71
@@ -263,6 +264,7 @@ async def test_rapid_format_cycling(dut):
         (FMT_FP8_E5M2,    [0x40],        None),  # just verify completes
         (FMT_E4M3_FNUZ,   [0x3F],        None),  # FNUZ: verify completes
         (FMT_BITNET,      [0x01],         0x3F800000),  # ternary +1
+        (FMT_INT4,        [0x0F],         0xFFFFFFFF),  # -1 sign-extended
         (FMT_E8M0,        [0xFE],         ref_e8m0(0xFE)),
         (FMT_INT8,        [0x7E],         ref_int8(0x7E)),
     ]
@@ -272,4 +274,4 @@ async def test_rapid_format_cycling(dut):
         if expected is not None:
             assert got == expected, \
                 f"Cycle[{i}] fmt={fmt}: expected 0x{expected:08X}, got 0x{got:08X}"
-    dut._log.info("PASS: rapid format cycling (12 formats, no reset)")
+    dut._log.info("PASS: rapid format cycling (13 formats, no reset)")
