@@ -12,6 +12,8 @@ read_verilog src/rtl/posit8_decode.v
 read_verilog src/rtl/fp4_decode.v
 read_verilog src/rtl/fp6_e3m2_decode.v
 read_verilog src/rtl/nf4_decode.v
+read_verilog src/rtl/tf32_decode.v
+read_verilog src/rtl/fp8_e5m2_decode.v
 
 hierarchy -check -top tt_um_trinity_corona
 proc; opt; fsm; opt; memory; opt

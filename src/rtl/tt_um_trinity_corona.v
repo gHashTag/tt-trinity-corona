@@ -39,6 +39,8 @@ module tt_um_trinity_corona (
     localparam [6:0] FMT_FP4           = 7'd41;   // cluster 5: OCP MX
     localparam [6:0] FMT_LNS8          = 7'd42;   // cluster 6: LNS
     localparam [6:0] FMT_BCD           = 7'd53;   // cluster 7: integer/fixed
+    localparam [6:0] FMT_TF32          = 7'd9;    // cluster 2: ML low-precision
+    localparam [6:0] FMT_FP8_E5M2     = 7'd10;   // cluster 2: ML low-precision
     localparam [6:0] FMT_NF4           = 7'd70;   // cluster 10: compression
 
     // =====================================================================
@@ -51,7 +53,7 @@ module tt_um_trinity_corona (
     //
     // IDLE: ui_in[7]=0 -> CMD1 (fmt_id = ui_in[6:0])
     //       ui_in[7]=1 -> ignored (stay idle)
-    // CMD2: ui_in[3:0] = byte_count (1-15), 0 = direct to STATUS
+    // CMD2: ui_in[3:0] = byte_count (1-4 valid, 0 = ROM readback)
     // DATA: accept exactly byte_count raw 8-bit bytes (no mode inspection)
     // STATUS: stream 4 result bytes on uo_out, one per clock
     // DONE: one-cycle gap, then back to IDLE
@@ -179,6 +181,20 @@ module tt_um_trinity_corona (
         .nf4_in(data_in_buf[3:0]), .fp32_out(nf4_fp32)
     );
 
+    wire [31:0] tf32_fp32;
+    wire        tf32_zero, tf32_inf, tf32_nan;
+    tf32_decode u_tf32 (
+        .tf32_in(data_in_buf[18:0]), .fp32_out(tf32_fp32),
+        .is_zero(tf32_zero), .is_inf(tf32_inf), .is_nan(tf32_nan)
+    );
+
+    wire [31:0] fp8e5m2_fp32;
+    wire        fp8e5m2_zero, fp8e5m2_inf, fp8e5m2_nan;
+    fp8_e5m2_decode u_fp8e5m2 (
+        .e5m2_in(data_in_buf[7:0]), .fp32_out(fp8e5m2_fp32),
+        .is_zero(fp8e5m2_zero), .is_inf(fp8e5m2_inf), .is_nan(fp8e5m2_nan)
+    );
+
     // =====================================================================
     // ROM instance (placeholder -- Phase B populates)
     // =====================================================================
@@ -205,6 +221,8 @@ module tt_um_trinity_corona (
             FMT_FP4:         begin decode_result = fp4_fp32;    has_decoder = 1'b1; end
             FMT_FP6_E3M2:    begin decode_result = fp6_fp32;    has_decoder = 1'b1; end
             FMT_NF4:         begin decode_result = nf4_fp32;    has_decoder = 1'b1; end
+            FMT_TF32:        begin decode_result = tf32_fp32;   has_decoder = 1'b1; end
+            FMT_FP8_E5M2:   begin decode_result = fp8e5m2_fp32; has_decoder = 1'b1; end
             default:         begin decode_result = 32'd0;       has_decoder = 1'b0; end
         endcase
     end
@@ -269,6 +287,8 @@ module tt_um_trinity_corona (
 
     wire _unused = &{uio_in, bcd_valid, bf16_zero, bf16_inf, bf16_nan,
                      mxfp8_zero, mxfp8_nan, lns8_zero, posit8_zero, posit8_nar,
+                     tf32_zero, tf32_inf, tf32_nan,
+                     fp8e5m2_zero, fp8e5m2_inf, fp8e5m2_nan,
                      1'b0};
 
 endmodule

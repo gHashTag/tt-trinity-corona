@@ -111,8 +111,8 @@ CATALOG = [
 
     # Cluster 2: ML low-precision (7)
     (8,  CL_ML_LOW,   ST_SPEC,       16,  1,  8,  7, ENC_FP, 8, FLAG_ON_DIE), # bf16
-    (9,  CL_ML_LOW,   ST_SPEC,       32,  1,  8, 10, ENC_FP, 9, 0),           # tf32
-    (10, CL_ML_LOW,   ST_EXPERIMENTAL,8,  1,  5,  2, ENC_FP,10, 0),           # fp8 e5m2
+    (9,  CL_ML_LOW,   ST_SPEC,       32,  1,  8, 10, ENC_FP, 9, FLAG_ON_DIE), # tf32
+    (10, CL_ML_LOW,   ST_EXPERIMENTAL,8,  1,  5,  2, ENC_FP,10, FLAG_ON_DIE), # fp8 e5m2
     (11, CL_ML_LOW,   ST_EXPERIMENTAL,8,  1,  4,  3, ENC_FP,11, FLAG_ON_DIE), # fp8 e4m3
     (12, CL_ML_LOW,   ST_SPEC,        6,  1,  3,  2, ENC_FP,12, FLAG_ON_DIE), # fp6 e3m2
     (13, CL_ML_LOW,   ST_SPEC,        4,  1,  2,  1, ENC_FP,13, FLAG_ON_DIE), # fp4 e2m1

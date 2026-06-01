@@ -15,6 +15,8 @@ FMT_FP6_E3M2    = 40
 FMT_FP4         = 41
 FMT_LNS8        = 42
 FMT_BCD         = 53
+FMT_TF32        = 9
+FMT_FP8_E5M2    = 10
 FMT_NF4         = 70
 
 
@@ -160,6 +162,22 @@ def ref_posit8(byte_val):
     fraction = (shifted >> 1) & 0x3F
     fp32_exp = k + 127
     return (sign << 31) | (fp32_exp << 23) | (fraction << 17)
+
+
+def ref_lns8(byte_val):
+    """LNS8: 1 sign + 7-bit Q3.4 log -> {sign, 15'b0, magnitude[15:0]}."""
+    LUT = [256, 267, 279, 291, 304, 317, 331, 345,
+           362, 378, 395, 412, 431, 450, 470, 490]
+    sign = (byte_val >> 7) & 1
+    log_val = byte_val & 0x7F
+    is_zero = (byte_val == 0x00)
+    if is_zero:
+        magnitude = 0
+    else:
+        int_part = (log_val >> 4) & 0x7
+        frac_part = log_val & 0xF
+        magnitude = (LUT[frac_part] << int_part) & 0xFFFF
+    return (sign << 31) | magnitude
 
 
 # =========================================================================
@@ -312,6 +330,32 @@ async def test_bcd_values(dut):
 
 
 # =========================================================================
+# LNS8 Exhaustive (256 values)
+# =========================================================================
+
+@cocotb.test()
+async def test_lns8_exhaustive(dut):
+    """LNS8: exhaustive test of all 256 values."""
+    clock = Clock(dut.clk, 20, units="ns")
+    cocotb.start_soon(clock.start())
+
+    fail_count = 0
+    for inp in range(256):
+        await reset_dut(dut)
+        expected = ref_lns8(inp)
+        await send_cmd(dut, FMT_LNS8, 1)
+        await send_data(dut, [inp])
+        result = await read_result_bytes(dut, 4)
+        got = bytes_to_u32(result)
+        if got != expected:
+            dut._log.error(
+                f"LNS8 0x{inp:02X}: expected 0x{expected:08X}, got 0x{got:08X}")
+            fail_count += 1
+    assert fail_count == 0, f"LNS8: {fail_count}/256 values failed"
+    dut._log.info("PASS: LNS8 exhaustive (256/256)")
+
+
+# =========================================================================
 # Not-Implemented Format Test
 # =========================================================================
 
@@ -451,3 +495,112 @@ async def test_rom_unused_address(dut):
     got = rom_bytes_to_u80(result)
     assert got == 0, f"ROM[100]: expected 0, got 0x{got:020X}"
     dut._log.info("PASS: ROM unused address returns zero")
+
+
+# =========================================================================
+# TF32 reference model
+# =========================================================================
+
+def ref_tf32(val_19bit):
+    """TF32 (19-bit) -> FP32: sign + exp(8) + mant(10) zero-extended to 23."""
+    sign = (val_19bit >> 18) & 1
+    exp = (val_19bit >> 10) & 0xFF
+    mant = val_19bit & 0x3FF
+    return (sign << 31) | (exp << 23) | (mant << 13)
+
+
+# =========================================================================
+# FP8 E5M2 reference model
+# =========================================================================
+
+def ref_fp8_e5m2(byte_val):
+    """FP8 E5M2 (bias=15) -> FP32 with Inf, NaN, subnormal."""
+    sign = (byte_val >> 7) & 1
+    exp = (byte_val >> 2) & 0x1F
+    mant = byte_val & 0x3
+
+    if exp == 0x1F and mant == 0:
+        return (sign << 31) | 0x7F800000  # Inf
+    elif exp == 0x1F and mant != 0:
+        return (sign << 31) | 0x7FC00000  # quiet NaN
+    elif exp == 0 and mant == 0:
+        return sign << 31  # zero
+    elif exp == 0:
+        # Subnormal: 2^(1-15) * 0.mant = 2^(-14) * 0.mant
+        if mant & 2:  # mant = 10 or 11
+            fp32_exp = 112  # 2^(-15) normalized
+            fp32_mant = (mant & 1) << 22
+        else:  # mant = 01
+            fp32_exp = 111  # 2^(-16) normalized
+            fp32_mant = 0
+        return (sign << 31) | (fp32_exp << 23) | fp32_mant
+    else:
+        fp32_exp = exp + 112
+        fp32_mant = mant << 21
+        return (sign << 31) | (fp32_exp << 23) | fp32_mant
+
+
+# =========================================================================
+# TF32 Key Values Test
+# =========================================================================
+
+@cocotb.test()
+async def test_tf32_key_values(dut):
+    """TF32: key values -> FP32 (wire-concat decode)."""
+    clock = Clock(dut.clk, 20, units="ns")
+    cocotb.start_soon(clock.start())
+
+    test_cases = [
+        # (19-bit TF32 input as 3 bytes LSB-first, expected FP32)
+        (0x00000, 0x00000000),  # +0.0
+        (0x40000, 0x80000000),  # -0.0  (sign=1, exp=0, mant=0)
+        (0x1FC00, 0x3F800000),  # 1.0   (sign=0, exp=0x7F=127, mant=0)
+        (0x20000, 0x40000000),  # 2.0   (sign=0, exp=0x80=128, mant=0)
+        (0x1F800, 0x3F000000),  # 0.5   (sign=0, exp=0x7E=126, mant=0)
+        (0x3FC00, 0x7F800000),  # +Inf  (sign=0, exp=0xFF, mant=0)
+        (0x7FC00, 0xFF800000),  # -Inf  (sign=1, exp=0xFF, mant=0)
+        (0x3FC01, 0x7F802000),  # NaN   (sign=0, exp=0xFF, mant=1)
+        (0x20200, 0x40400000),  # 3.0   (sign=0, exp=128, mant=0x200=512 -> 512<<13)
+    ]
+
+    for tf32_in, expected in test_cases:
+        await reset_dut(dut)
+        b0 = tf32_in & 0xFF
+        b1 = (tf32_in >> 8) & 0xFF
+        b2 = (tf32_in >> 16) & 0xFF
+        ref = ref_tf32(tf32_in)
+        assert ref == expected, \
+            f"ref_tf32 self-check: 0x{tf32_in:05X} -> 0x{ref:08X}, expected 0x{expected:08X}"
+        await send_cmd(dut, FMT_TF32, 3)
+        await send_data(dut, [b0, b1, b2])
+        result = await read_result_bytes(dut, 4)
+        got = bytes_to_u32(result)
+        assert got == expected, \
+            f"TF32 0x{tf32_in:05X}: expected 0x{expected:08X}, got 0x{got:08X}"
+    dut._log.info("PASS: TF32 key values correct")
+
+
+# =========================================================================
+# FP8 E5M2 Exhaustive (256 values)
+# =========================================================================
+
+@cocotb.test()
+async def test_fp8_e5m2_exhaustive(dut):
+    """FP8 E5M2: exhaustive test of all 256 values."""
+    clock = Clock(dut.clk, 20, units="ns")
+    cocotb.start_soon(clock.start())
+
+    fail_count = 0
+    for inp in range(256):
+        await reset_dut(dut)
+        expected = ref_fp8_e5m2(inp)
+        await send_cmd(dut, FMT_FP8_E5M2, 1)
+        await send_data(dut, [inp])
+        result = await read_result_bytes(dut, 4)
+        got = bytes_to_u32(result)
+        if got != expected:
+            dut._log.error(
+                f"FP8_E5M2 0x{inp:02X}: expected 0x{expected:08X}, got 0x{got:08X}")
+            fail_count += 1
+    assert fail_count == 0, f"FP8 E5M2: {fail_count}/256 values failed"
+    dut._log.info("PASS: FP8 E5M2 exhaustive (256/256)")
