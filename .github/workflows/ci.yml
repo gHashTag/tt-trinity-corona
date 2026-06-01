@@ -97,12 +97,18 @@ jobs:
         run: |
           yosys -p "read_verilog src/rtl/*.v; synth -top tt_um_trinity_corona -flatten; stat; write_verilog -noattr /tmp/corona_synth.v" 2>&1 | tee synth.log
           grep "Number of cells" synth.log
-      - name: Gate-level simulation smoke test
+      - name: Gate-level simulation smoke test (76 tests)
         run: |
           SIMCELLS=$(yosys-config --datdir)/simcells.v
           iverilog -o /tmp/corona_gls "$SIMCELLS" /tmp/corona_synth.v test/tb_gls_smoke.v
           vvp /tmp/corona_gls 2>&1 | tee gls.log
           grep -q "ALL PASS" gls.log
+      - name: ROM golden validation (80 records)
+        run: |
+          SIMCELLS=$(yosys-config --datdir)/simcells.v
+          iverilog -o /tmp/rom_golden "$SIMCELLS" /tmp/corona_synth.v test/tb_rom_golden.v
+          vvp /tmp/rom_golden 2>&1 | tee rom_golden.log
+          grep -q "ALL 80 RECORDS PASS" rom_golden.log
 
   test:
     runs-on: ubuntu-latest

@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # tt-trinity-corona / Makefile
 
-.PHONY: all test lint verilator-lint formal gls clean
+.PHONY: all test lint verilator-lint formal gls rom-golden clean
 
 all: lint verilator-lint
 
@@ -25,6 +25,13 @@ gls:
 	iverilog -o /tmp/corona_gls "$$(yosys-config --datdir)/simcells.v" /tmp/corona_synth.v test/tb_gls_smoke.v
 	vvp /tmp/corona_gls 2>&1 | tee /tmp/gls.log
 	grep -q "ALL PASS" /tmp/gls.log
+
+rom-golden:
+	@echo "--- ROM golden: exhaustive 80-record validation ---"
+	yosys -p "read_verilog src/rtl/*.v; synth -top tt_um_trinity_corona -flatten; write_verilog -noattr /tmp/corona_synth.v" 2>&1 | tail -3
+	iverilog -o /tmp/rom_golden "$$(yosys-config --datdir)/simcells.v" /tmp/corona_synth.v test/tb_rom_golden.v
+	vvp /tmp/rom_golden 2>&1 | tee /tmp/rom_golden.log
+	grep -q "ALL 80 RECORDS PASS" /tmp/rom_golden.log
 
 clean:
 	$(MAKE) -C test clean
