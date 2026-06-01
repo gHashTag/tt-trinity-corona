@@ -1,5 +1,5 @@
 // Gate-level simulation smoke test (no cocotb dependency).
-// Tests: anchor, BF16, posit8, FP4, NF4, BitNet, INT4, FP8 E5M2, E8M0, MXINT8, ROM readback, reset.
+// Tests all 18 Tier-1 decoders + ROM readback + NOT_IMPL sentinel + reset recovery.
 // Usage: yosys -> synth_netlist.v, then iverilog + simcells.v + this file.
 `timescale 1ns/1ps
 
@@ -129,24 +129,69 @@ module tb_gls_smoke;
         // --- Test 10: MXINT8 decode of +1.0 (0x40 -> 0x3F800000) ---
         decode_1byte(7'd79, 8'h40, 32'h3F800000, "mxint8 +1.0");
 
-        // --- Test 11: ROM readback for fmt_id=8 (BF16) ---
+        // --- Test 11: TF32 decode of +1.0 (3 bytes -> 0x3F800000) ---
+        pre_err = errors;
+        ui_in = 8'h09;
+        @(posedge clk); #1;
+        ui_in = 8'h03;
+        @(posedge clk); #1;
+        ui_in = 8'h00;
+        @(posedge clk); #1;
+        ui_in = 8'hFC;
+        @(posedge clk); #1;
+        ui_in = 8'h01;
+        @(posedge clk); #1;
+        ui_in = 8'h80;
+        check(8'h00, 8'h00, "tf32 status[0]");
+        @(posedge clk); #1;
+        check(8'h00, 8'h00, "tf32 status[1]");
+        @(posedge clk); #1;
+        check(8'h80, 8'h00, "tf32 status[2]");
+        @(posedge clk); #1;
+        check(8'h3F, 8'h00, "tf32 status[3]");
+        if (errors == pre_err) $display("PASS: tf32 +1.0 -> 3F800000");
+        @(posedge clk); #1;
+        @(posedge clk); #1;
+
+        // --- Test 12: FP6 E3M2 decode of +1.0 (0x0C -> 0x3F800000) ---
+        decode_1byte(7'd40, 8'h0C, 32'h3F800000, "fp6e3m2 +1.0");
+
+        // --- Test 13: FP6 E2M3 decode of +1.0 (0x08 -> 0x3F800000) ---
+        decode_1byte(7'd77, 8'h08, 32'h3F800000, "fp6e2m3 +1.0");
+
+        // --- Test 14: MXFP8 E4M3 decode of +1.0 (0x38 -> 0x3F800000) ---
+        decode_1byte(7'd39, 8'h38, 32'h3F800000, "mxfp8 +1.0");
+
+        // --- Test 15: FP8 E4M3 FNUZ decode of +1.0 (0x40 -> 0x3F800000) ---
+        decode_1byte(7'd14, 8'h40, 32'h3F800000, "fnuz +1.0");
+
+        // --- Test 16: INT8 decode of +1 (0x01 -> 0x00000001) ---
+        decode_1byte(7'd47, 8'h01, 32'h00000001, "int8 +1");
+
+        // --- Test 17: BCD decode of 42 (0x42 -> 0x0000002A) ---
+        decode_1byte(7'd53, 8'h42, 32'h0000002A, "bcd 42");
+
+        // --- Test 18: LNS8 decode of 0x01 (magnitude=267=0x010B) ---
+        decode_1byte(7'd42, 8'h01, 32'h0000010B, "lns8 0x01");
+
+        // --- Test 19: NOT_IMPL sentinel (fmt_id=1, unsupported) ---
+        decode_1byte(7'd1, 8'hAA, 32'h4E0701FF, "not-impl");
+
+        // --- Test 20: ROM readback for fmt_id=8 (BF16) ---
         ui_in = 8'h08;
         @(posedge clk); #1;
         ui_in = 8'h00;
         @(posedge clk); #1;
         ui_in = 8'h80;
-        // ROM streams 10 bytes LSB-first; just verify byte 0 is non-zero
-        // (full ROM correctness proven by formal fv_rom)
         if (uo_out === 8'h00 && uio_out === 8'h00) begin
             $display("FAIL: ROM readback byte[0] all zeros");
             errors = errors + 1;
         end else begin
             $display("PASS: ROM readback byte[0] = %02X", uo_out);
         end
-        // Wait through remaining 9 STATUS + DONE + IDLE cycles
         repeat(11) begin @(posedge clk); #1; end
 
-        // --- Test 12: Reset re-entry (FSM recovery) ---
+        // --- Test 21: Reset re-entry (FSM recovery) ---
         ui_in = 8'h08;  // CMD1: BF16
         @(posedge clk); #1;
         rst_n = 0;       // Assert reset mid-CMD2
