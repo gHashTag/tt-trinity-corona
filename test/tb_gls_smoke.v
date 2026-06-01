@@ -1,5 +1,6 @@
 // Gate-level simulation smoke test (no cocotb dependency).
-// Tests all 18 Tier-1 decoders + ROM readback + NOT_IMPL sentinel + reset recovery.
+// 42 tests: all 18 decoders (positive+edge), NaN/Inf/subnormal, sign extension,
+// aliases, NOT_IMPL sentinel, ROM readback, reset recovery.
 // Usage: yosys -> synth_netlist.v, then iverilog + simcells.v + this file.
 `timescale 1ns/1ps
 
@@ -191,7 +192,93 @@ module tb_gls_smoke;
         end
         repeat(11) begin @(posedge clk); #1; end
 
-        // --- Test 21: Reset re-entry (FSM recovery) ---
+        // ===================== Edge-case / boundary tests =====================
+
+        // --- Test 21: INT4 -8 (min negative, sign extension) ---
+        decode_1byte(7'd46, 8'h08, 32'hFFFFFFF8, "int4 -8");
+
+        // --- Test 22: INT4 -1 (all-ones sign extension) ---
+        decode_1byte(7'd46, 8'h0F, 32'hFFFFFFFF, "int4 -1");
+
+        // --- Test 23: INT8 -128 (min negative) ---
+        decode_1byte(7'd47, 8'h80, 32'hFFFFFF80, "int8 -128");
+
+        // --- Test 24: INT8 -1 ---
+        decode_1byte(7'd47, 8'hFF, 32'hFFFFFFFF, "int8 -1");
+
+        // --- Test 25: BitNet -1 (ternary 0b10) ---
+        decode_1byte(7'd71, 8'h02, 32'hBF800000, "bitnet -1");
+
+        // --- Test 26: BitNet NaN (ternary 0b11, reserved) ---
+        decode_1byte(7'd71, 8'h03, 32'h7FC00000, "bitnet NaN");
+
+        // --- Test 27: NF4 -1.0 (index 0) ---
+        decode_1byte(7'd70, 8'h00, 32'hBF800000, "nf4 -1.0");
+
+        // --- Test 28: NF4 zero (index 7) ---
+        decode_1byte(7'd70, 8'h07, 32'h00000000, "nf4 zero");
+
+        // --- Test 29: FP8 E5M2 +Inf (0x7C) ---
+        decode_1byte(7'd10, 8'h7C, 32'h7F800000, "fp8e5m2 +Inf");
+
+        // --- Test 30: FP8 E5M2 NaN (0xFF) ---
+        decode_1byte(7'd10, 8'hFF, 32'hFFC00000, "fp8e5m2 NaN");
+
+        // --- Test 31: FP8 E5M2 smallest subnormal (0x01) ---
+        decode_1byte(7'd10, 8'h01, 32'h37800000, "fp8e5m2 subn");
+
+        // --- Test 32: E8M0 NaN (0xFF) ---
+        decode_1byte(7'd78, 8'hFF, 32'h7FC00000, "e8m0 NaN");
+
+        // --- Test 33: E8M0 min (0x00 -> 2^-127) ---
+        decode_1byte(7'd78, 8'h00, 32'h00400000, "e8m0 min");
+
+        // --- Test 34: MXINT8 reserved NaN (0x80) ---
+        decode_1byte(7'd79, 8'h80, 32'h7FC00000, "mxint8 NaN");
+
+        // --- Test 35: MXINT8 zero (0x00) ---
+        decode_1byte(7'd79, 8'h00, 32'h00000000, "mxint8 zero");
+
+        // --- Test 36: BF16 NaN (0x7FC0) ---
+        pre_err = errors;
+        ui_in = 8'h08;
+        @(posedge clk); #1;
+        ui_in = 8'h02;
+        @(posedge clk); #1;
+        ui_in = 8'hC0;
+        @(posedge clk); #1;
+        ui_in = 8'h7F;
+        @(posedge clk); #1;
+        ui_in = 8'h80;
+        check(8'h00, 8'h00, "bf16nan s[0]");
+        @(posedge clk); #1;
+        check(8'h00, 8'h00, "bf16nan s[1]");
+        @(posedge clk); #1;
+        check(8'hC0, 8'h00, "bf16nan s[2]");
+        @(posedge clk); #1;
+        check(8'h7F, 8'h00, "bf16nan s[3]");
+        if (errors == pre_err) $display("PASS: bf16 NaN -> 7FC00000");
+        @(posedge clk); #1;
+        @(posedge clk); #1;
+
+        // --- Test 37: FP8 E4M3 FNUZ NaN (0x80 -> positive qNaN, sign overridden) ---
+        decode_1byte(7'd14, 8'h80, 32'h7FC00000, "fnuz NaN");
+
+        // --- Test 38: MXINT8 -1 (0xFF -> -1/64 = 0xBC800000) ---
+        decode_1byte(7'd79, 8'hFF, 32'hBC800000, "mxint8 -1");
+
+        // --- Test 39: Alias fmt_id=11 (FP8 E4M3) == fmt_id=39 (MXFP8 E4M3) ---
+        decode_1byte(7'd11, 8'h38, 32'h3F800000, "alias 11=39");
+
+        // --- Test 40: Alias fmt_id=13 (FP4 ML) == fmt_id=41 (FP4 MX) ---
+        decode_1byte(7'd13, 8'h02, 32'h3F800000, "alias 13=41");
+
+        // --- Test 41: Alias fmt_id=75 (NF4 BnB) == fmt_id=70 (NF4 QLoRA) ---
+        decode_1byte(7'd75, 8'h0F, 32'h3F800000, "alias 75=70");
+
+        // ===================== Infrastructure tests =====================
+
+        // --- Test 42: Reset re-entry (FSM recovery) ---
         ui_in = 8'h08;  // CMD1: BF16
         @(posedge clk); #1;
         rst_n = 0;       // Assert reset mid-CMD2
