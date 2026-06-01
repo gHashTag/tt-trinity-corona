@@ -13,7 +13,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Validate info.yaml
-        run: python3 -c "import yaml; d=yaml.safe_load(open('info.yaml')); assert 'project' in d, 'missing project section'"
+        run: |
+          python3 << 'SCRIPT'
+          import yaml, os, sys
+          d = yaml.safe_load(open('info.yaml'))
+          assert 'project' in d, 'missing project section'
+          listed = set(d['project']['source_files'])
+          actual = set('rtl/' + f for f in os.listdir('src/rtl') if f.endswith('.v'))
+          missing = actual - listed
+          extra = listed - actual
+          ok = True
+          if missing:
+              print(f"ERROR: files in src/rtl/ not listed in info.yaml: {missing}")
+              ok = False
+          if extra:
+              print(f"ERROR: info.yaml lists files not in src/rtl/: {extra}")
+              ok = False
+          if ok:
+              print(f"info.yaml: {len(listed)} source files verified")
+          sys.exit(0 if ok else 1)
+          SCRIPT
       - name: Install Icarus Verilog
         run: sudo apt-get update && sudo apt-get install -y iverilog
       - name: Verilog lint
@@ -50,6 +69,15 @@ jobs:
               print("claim-status-lint: PASS (no banned words found)")
           SCRIPT
 
+  verilator-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Verilator
+        run: sudo apt-get update && sudo apt-get install -y verilator
+      - name: Verilator lint (zero warnings)
+        run: verilator --lint-only -Wall -Isrc/rtl src/rtl/*.v
+
   test:
     runs-on: ubuntu-latest
     steps:
@@ -57,7 +85,7 @@ jobs:
       - name: Install Icarus Verilog
         run: sudo apt-get update && sudo apt-get install -y iverilog
       - name: Install cocotb
-        run: pip install cocotb
+        run: pip install cocotb==2.0.1
       - name: Run cocotb tests
         working-directory: test
         run: make SIM=icarus TOPLEVEL_LANG=verilog
