@@ -19,7 +19,7 @@ async def reset_dut(dut):
 @cocotb.test()
 async def test_anchor_probe(dut):
     """Anchor probe: CMD with fmt_id=0x7F -> {uio_out, uo_out} == 0x47C0."""
-    clock = Clock(dut.clk, 40, unit="ns")  # 25 MHz
+    clock = Clock(dut.clk, 40, units="ns")  # 25 MHz
     cocotb.start_soon(clock.start())
     await reset_dut(dut)
 
@@ -27,7 +27,7 @@ async def test_anchor_probe(dut):
     dut.ui_in.value = 0x7F
     await RisingEdge(dut.clk)
     # Combinational output: read immediately
-    await cocotb.triggers.Timer(1, unit="ns")
+    await cocotb.triggers.Timer(1, units="ns")
 
     uo = dut.uo_out.value.to_unsigned()
     uio = dut.uio_out.value.to_unsigned()
@@ -45,14 +45,14 @@ async def test_anchor_probe(dut):
 @cocotb.test()
 async def test_anchor_stable_across_cycles(dut):
     """Anchor output remains stable while CMD+0x7F is held."""
-    clock = Clock(dut.clk, 40, unit="ns")
+    clock = Clock(dut.clk, 40, units="ns")
     cocotb.start_soon(clock.start())
     await reset_dut(dut)
 
     dut.ui_in.value = 0x7F
     for cycle in range(10):
         await RisingEdge(dut.clk)
-        await cocotb.triggers.Timer(1, unit="ns")
+        await cocotb.triggers.Timer(1, units="ns")
         uo = dut.uo_out.value.to_unsigned()
         uio = dut.uio_out.value.to_unsigned()
         combined = (uio << 8) | uo
@@ -63,14 +63,14 @@ async def test_anchor_stable_across_cycles(dut):
 @cocotb.test()
 async def test_non_anchor_returns_zero(dut):
     """CMD with fmt_id != 0x7F should not produce the anchor value."""
-    clock = Clock(dut.clk, 40, unit="ns")
+    clock = Clock(dut.clk, 40, units="ns")
     cocotb.start_soon(clock.start())
     await reset_dut(dut)
 
     for fmt_id in [0x00, 0x01, 0x4C, 0x7E]:
         dut.ui_in.value = fmt_id  # mode=00, fmt_id varies
         await RisingEdge(dut.clk)
-        await cocotb.triggers.Timer(1, unit="ns")
+        await cocotb.triggers.Timer(1, units="ns")
         uo = dut.uo_out.value.to_unsigned()
         uio = dut.uio_out.value.to_unsigned()
         oe = dut.uio_oe.value.to_unsigned()
@@ -83,7 +83,7 @@ async def test_non_anchor_returns_zero(dut):
 @cocotb.test()
 async def test_reset_clears_state(dut):
     """After reset, outputs should be zero (no anchor asserted)."""
-    clock = Clock(dut.clk, 40, unit="ns")
+    clock = Clock(dut.clk, 40, units="ns")
     cocotb.start_soon(clock.start())
 
     dut.rst_n.value = 0
@@ -100,7 +100,7 @@ async def test_reset_clears_state(dut):
 @cocotb.test()
 async def test_ena_gate_freezes_fsm(dut):
     """When ena=0, FSM must not advance — TT mux requires this."""
-    clock = Clock(dut.clk, 40, unit="ns")
+    clock = Clock(dut.clk, 40, units="ns")
     cocotb.start_soon(clock.start())
     await reset_dut(dut)
 
@@ -119,10 +119,10 @@ async def test_ena_gate_freezes_fsm(dut):
     dut.ui_in.value = 0x2A  # 42
     await RisingEdge(dut.clk)
     # Read result
-    await cocotb.triggers.Timer(1, unit="ns")
+    await cocotb.triggers.Timer(1, units="ns")
     result = []
     for _ in range(4):
-        await cocotb.triggers.Timer(1, unit="ns")
+        await cocotb.triggers.Timer(1, units="ns")
         result.append(dut.uo_out.value.to_unsigned())
         await RisingEdge(dut.clk)
     got = result[0] | (result[1] << 8) | (result[2] << 16) | (result[3] << 24)

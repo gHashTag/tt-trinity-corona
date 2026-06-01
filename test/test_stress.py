@@ -48,7 +48,7 @@ async def send_data(dut, byte_list):
 async def read_result_bytes(dut, n):
     result = []
     for _ in range(n):
-        await Timer(1, unit="ns")
+        await Timer(1, units="ns")
         result.append(dut.uo_out.value.to_unsigned())
         await RisingEdge(dut.clk)
     return result
@@ -73,7 +73,7 @@ async def transact_rom(dut, fmt_id):
     await send_cmd(dut, fmt_id, 0)
     result = []
     for _ in range(10):
-        await Timer(1, unit="ns")
+        await Timer(1, units="ns")
         result.append(dut.uo_out.value.to_unsigned())
         await RisingEdge(dut.clk)
     dut.ui_in.value = 0x80
@@ -122,7 +122,7 @@ def ref_mxint8(val):
 @cocotb.test()
 async def test_back_to_back_same_format(dut):
     """10 consecutive FP4 decodes without reset between transactions."""
-    clock = Clock(dut.clk, 40, unit="ns")
+    clock = Clock(dut.clk, 40, units="ns")
     cocotb.start_soon(clock.start())
     await reset_dut(dut)
 
@@ -137,7 +137,7 @@ async def test_back_to_back_same_format(dut):
 @cocotb.test()
 async def test_back_to_back_mixed_formats(dut):
     """Alternate between different formats without reset."""
-    clock = Clock(dut.clk, 40, unit="ns")
+    clock = Clock(dut.clk, 40, units="ns")
     cocotb.start_soon(clock.start())
     await reset_dut(dut)
 
@@ -164,7 +164,7 @@ async def test_back_to_back_mixed_formats(dut):
 @cocotb.test()
 async def test_rom_then_decode(dut):
     """ROM readback followed immediately by decode, no reset."""
-    clock = Clock(dut.clk, 40, unit="ns")
+    clock = Clock(dut.clk, 40, units="ns")
     cocotb.start_soon(clock.start())
     await reset_dut(dut)
 
@@ -182,7 +182,7 @@ async def test_rom_then_decode(dut):
 @cocotb.test()
 async def test_decode_then_rom(dut):
     """Decode followed immediately by ROM readback, no reset."""
-    clock = Clock(dut.clk, 40, unit="ns")
+    clock = Clock(dut.clk, 40, units="ns")
     cocotb.start_soon(clock.start())
     await reset_dut(dut)
 
@@ -199,7 +199,7 @@ async def test_decode_then_rom(dut):
 @cocotb.test()
 async def test_multi_byte_then_single_byte(dut):
     """2-byte BF16 followed by 1-byte formats to catch stale data_in_buf."""
-    clock = Clock(dut.clk, 40, unit="ns")
+    clock = Clock(dut.clk, 40, units="ns")
     cocotb.start_soon(clock.start())
     await reset_dut(dut)
 
@@ -225,7 +225,7 @@ async def test_multi_byte_then_single_byte(dut):
 @cocotb.test()
 async def test_3byte_tf32_then_1byte(dut):
     """3-byte TF32 followed by 1-byte E8M0 to verify buffer cleanup."""
-    clock = Clock(dut.clk, 40, unit="ns")
+    clock = Clock(dut.clk, 40, units="ns")
     cocotb.start_soon(clock.start())
     await reset_dut(dut)
 
@@ -249,7 +249,7 @@ async def test_3byte_tf32_then_1byte(dut):
 @cocotb.test()
 async def test_rapid_format_cycling(dut):
     """Cycle through all 14 decoder formats without reset."""
-    clock = Clock(dut.clk, 40, unit="ns")
+    clock = Clock(dut.clk, 40, units="ns")
     cocotb.start_soon(clock.start())
     await reset_dut(dut)
 
