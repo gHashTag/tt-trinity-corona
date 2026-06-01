@@ -27,11 +27,11 @@ module fv_mxfp8_e4m3;
         end else if (exp == 4'd0) begin
             // Subnormal: val = ±2^(-6) × (0.mant)
             if (mant[2]) begin
-                g_exp = 8'd121; g_mant = {mant[1:0], 21'b0};
+                g_exp = 8'd120; g_mant = {mant[1:0], 21'b0};
             end else if (mant[1]) begin
-                g_exp = 8'd120; g_mant = {mant[0], 22'b0};
+                g_exp = 8'd119; g_mant = {mant[0], 22'b0};
             end else begin
-                g_exp = 8'd119; g_mant = 23'b0;
+                g_exp = 8'd118; g_mant = 23'b0;
             end
         end else begin
             g_exp = {4'b0, exp} + 8'd120;

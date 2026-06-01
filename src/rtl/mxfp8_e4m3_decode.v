@@ -37,13 +37,13 @@ module mxfp8_e4m3_decode (
             // Subnormal: value = (-1)^S * 2^(-6) * (0.mant)
             // Normalize by shifting mantissa left until leading 1 found
             if (mant[2]) begin
-                fp32_exp  = 8'd121;           // -7+1+127 = 121
+                fp32_exp  = 8'd120;           // -6-1+127 = 120
                 fp32_mant = {mant[1:0], 21'b0};
             end else if (mant[1]) begin
-                fp32_exp  = 8'd120;           // -7+0+127 = 120
+                fp32_exp  = 8'd119;           // -6-2+127 = 119
                 fp32_mant = {mant[0], 22'b0};
             end else begin
-                fp32_exp  = 8'd119;           // -7-1+127 = 119
+                fp32_exp  = 8'd118;           // -6-3+127 = 118
                 fp32_mant = 23'b0;
             end
         end else begin

@@ -126,13 +126,13 @@ def ref_mxfp8_e4m3(byte_val):
         return 0x80000000 if sign else 0x00000000
     elif exp == 0:
         if mant & 4:
-            fp32_exp = 121
+            fp32_exp = 120
             fp32_mant = (mant & 3) << 21
         elif mant & 2:
-            fp32_exp = 120
+            fp32_exp = 119
             fp32_mant = (mant & 1) << 22
         else:
-            fp32_exp = 119
+            fp32_exp = 118
             fp32_mant = 0
         return (sign << 31) | (fp32_exp << 23) | fp32_mant
     else:
