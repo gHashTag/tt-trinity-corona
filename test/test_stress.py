@@ -507,3 +507,24 @@ async def test_ena_gate_data_and_status(dut):
         f"ena gate STATUS: expected 0x{expected:08X}, got 0x{got:08X}"
 
     dut._log.info("PASS: ena=0 freezes FSM in DATA and STATUS states")
+
+
+@cocotb.test()
+async def test_full_rom_self_index_sweep(dut):
+    """Read all 80 ROM entries and verify each record's self-index matches its address."""
+    clock = Clock(dut.clk, 40, units="ns")
+    cocotb.start_soon(clock.start())
+    await reset_dut(dut)
+
+    errors = 0
+    for fmt_id in range(80):
+        rom = await transact_rom(dut, fmt_id)
+        got_index = rom[9]
+        if got_index != fmt_id:
+            dut._log.error(f"ROM[{fmt_id}] self-index mismatch: got {got_index}")
+            errors += 1
+        if all(b == 0 for b in rom):
+            dut._log.error(f"ROM[{fmt_id}] returned all zeros (should be populated)")
+            errors += 1
+    assert errors == 0, f"ROM self-index sweep: {errors} error(s)"
+    dut._log.info("PASS: all 80 ROM entries have correct self-index and non-zero data")

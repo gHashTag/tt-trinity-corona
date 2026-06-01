@@ -510,6 +510,13 @@ module tt_um_trinity_corona (
             assert(uio_oe == 8'h00);
         end
 
+    // P14: STATUS exits at correct count (not just valid transition)
+    always @(posedge clk)
+        if (f_past_valid && rst_n && $past(ena) && $past(state) == ST_STATUS && state == ST_DONE) begin
+            if ($past(rom_mode)) assert($past(status_cnt) == 4'd9);
+            else                 assert($past(status_cnt) == 4'd3);
+        end
+
     // Cover points — prove each FSM state and key scenario is reachable
     always @(posedge clk) begin
         cover(rst_n && state == ST_IDLE);
