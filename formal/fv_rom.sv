@@ -1,5 +1,5 @@
 // Formal verification of format_rom -- SSOT catalog integrity.
-// Proves: self-index, default-zero, non-zero, golden spot-checks,
+// Proves: self-index, default-zero, non-zero, exhaustive 80-entry golden LUT,
 //         field-range bounds, cross-field consistency.
 `default_nettype none
 
@@ -45,49 +45,91 @@ module fv_rom (
         if (addr <= 7'd79) assert(data != 80'h0);
 
         // ===========================================================
-        // P4: Golden spot-checks -- original 3 (first, middle, last)
+        // P4: Exhaustive golden LUT -- all 80 records verified
         // ===========================================================
-        if (addr == 7'd 0) assert(data == 80'h0007101050A01E370000);
-        if (addr == 7'd40) assert(data == 80'h285706103025E1C81301);
-        if (addr == 7'd79) assert(data == 80'h4F57081000759E371301);
-
-        // ===========================================================
-        // P5: Additional golden spot-checks -- one per uncovered cluster
-        //     Covered by P4: cluster 0 (addr 0), cluster 5 (addr 40,79)
-        // ===========================================================
-
-        // Cluster 1 (bfloat-family): addr 6
-        if (addr == 7'd 6) assert(data == 80'h06174010832475410600);
-
-        // Cluster 2 (mini-float/IEEE sub-byte): addr 12
-        if (addr == 7'd12) assert(data == 80'h0C2706103020E1C80C01);
-
-        // Cluster 3 (posit-family sweep): addr 23
-        if (addr == 7'd23) assert(data == 80'h1732181080F715AE0F06);
-
-        // Cluster 4 (integer/fixed): addr 35
-        if (addr == 7'd35) assert(data == 80'h234508100006FFFF1208);
-
-        // Cluster 6 (log-number): addr 44
-        if (addr == 7'd44) assert(data == 80'h2C6520108172452C1500);
-
-        // Cluster 7 (fixed-point/block): addr 50
-        if (addr == 7'd50) assert(data == 80'h3277401003F39E371700);
-
-        // Cluster 8 (decimal-float): addr 59
-        if (addr == 7'd59) assert(data == 80'h3B8620108178452C1D00);
-
-        // Cluster 9 (quantized/stochastic): addr 66
-        if (addr == 7'd66) assert(data == 80'h429220108179452C2300);
-
-        // Cluster 10 (legacy oddball): addr 70
-        if (addr == 7'd70) assert(data == 80'h46A5040000439E372701);
-
-        // Cluster 11 (extended-precision): addr 73
-        if (addr == 7'd73) assert(data == 80'h49B580107001FFFF2A00);
-
-        // Cluster 12 (custom ultra-narrow): addr 76
-        if (addr == 7'd76) assert(data == 80'h4CC5040000439E372D00);
+        case (addr)
+            7'd 0: assert(data == 80'h0007101050A01E370000);
+            7'd 1: assert(data == 80'h010720108170452C0100);
+            7'd 2: assert(data == 80'h02074010B34068100200);
+            7'd 3: assert(data == 80'h03078010F7007BEE0300);
+            7'd 4: assert(data == 80'h040700113EC0899B0400);
+            7'd 5: assert(data == 80'h05172010814437D10500);
+            7'd 6: assert(data == 80'h06174010832475410600);
+            7'd 7: assert(data == 80'h0717801086E48B990700);
+            7'd 8: assert(data == 80'h082710108070865A0801);
+            7'd 9: assert(data == 80'h0927201080A02E950901);
+            7'd10: assert(data == 80'h0A2508105020FFFF0A01);
+            7'd11: assert(data == 80'h0B2508104030B71D0B01);
+            7'd12: assert(data == 80'h0C2706103020E1C80C01);
+            7'd13: assert(data == 80'h0D2704102010FFFF0D01);
+            7'd14: assert(data == 80'h0E2508104030B71D0E01);
+            7'd15: assert(data == 80'h0F32041010271E370F06);
+            7'd16: assert(data == 80'h1032061020370C730F06);
+            7'd17: assert(data == 80'h11320810304721C80F06);
+            7'd18: assert(data == 80'h12320A1030671E370F06);
+            7'd19: assert(data == 80'h13320C1040770BEE0F06);
+            7'd20: assert(data == 80'h14320E10508701C80F06);
+            7'd21: assert(data == 80'h1532101050A71E370F06);
+            7'd22: assert(data == 80'h1632141070C708E20F06);
+            7'd23: assert(data == 80'h1732181080F715AE0F06);
+            7'd24: assert(data == 80'h18322010B147116A0F06);
+            7'd25: assert(data == 80'h1932301101F71A160F06);
+            7'd26: assert(data == 80'h1A324011629714D90F06);
+            7'd27: assert(data == 80'h1B32601213E715F50F06);
+            7'd28: assert(data == 80'h1C328012C53716810F06);
+            7'd29: assert(data == 80'h1D3200158A7717510F06);
+            7'd30: assert(data == 80'h1E32021000179E370F06);
+            7'd31: assert(data == 80'h1F4508100001FFFF1001);
+            7'd32: assert(data == 80'h204510101001FFFF1006);
+            7'd33: assert(data == 80'h214520102001FFFF1100);
+            7'd34: assert(data == 80'h224540103001FFFF1100);
+            7'd35: assert(data == 80'h234508100006FFFF1208);
+            7'd36: assert(data == 80'h244510100006FFFF1208);
+            7'd37: assert(data == 80'h254520100006FFFF1208);
+            7'd38: assert(data == 80'h264540100006FFFF1208);
+            7'd39: assert(data == 80'h275708104035B71D1301);
+            7'd40: assert(data == 80'h285706103025E1C81301);
+            7'd41: assert(data == 80'h295704102015FFFF1301);
+            7'd42: assert(data == 80'h2A650810304221C81401);
+            7'd43: assert(data == 80'h2B65101050A21E371400);
+            7'd44: assert(data == 80'h2C6520108172452C1500);
+            7'd45: assert(data == 80'h2D6520108172452C1600);
+            7'd46: assert(data == 80'h2E77041000339E371707);
+            7'd47: assert(data == 80'h2F77081000739E371707);
+            7'd48: assert(data == 80'h3077101000F39E371700);
+            7'd49: assert(data == 80'h3177201001F39E371700);
+            7'd50: assert(data == 80'h3277401003F39E371700);
+            7'd51: assert(data == 80'h3377040000439E371800);
+            7'd52: assert(data == 80'h3477101000F39E371800);
+            7'd53: assert(data == 80'h3577080000849E371901);
+            7'd54: assert(data == 80'h368620108178452C1A00);
+            7'd55: assert(data == 80'h37864010837878FA1A00);
+            7'd56: assert(data == 80'h388620107188538C1B00);
+            7'd57: assert(data == 80'h3986401073887E371B00);
+            7'd58: assert(data == 80'h3A864010F3084E371C00);
+            7'd59: assert(data == 80'h3B8620108178452C1D00);
+            7'd60: assert(data == 80'h3C864010837878FA1D00);
+            7'd61: assert(data == 80'h3D8620108178452C1E00);
+            7'd62: assert(data == 80'h3E865010F40862371F00);
+            7'd63: assert(data == 80'h3F863010827869B42000);
+            7'd64: assert(data == 80'h409720100009FFFF2100);
+            7'd65: assert(data == 80'h419720100009FFFF2200);
+            7'd66: assert(data == 80'h429220108179452C2300);
+            7'd67: assert(data == 80'h439220108179452C2400);
+            7'd68: assert(data == 80'h44A7101050A01E372500);
+            7'd69: assert(data == 80'h45A508104030B71D2601);
+            7'd70: assert(data == 80'h46A5040000439E372701);
+            7'd71: assert(data == 80'h47A5021000139E372807);
+            7'd72: assert(data == 80'h48B78010F7007BEE2900);
+            7'd73: assert(data == 80'h49B580107001FFFF2A00);
+            7'd74: assert(data == 80'h4AB18010B68083232B00);
+            7'd75: assert(data == 80'h4BC5040000439E372C01);
+            7'd76: assert(data == 80'h4CC5040000439E372D00);
+            7'd77: assert(data == 80'h4D27061020300C730C01);
+            7'd78: assert(data == 80'h4E5708008005FFFF1301);
+            7'd79: assert(data == 80'h4F57081000759E371301);
+            default: begin end
+        endcase
 
         // ===========================================================
         // P6: Field-range assertions (valid addresses only)
