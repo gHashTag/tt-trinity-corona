@@ -8,7 +8,7 @@ Document status: paper-design, pre-repo-creation
 Document version: corona_plan-v1.0 (merged from corona_plan_skeleton.md and corona_research.md)
 
 Claim-status key used throughout: [Verified], [Empirical fit], [Open conjecture], [Risk], [Retracted], [Experimental], [Historical], [Spec].
-ASCII only. No smart quotes. No em-dashes (use `--`). No Cyrillic. No banned words (breakthrough, nobel, revolution, proves, first-ever, world-first, industry-leading, prize).
+ASCII only. No smart quotes. No em-dashes (use `--`). No Cyrillic. No banned words (see docs/CLAIM_STATUS.md for the full list).
 
 ---
 

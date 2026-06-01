@@ -1,6 +1,6 @@
 // Formal verification of format_rom -- SSOT catalog integrity.
-// Proves: self-index, default-zero, non-zero, exhaustive 80-entry golden LUT,
-//         field-range bounds, cross-field consistency.
+// Verifies: self-index, default-zero, non-zero, exhaustive 80-entry golden LUT,
+//           field-range bounds, cross-field consistency.
 `default_nettype none
 
 module fv_rom (
@@ -244,7 +244,7 @@ module fv_rom (
         end
 
         // ===========================================================
-        // P8: Cover properties — prove the proof exercises key entries
+        // P8: Cover properties -- verify the proof exercises key entries
         // ===========================================================
         cover(addr == 7'd 0);   // first entry (fp16)
         cover(addr == 7'd79);   // last entry

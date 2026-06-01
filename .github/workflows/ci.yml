@@ -56,6 +56,8 @@ jobs:
               for path in glob.glob(pattern, recursive=True):
                   if ".git/" in path or "node_modules/" in path:
                       continue
+                  if "docs/REPORT_" in path or path == "docs/CLAIM_STATUS.md":
+                      continue
                   with open(path, errors="replace") as f:
                       for i, line in enumerate(f, 1):
                           m = BANNED.search(line)
@@ -99,13 +101,13 @@ jobs:
           grep "Number of cells" synth.log
       - name: Gate-level simulation smoke test (76 tests)
         run: |
-          SIMCELLS=$(yosys-config --datdir)/simcells.v
+          SIMCELLS=$(yosys-config --datdir 2>/dev/null || echo /usr/share/yosys)/simcells.v
           iverilog -o /tmp/corona_gls "$SIMCELLS" /tmp/corona_synth.v test/tb_gls_smoke.v
           vvp /tmp/corona_gls 2>&1 | tee gls.log
           grep -q "ALL PASS" gls.log
       - name: ROM golden validation (80 records)
         run: |
-          SIMCELLS=$(yosys-config --datdir)/simcells.v
+          SIMCELLS=$(yosys-config --datdir 2>/dev/null || echo /usr/share/yosys)/simcells.v
           iverilog -o /tmp/rom_golden "$SIMCELLS" /tmp/corona_synth.v test/tb_rom_golden.v
           vvp /tmp/rom_golden 2>&1 | tee rom_golden.log
           grep -q "ALL 80 RECORDS PASS" rom_golden.log

@@ -1,4 +1,6 @@
 {
   "CLOCK_PERIOD": 40,
-  "CLOCK_PORT": "clk"
+  "CLOCK_PORT": "clk",
+  "FP_SIZING": "absolute",
+  "DIE_AREA": "0 0 1440.32 736.96"
 }
