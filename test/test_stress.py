@@ -288,7 +288,7 @@ async def test_not_impl_response(dut):
     cocotb.start_soon(clock.start())
     await reset_dut(dut)
 
-    no_decoder_ids = [5, 6, 7, 15, 20, 50, 60]
+    no_decoder_ids = [0, 5, 6, 7, 15, 20, 50, 60]
     for fmt_id in no_decoder_ids:
         got = await transact_decode(dut, fmt_id, [0x00])
         expected = not_impl_u32(fmt_id)

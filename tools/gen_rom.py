@@ -77,7 +77,12 @@ def phi_distance(exp_bits, mant_bits):
 
 def pack_record(fmt_id, cluster, status, total_bits, sign_bits,
                 exp_bits, mant_bits, enc_kind, ref_idx, flags):
-    """Pack a single 80-bit record per rom_layout.t27."""
+    """Pack a single 80-bit record per rom_layout.t27.
+    NOTE: total_bits is 8-bit; 256 wraps to 0 (fmt_id 4=fp256, 29=GF256)."""
+    if total_bits > 255:
+        import sys
+        print(f"WARNING: fmt_id={fmt_id} total_bits={total_bits} truncated to "
+              f"{total_bits & 0xFF} (8-bit field overflow)", file=sys.stderr)
     phi_q16 = phi_distance(exp_bits, mant_bits)
     word = 0
     word |= (fmt_id & 0xFF) << 72
