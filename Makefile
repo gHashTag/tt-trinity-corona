@@ -33,6 +33,7 @@ rom-golden:
 	vvp /tmp/rom_golden 2>&1 | tee /tmp/rom_golden.log
 	grep -q "ALL 80 RECORDS PASS" /tmp/rom_golden.log
 
+
 clean:
 	$(MAKE) -C test clean
 	rm -rf sim_build results.xml
