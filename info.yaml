@@ -29,6 +29,7 @@ project:
     - "rtl/tf32_decode.v"
     - "rtl/fp8_e5m2_decode.v"
     - "rtl/fp6_e2m3_decode.v"
+    - "rtl/int8_decode.v"
 
 # -----------------------------------------------------------------------------
 # Pin assignments

@@ -18,6 +18,7 @@ FMT_BCD         = 53
 FMT_TF32        = 9
 FMT_FP8_E5M2    = 10
 FMT_NF4         = 70
+FMT_INT8        = 47
 FMT_FP6_E2M3    = 77
 
 
@@ -659,3 +660,71 @@ async def test_fp6_e2m3_exhaustive(dut):
             fail_count += 1
     assert fail_count == 0, f"FP6 E2M3: {fail_count}/64 values failed"
     dut._log.info("PASS: FP6 E2M3 exhaustive (64/64)")
+
+
+# =========================================================================
+# INT8 Exhaustive (256 values)
+# =========================================================================
+
+def ref_int8(byte_val):
+    """INT8 signed -> 32-bit sign-extended integer."""
+    if byte_val & 0x80:
+        return 0xFFFFFF00 | byte_val
+    return byte_val
+
+
+@cocotb.test()
+async def test_int8_exhaustive(dut):
+    """INT8 signed: exhaustive test of all 256 values (sign-extension)."""
+    clock = Clock(dut.clk, 20, units="ns")
+    cocotb.start_soon(clock.start())
+
+    fail_count = 0
+    for inp in range(256):
+        await reset_dut(dut)
+        expected = ref_int8(inp)
+        await send_cmd(dut, FMT_INT8, 1)
+        await send_data(dut, [inp])
+        result = await read_result_bytes(dut, 4)
+        got = bytes_to_u32(result)
+        if got != expected:
+            dut._log.error(
+                f"INT8 0x{inp:02X}: expected 0x{expected:08X}, got 0x{got:08X}")
+            fail_count += 1
+    assert fail_count == 0, f"INT8: {fail_count}/256 values failed"
+    dut._log.info("PASS: INT8 exhaustive (256/256)")
+
+
+# =========================================================================
+# BF16 Exhaustive (65,536 values)
+# =========================================================================
+
+def ref_bf16(val_16bit):
+    """BF16 -> FP32: zero-extend lower 16 bits to 32."""
+    return val_16bit << 16
+
+
+@cocotb.test()
+async def test_bf16_exhaustive(dut):
+    """BF16: exhaustive test of all 65,536 values."""
+    clock = Clock(dut.clk, 20, units="ns")
+    cocotb.start_soon(clock.start())
+
+    fail_count = 0
+    for inp in range(65536):
+        await reset_dut(dut)
+        expected = ref_bf16(inp)
+        b0 = inp & 0xFF
+        b1 = (inp >> 8) & 0xFF
+        await send_cmd(dut, FMT_BF16, 2)
+        await send_data(dut, [b0, b1])
+        result = await read_result_bytes(dut, 4)
+        got = bytes_to_u32(result)
+        if got != expected:
+            dut._log.error(
+                f"BF16 0x{inp:04X}: expected 0x{expected:08X}, got 0x{got:08X}")
+            fail_count += 1
+            if fail_count >= 10:
+                break
+    assert fail_count == 0, f"BF16: {fail_count}/65536 values failed"
+    dut._log.info("PASS: BF16 exhaustive (65536/65536)")

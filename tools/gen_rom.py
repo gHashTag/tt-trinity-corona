@@ -159,7 +159,7 @@ CATALOG = [
 
     # Cluster 7: Integer/fixed (8)
     (46, CL_INT_FIXED, ST_SPEC,  4, 1, 0, 3, ENC_INT, 23, FLAG_GAMMA|FLAG_D2D),  # int4
-    (47, CL_INT_FIXED, ST_SPEC,  8, 1, 0, 7, ENC_INT, 23, FLAG_GAMMA|FLAG_D2D),  # int8
+    (47, CL_INT_FIXED, ST_SPEC,  8, 1, 0, 7, ENC_INT, 23, FLAG_ON_DIE|FLAG_GAMMA|FLAG_D2D),  # int8
     (48, CL_INT_FIXED, ST_SPEC, 16, 1, 0,15, ENC_INT, 23, 0),                    # int16
     (49, CL_INT_FIXED, ST_SPEC, 32, 1, 0,31, ENC_INT, 23, 0),                    # int32
     (50, CL_INT_FIXED, ST_SPEC, 64, 1, 0,63, ENC_INT, 23, 0),                    # int64
