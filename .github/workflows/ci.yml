@@ -78,6 +78,15 @@ jobs:
       - name: Verilator lint (zero warnings)
         run: verilator --lint-only -Wall -Isrc/rtl src/rtl/*.v
 
+  formal:
+    runs-on: ubuntu-latest
+    container: hdlc/formal:min
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run SymbiYosys formal proofs (17 decoders + FSM)
+        working-directory: formal
+        run: make all SBY=sby
+
   test:
     runs-on: ubuntu-latest
     steps:

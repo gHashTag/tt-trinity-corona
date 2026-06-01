@@ -1,9 +1,12 @@
 [tasks]
 bmc
+prove
 
 [options]
 bmc: mode bmc
 bmc: depth 30
+prove: mode prove
+prove: depth 30
 
 [engines]
 smtbmc z3

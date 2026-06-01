@@ -451,6 +451,43 @@ module tt_um_trinity_corona (
         end
     always @(posedge clk)
         if (rst_n) assert(f_idle_timer <= 5'd28);
+
+    // Auxiliary invariants for k-induction (unbounded proof)
+
+    // AI1: Timer is 0 in CMD2 (just left IDLE where timer resets)
+    always @(posedge clk)
+        if (rst_n && state == ST_CMD2) assert(f_idle_timer == 5'd0);
+
+    // AI2: Timer + data_cnt conserved in DATA (6-bit to avoid overflow)
+    always @(posedge clk)
+        if (rst_n && state == ST_DATA)
+            assert({1'b0, f_idle_timer} + {2'b00, data_cnt} <= 6'd16);
+
+    // AI3: Timer tracks status_cnt in STATUS (6-bit to avoid overflow)
+    always @(posedge clk)
+        if (rst_n && state == ST_STATUS && !rom_mode)
+            assert({1'b0, f_idle_timer} <= {2'b00, status_cnt} + 6'd16);
+    always @(posedge clk)
+        if (rst_n && state == ST_STATUS && rom_mode)
+            assert({1'b0, f_idle_timer} == {2'b00, status_cnt} + 6'd1);
+
+    // AI4: Timer bounded in DONE
+    always @(posedge clk)
+        if (rst_n && state == ST_DONE) assert(f_idle_timer <= 5'd20);
+
+    // AI5: status_cnt is 0 in CMD2
+    always @(posedge clk)
+        if (rst_n && state == ST_CMD2) assert(status_cnt == 4'd0);
+
+    // AI6: rom_mode is 0 in CMD2
+    always @(posedge clk)
+        if (rst_n && state == ST_CMD2) assert(rom_mode == 1'b0);
+
+    // AI7: Tight status_cnt bounds in STATUS
+    always @(posedge clk)
+        if (rst_n && state == ST_STATUS && rom_mode) assert(status_cnt <= 4'd9);
+    always @(posedge clk)
+        if (rst_n && state == ST_STATUS && !rom_mode) assert(status_cnt <= 4'd3);
 `endif
 
     wire _unused = &{uio_in, bcd_valid, bf16_zero, bf16_inf, bf16_nan,
