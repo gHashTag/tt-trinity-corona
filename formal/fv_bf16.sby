@@ -1,0 +1,18 @@
+[tasks]
+bmc
+
+[options]
+bmc: mode bmc
+bmc: depth 1
+
+[engines]
+smtbmc z3
+
+[script]
+read -formal fv_bf16.sv
+read -formal bf16_decode.v
+prep -top fv_bf16
+
+[files]
+fv_bf16.sv
+../src/rtl/bf16_decode.v

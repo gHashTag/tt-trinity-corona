@@ -1,0 +1,18 @@
+[tasks]
+bmc
+
+[options]
+bmc: mode bmc
+bmc: depth 1
+
+[engines]
+smtbmc z3
+
+[script]
+read -formal fv_mxfp8_e4m3.sv
+read -formal mxfp8_e4m3_decode.v
+prep -top fv_mxfp8_e4m3
+
+[files]
+fv_mxfp8_e4m3.sv
+../src/rtl/mxfp8_e4m3_decode.v

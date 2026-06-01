@@ -1,0 +1,18 @@
+[tasks]
+bmc
+
+[options]
+bmc: mode bmc
+bmc: depth 1
+
+[engines]
+smtbmc z3
+
+[script]
+read -formal fv_fp8_e4m3_fnuz.sv
+read -formal fp8_e4m3_fnuz_decode.v
+prep -top fv_fp8_e4m3_fnuz
+
+[files]
+fv_fp8_e4m3_fnuz.sv
+../src/rtl/fp8_e4m3_fnuz_decode.v
