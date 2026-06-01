@@ -488,6 +488,22 @@ module tt_um_trinity_corona (
         if (rst_n && state == ST_STATUS && rom_mode) assert(status_cnt <= 4'd9);
     always @(posedge clk)
         if (rst_n && state == ST_STATUS && !rom_mode) assert(status_cnt <= 4'd3);
+
+    // P11: Anchor response — correct values and OE when anchor active
+    always @(posedge clk)
+        if (rst_n && is_anchor_cmd && state != ST_STATUS) begin
+            assert(uo_out == ANCHOR_UO);
+            assert(uio_out == ANCHOR_UIO);
+            assert(uio_oe == 8'hFF);
+        end
+
+    // P12: Output quiescent — zero when neither anchor nor STATUS
+    always @(posedge clk)
+        if (rst_n && !is_anchor_cmd && state != ST_STATUS) begin
+            assert(uo_out == 8'h00);
+            assert(uio_out == 8'h00);
+            assert(uio_oe == 8'h00);
+        end
 `endif
 
     wire _unused = &{uio_in, bcd_valid, bf16_zero, bf16_inf, bf16_nan,

@@ -33,10 +33,13 @@ async def test_anchor_probe(dut):
     uio = dut.uio_out.value.to_unsigned()
     combined = (uio << 8) | uo
 
+    oe = dut.uio_oe.value.to_unsigned()
+
     assert uo == 0xC0, f"uo_out expected 0xC0, got 0x{uo:02X}"
     assert uio == 0x47, f"uio_out expected 0x47, got 0x{uio:02X}"
     assert combined == 0x47C0, f"anchor expected 0x47C0, got 0x{combined:04X}"
-    dut._log.info(f"PASS: anchor = 0x{combined:04X}")
+    assert oe == 0xFF, f"uio_oe expected 0xFF during anchor, got 0x{oe:02X}"
+    dut._log.info(f"PASS: anchor = 0x{combined:04X}, uio_oe = 0x{oe:02X}")
 
 
 @cocotb.test()
@@ -70,9 +73,11 @@ async def test_non_anchor_returns_zero(dut):
         await cocotb.triggers.Timer(1, unit="ns")
         uo = dut.uo_out.value.to_unsigned()
         uio = dut.uio_out.value.to_unsigned()
+        oe = dut.uio_oe.value.to_unsigned()
         combined = (uio << 8) | uo
         assert combined != 0x47C0, f"fmt_id=0x{fmt_id:02X} should not produce anchor"
-    dut._log.info("PASS: non-anchor fmt_ids do not produce 0x47C0")
+        assert oe == 0x00, f"fmt_id=0x{fmt_id:02X}: uio_oe should be 0x00, got 0x{oe:02X}"
+    dut._log.info("PASS: non-anchor fmt_ids produce zero output + OE")
 
 
 @cocotb.test()
