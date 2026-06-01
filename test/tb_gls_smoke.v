@@ -1,6 +1,7 @@
 // Gate-level simulation smoke test (no cocotb dependency).
-// 63 tests: all 18 decoders (positive + negative + boundary + subnormal),
-// NaN/Inf/-0, sign extension, aliases, NOT_IMPL, ROM, synthesis stress, reset.
+// 73 tests: all 18 decoders (positive + negative + boundary + subnormal),
+// NaN/Inf/-0, sign extension, aliases, NOT_IMPL, ROM, synthesis stress,
+// posit8 regime boundary sweep, reset.
 // Usage: yosys -> synth_netlist.v, then iverilog + simcells.v + this file.
 `timescale 1ns/1ps
 
@@ -360,9 +361,42 @@ module tb_gls_smoke;
         // --- Test 62: Alias fmt_id=69 (FNUZ alt) == fmt_id=14 ---
         decode_1byte(7'd69, 8'h40, 32'h3F800000, "alias 69=14");
 
+        // ===================== Posit8 regime boundary sweep =====================
+        // Tests 63-72: exercise all regime encoding paths through synthesis
+
+        // --- Test 63: Posit8 smallest positive (0x01 = 1/64, regime k=-6) ---
+        decode_1byte(7'd31, 8'h01, 32'h3C800000, "posit8 1/64");
+
+        // --- Test 64: Posit8 1.0 (0x40, regime k=0) ---
+        decode_1byte(7'd31, 8'h40, 32'h3F800000, "posit8 1.0");
+
+        // --- Test 65: Posit8 2.0 (0x60, regime k=1) ---
+        decode_1byte(7'd31, 8'h60, 32'h40000000, "posit8 2.0");
+
+        // --- Test 66: Posit8 4.0 (0x70, regime k=2) ---
+        decode_1byte(7'd31, 8'h70, 32'h40800000, "posit8 4.0");
+
+        // --- Test 67: Posit8 8.0 (0x78, regime k=3) ---
+        decode_1byte(7'd31, 8'h78, 32'h41000000, "posit8 8.0");
+
+        // --- Test 68: Posit8 16.0 (0x7C, regime k=4) ---
+        decode_1byte(7'd31, 8'h7C, 32'h41800000, "posit8 16.0");
+
+        // --- Test 69: Posit8 32.0 (0x7E, regime k=5) ---
+        decode_1byte(7'd31, 8'h7E, 32'h42000000, "posit8 32.0");
+
+        // --- Test 70: Posit8 max positive 64.0 (0x7F, regime k=6) ---
+        decode_1byte(7'd31, 8'h7F, 32'h42800000, "posit8 64.0");
+
+        // --- Test 71: Posit8 max negative -64.0 (0x81) ---
+        decode_1byte(7'd31, 8'h81, 32'hC2800000, "posit8 -64.0");
+
+        // --- Test 72: Posit8 smallest negative -1/64 (0xFF) ---
+        decode_1byte(7'd31, 8'hFF, 32'hBC800000, "posit8 -1/64");
+
         // ===================== Infrastructure tests =====================
 
-        // --- Test 63: Reset re-entry (FSM recovery) ---
+        // --- Test 73: Reset re-entry (FSM recovery) ---
         ui_in = 8'h08;  // CMD1: BF16
         @(posedge clk); #1;
         rst_n = 0;       // Assert reset mid-CMD2

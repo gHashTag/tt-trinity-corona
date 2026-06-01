@@ -28,7 +28,10 @@ sim_build/
 results.xml
 dump.vcd
 dump.fst
+*.vcd
+*.fst
 *.vvp
+debug_results.xml
 
 # Editors
 .vscode/

@@ -199,7 +199,7 @@ def ref_lns8(byte_val):
 @cocotb.test()
 async def test_fp4_exhaustive(dut):
     """FP4 E2M1: exhaustive test of all 16 values."""
-    clock = Clock(dut.clk, 20, unit="ns")
+    clock = Clock(dut.clk, 40, unit="ns")
     cocotb.start_soon(clock.start())
 
     for inp in range(16):
@@ -221,7 +221,7 @@ async def test_fp4_exhaustive(dut):
 @cocotb.test()
 async def test_nf4_exhaustive(dut):
     """NF4 QLoRA: exhaustive test of all 16 values."""
-    clock = Clock(dut.clk, 20, unit="ns")
+    clock = Clock(dut.clk, 40, unit="ns")
     cocotb.start_soon(clock.start())
 
     for inp in range(16):
@@ -243,7 +243,7 @@ async def test_nf4_exhaustive(dut):
 @cocotb.test()
 async def test_fp6_e3m2_exhaustive(dut):
     """FP6 E3M2: exhaustive test of all 64 values."""
-    clock = Clock(dut.clk, 20, unit="ns")
+    clock = Clock(dut.clk, 40, unit="ns")
     cocotb.start_soon(clock.start())
 
     for inp in range(64):
@@ -265,7 +265,7 @@ async def test_fp6_e3m2_exhaustive(dut):
 @cocotb.test()
 async def test_mxfp8_e4m3_exhaustive(dut):
     """MXFP8 E4M3: exhaustive test of all 256 values."""
-    clock = Clock(dut.clk, 20, unit="ns")
+    clock = Clock(dut.clk, 40, unit="ns")
     cocotb.start_soon(clock.start())
 
     fail_count = 0
@@ -291,7 +291,7 @@ async def test_mxfp8_e4m3_exhaustive(dut):
 @cocotb.test()
 async def test_posit8_exhaustive(dut):
     """Posit8(es=0): exhaustive test of all 256 values."""
-    clock = Clock(dut.clk, 20, unit="ns")
+    clock = Clock(dut.clk, 40, unit="ns")
     cocotb.start_soon(clock.start())
 
     fail_count = 0
@@ -317,7 +317,7 @@ async def test_posit8_exhaustive(dut):
 @cocotb.test()
 async def test_bcd_values(dut):
     """BCD decode: packed BCD bytes -> binary."""
-    clock = Clock(dut.clk, 20, unit="ns")
+    clock = Clock(dut.clk, 40, unit="ns")
     cocotb.start_soon(clock.start())
 
     test_cases = [
@@ -348,7 +348,7 @@ async def test_bcd_values(dut):
 @cocotb.test()
 async def test_lns8_exhaustive(dut):
     """LNS8: exhaustive test of all 256 values."""
-    clock = Clock(dut.clk, 20, unit="ns")
+    clock = Clock(dut.clk, 40, unit="ns")
     cocotb.start_soon(clock.start())
 
     fail_count = 0
@@ -374,7 +374,7 @@ async def test_lns8_exhaustive(dut):
 @cocotb.test()
 async def test_not_implemented_sentinel(dut):
     """Unknown fmt_id returns NOT_IMPL sentinel (0xFF, fmt_id, 0x07, 'N')."""
-    clock = Clock(dut.clk, 20, unit="ns")
+    clock = Clock(dut.clk, 40, unit="ns")
     cocotb.start_soon(clock.start())
     await reset_dut(dut)
 
@@ -396,7 +396,7 @@ async def test_not_implemented_sentinel(dut):
 @cocotb.test()
 async def test_bf16_key_values(dut):
     """BF16: key values -> FP32 (zero-extends lower 16 bits)."""
-    clock = Clock(dut.clk, 20, unit="ns")
+    clock = Clock(dut.clk, 40, unit="ns")
     cocotb.start_soon(clock.start())
 
     test_cases = [
@@ -452,7 +452,7 @@ def rom_bytes_to_u80(b):
 @cocotb.test()
 async def test_rom_readback_all(dut):
     """ROM readback: verify all ROM records match expected packed values."""
-    clock = Clock(dut.clk, 20, unit="ns")
+    clock = Clock(dut.clk, 40, unit="ns")
     cocotb.start_soon(clock.start())
 
     fail_count = 0
@@ -473,7 +473,7 @@ async def test_rom_readback_all(dut):
 @cocotb.test()
 async def test_rom_readback_key_fields(dut):
     """ROM readback: verify key fields can be extracted from a few records."""
-    clock = Clock(dut.clk, 20, unit="ns")
+    clock = Clock(dut.clk, 40, unit="ns")
     cocotb.start_soon(clock.start())
 
     # Check fp32 (fmt_id=1): total_bits=32, exp=8, mant=23, encoding=FP(0)
@@ -499,7 +499,7 @@ async def test_rom_readback_key_fields(dut):
 @cocotb.test()
 async def test_rom_unused_address(dut):
     """ROM unused address returns zero."""
-    clock = Clock(dut.clk, 20, unit="ns")
+    clock = Clock(dut.clk, 40, unit="ns")
     cocotb.start_soon(clock.start())
     await reset_dut(dut)
 
@@ -559,7 +559,7 @@ def ref_fp8_e5m2(byte_val):
 @cocotb.test()
 async def test_tf32_key_values(dut):
     """TF32: key values -> FP32 (wire-concat decode)."""
-    clock = Clock(dut.clk, 20, unit="ns")
+    clock = Clock(dut.clk, 40, unit="ns")
     cocotb.start_soon(clock.start())
 
     test_cases = [
@@ -599,7 +599,7 @@ async def test_tf32_key_values(dut):
 @cocotb.test()
 async def test_fp8_e5m2_exhaustive(dut):
     """FP8 E5M2: exhaustive test of all 256 values."""
-    clock = Clock(dut.clk, 20, unit="ns")
+    clock = Clock(dut.clk, 40, unit="ns")
     cocotb.start_soon(clock.start())
 
     fail_count = 0
@@ -653,7 +653,7 @@ def ref_fp6_e2m3(val):
 @cocotb.test()
 async def test_fp6_e2m3_exhaustive(dut):
     """FP6 E2M3 (Blackwell): exhaustive test of all 64 values."""
-    clock = Clock(dut.clk, 20, unit="ns")
+    clock = Clock(dut.clk, 40, unit="ns")
     cocotb.start_soon(clock.start())
 
     fail_count = 0
@@ -686,7 +686,7 @@ def ref_int8(byte_val):
 @cocotb.test()
 async def test_int8_exhaustive(dut):
     """INT8 signed: exhaustive test of all 256 values (sign-extension)."""
-    clock = Clock(dut.clk, 20, unit="ns")
+    clock = Clock(dut.clk, 40, unit="ns")
     cocotb.start_soon(clock.start())
 
     fail_count = 0
@@ -717,7 +717,7 @@ def ref_bf16(val_16bit):
 @cocotb.test()
 async def test_bf16_exhaustive(dut):
     """BF16: exhaustive test of all 65,536 values."""
-    clock = Clock(dut.clk, 20, unit="ns")
+    clock = Clock(dut.clk, 40, unit="ns")
     cocotb.start_soon(clock.start())
 
     fail_count = 0
@@ -757,7 +757,7 @@ def ref_e8m0(val):
 @cocotb.test()
 async def test_e8m0_exhaustive(dut):
     """E8M0 shared scale: exhaustive test of all 256 values."""
-    clock = Clock(dut.clk, 20, unit="ns")
+    clock = Clock(dut.clk, 40, unit="ns")
     cocotb.start_soon(clock.start())
 
     fail_count = 0
@@ -795,7 +795,7 @@ def ref_mxint8(val):
 @cocotb.test()
 async def test_mxint8_exhaustive(dut):
     """MXINT8: exhaustive test of all 256 values (fixed-point * 2^-6)."""
-    clock = Clock(dut.clk, 20, unit="ns")
+    clock = Clock(dut.clk, 40, unit="ns")
     cocotb.start_soon(clock.start())
 
     fail_count = 0
@@ -844,7 +844,7 @@ def ref_fp8_e4m3_fnuz(val):
 @cocotb.test()
 async def test_fp8_e4m3_fnuz_exhaustive(dut):
     """FP8 E4M3 FNUZ (fmt_id=14): bias=8, 0x80=NaN. 256 exhaustive."""
-    clock = Clock(dut.clk, 20, unit="ns")
+    clock = Clock(dut.clk, 40, unit="ns")
     cocotb.start_soon(clock.start())
 
     fail_count = 0
@@ -873,7 +873,7 @@ def ref_int4(val):
 @cocotb.test()
 async def test_int4_exhaustive(dut):
     """INT4 signed (fmt_id=46): 16 values exhaustive."""
-    clock = Clock(dut.clk, 20, unit="ns")
+    clock = Clock(dut.clk, 40, unit="ns")
     cocotb.start_soon(clock.start())
 
     for inp in range(16):
@@ -904,7 +904,7 @@ def ref_bitnet(val):
 @cocotb.test()
 async def test_bitnet_exhaustive(dut):
     """BitNet 1.58b ternary (fmt_id=71): 4 values exhaustive."""
-    clock = Clock(dut.clk, 20, unit="ns")
+    clock = Clock(dut.clk, 40, unit="ns")
     cocotb.start_soon(clock.start())
 
     for inp in range(4):
@@ -926,7 +926,7 @@ async def test_bitnet_exhaustive(dut):
 @cocotb.test()
 async def test_fp8_e4m3_alias(dut):
     """FP8 E4M3 (fmt_id=11) uses same decoder as MXFP8 E4M3 (fmt_id=39)."""
-    clock = Clock(dut.clk, 20, unit="ns")
+    clock = Clock(dut.clk, 40, unit="ns")
     cocotb.start_soon(clock.start())
 
     fail_count = 0
@@ -948,7 +948,7 @@ async def test_fp8_e4m3_alias(dut):
 @cocotb.test()
 async def test_fp6_e3m2_ml_alias(dut):
     """FP6 E3M2 ML (fmt_id=12) uses same decoder as MXFP6 E3M2 (fmt_id=40)."""
-    clock = Clock(dut.clk, 20, unit="ns")
+    clock = Clock(dut.clk, 40, unit="ns")
     cocotb.start_soon(clock.start())
 
     fail_count = 0
@@ -970,7 +970,7 @@ async def test_fp6_e3m2_ml_alias(dut):
 @cocotb.test()
 async def test_fp4_ml_alias(dut):
     """FP4 ML (fmt_id=13) uses same decoder as MXFP4 E2M1 (fmt_id=41)."""
-    clock = Clock(dut.clk, 20, unit="ns")
+    clock = Clock(dut.clk, 40, unit="ns")
     cocotb.start_soon(clock.start())
 
     for inp in range(16):
@@ -988,7 +988,7 @@ async def test_fp4_ml_alias(dut):
 @cocotb.test()
 async def test_nf4_bnb_alias(dut):
     """NF4 bitsandbytes (fmt_id=75) uses same LUT as NF4 QLoRA (fmt_id=70)."""
-    clock = Clock(dut.clk, 20, unit="ns")
+    clock = Clock(dut.clk, 40, unit="ns")
     cocotb.start_soon(clock.start())
 
     for inp in range(16):
@@ -1006,7 +1006,7 @@ async def test_nf4_bnb_alias(dut):
 @cocotb.test()
 async def test_e4m3_fnuz_alt_alias(dut):
     """E4M3 FNUZ alt (fmt_id=69) uses same decoder as FNUZ (fmt_id=14)."""
-    clock = Clock(dut.clk, 20, unit="ns")
+    clock = Clock(dut.clk, 40, unit="ns")
     cocotb.start_soon(clock.start())
 
     fail_count = 0

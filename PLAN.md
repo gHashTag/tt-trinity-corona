@@ -77,7 +77,7 @@ The Gamma+Corona two-die assembly on a shared bring-up board is the first config
 
 The D2D routing logic resides in the Corona die's adapter module (`rtl/d2d_corona_adapter.v`, Phase D deliverable). [Spec] The existing tt-trinity-gamma `d2d_holo_mesh.v` uses a 4-port holographic mesh: `uio[3:0]` = TX (North, East, South, West, one bit each, or packed nibble); `uio[7:4]` = RX (corresponding). [Spec] Reusing `d2d_holo_mesh.v` from gamma as a submodule (git submodule or vendor copy) reduces Phase D effort to wiring and a protocol state machine of approximately 100-200 cells overhead. [Open conjecture]
 
-Latency: Corona receives a format index, asserts D2D_REQ, waits for D2D_ACK from Gamma (expected 1-4 cycles for board-level propagation), latches Gamma's result, and forwards it. At 50 MHz a 4-byte cross-die query is approximately 80 ns round-trip. [Open conjecture] The exact timing will be characterized in Phase D simulation. [Spec]
+Latency: Corona receives a format index, asserts D2D_REQ, waits for D2D_ACK from Gamma (expected 1-4 cycles for board-level propagation), latches Gamma's result, and forwards it. At 25 MHz a 4-byte cross-die query is approximately 160 ns round-trip. [Open conjecture] The exact timing will be characterized in Phase D simulation. [Spec]
 
 The physical two-die board is currently a design intent and not a committed deliverable. Whether it is in-scope for the Corona project or a separate post-submission bring-up project is an open question for the user (Section 10, Q3). [Open conjecture]
 
@@ -148,7 +148,7 @@ Cycle sequence for a 32-bit decode query:
   7..10. uo_out streams 4 bytes of decoded value
 ```
 
-This 10-cycle protocol fits the TT 8-bit I/O model and handles up to 32-bit formats. For 64-bit formats, extend to 18 cycles at 50 MHz. For 128-bit formats, extend to 34 cycles. [Spec] The `uio` control encoding for field-select (when reading multi-byte ROM records) uses `uio_in[3:0]` = field selector and `uio_in[7:4]` = cycle-within-field. `uio_out[7]` is a valid flag; `uio_out[6:0]` carries field-specific metadata. [Spec]
+This 10-cycle protocol fits the TT 8-bit I/O model and handles up to 32-bit formats. For 64-bit formats, extend to 18 cycles at 25 MHz. For 128-bit formats, extend to 34 cycles. [Spec] The `uio` control encoding for field-select (when reading multi-byte ROM records) uses `uio_in[3:0]` = field selector and `uio_in[7:4]` = cycle-within-field. `uio_out[7]` is a valid flag; `uio_out[6:0]` carries field-specific metadata. [Spec]
 
 Anchor protocol: `format_index = 7'h7F` with mode = 0 produces `{uio_out, uo_out} = 16'h47C0` on cycle 0 unconditionally. [Spec]
 
@@ -292,7 +292,7 @@ GF180MCU process notes:
 - 6 metal layers total (Metal1-Metal5 + MetalTop, up to 3.035 um thick).
 - Metal5 is reserved by TinyTapeout for the power distribution grid; designs cannot use it. [Spec]
 - Higher core voltage than SKY130A (3.3V vs 1.8V); TT carrier handles VIO/Vcore separation.
-- 180nm cells are slower. At 50 MHz the critical path budget is 20 ns -- comfortable for simple format converters but tight for multi-stage FP adders.
+- 180nm cells are slower. At 25 MHz the critical path budget is 40 ns -- comfortable for simple format converters and adequate for multi-stage FP adders.
 - GF180MCU open PDK does NOT include an open-source SRAM macro as of writing; any memory beyond DFFs must be synthesized from flip-flops or as combinational ROM. [Spec]
 - COB (chip-on-board) packaging on TTGF26a: chips are die-bonded directly to the PCB and cannot be removed from the board, per the [TinyTapeout FAQ](https://tinytapeout.com/faq/). This affects prototyping workflow. [Spec]
 
@@ -397,7 +397,7 @@ Total honest estimate across all six phases: approximately 45-55 calendar-days f
 
 | Field            | Detail                                                                                                                                                                                              |
 |------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Deliverable      | Final GDS produced via OpenLane2 with GF180MCU PDK; DRC clean (antenna rules satisfied; diode insertion used as needed); LVS clean against the RTL netlist; timing closure at 50 MHz; submitted to TTGF26a by deadline. |
+| Deliverable      | Final GDS produced via OpenLane2 with GF180MCU PDK; DRC clean (antenna rules satisfied; diode insertion used as needed); LVS clean against the RTL netlist; timing closure at 25 MHz; submitted to TTGF26a by deadline. |
 | RTL files added  | None (GDS phase; RTL is frozen after Phase C; only OpenLane2 config files may change).                                                                                                              |
 | Test files added | None (Phase E conformance suite is re-run post-GDS on the extracted netlist if time allows); `test/gds_signoff_report.md` (DRC/LVS record).                                                          |
 | CI gate          | OpenLane2 reports zero DRC violations; LVS matches netlist; setup/hold slack >= 0 at target frequency; TTGF26a submission portal confirms receipt of GDS.                                            |

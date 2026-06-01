@@ -19,7 +19,7 @@ async def reset_dut(dut):
 @cocotb.test()
 async def test_anchor_probe(dut):
     """Anchor probe: CMD with fmt_id=0x7F -> {uio_out, uo_out} == 0x47C0."""
-    clock = Clock(dut.clk, 20, unit="ns")  # 50 MHz
+    clock = Clock(dut.clk, 40, unit="ns")  # 25 MHz
     cocotb.start_soon(clock.start())
     await reset_dut(dut)
 
@@ -45,7 +45,7 @@ async def test_anchor_probe(dut):
 @cocotb.test()
 async def test_anchor_stable_across_cycles(dut):
     """Anchor output remains stable while CMD+0x7F is held."""
-    clock = Clock(dut.clk, 20, unit="ns")
+    clock = Clock(dut.clk, 40, unit="ns")
     cocotb.start_soon(clock.start())
     await reset_dut(dut)
 
@@ -63,7 +63,7 @@ async def test_anchor_stable_across_cycles(dut):
 @cocotb.test()
 async def test_non_anchor_returns_zero(dut):
     """CMD with fmt_id != 0x7F should not produce the anchor value."""
-    clock = Clock(dut.clk, 20, unit="ns")
+    clock = Clock(dut.clk, 40, unit="ns")
     cocotb.start_soon(clock.start())
     await reset_dut(dut)
 
@@ -83,7 +83,7 @@ async def test_non_anchor_returns_zero(dut):
 @cocotb.test()
 async def test_reset_clears_state(dut):
     """After reset, outputs should be zero (no anchor asserted)."""
-    clock = Clock(dut.clk, 20, unit="ns")
+    clock = Clock(dut.clk, 40, unit="ns")
     cocotb.start_soon(clock.start())
 
     dut.rst_n.value = 0
@@ -100,7 +100,7 @@ async def test_reset_clears_state(dut):
 @cocotb.test()
 async def test_ena_gate_freezes_fsm(dut):
     """When ena=0, FSM must not advance — TT mux requires this."""
-    clock = Clock(dut.clk, 20, unit="ns")
+    clock = Clock(dut.clk, 40, unit="ns")
     cocotb.start_soon(clock.start())
     await reset_dut(dut)
 
