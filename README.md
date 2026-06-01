@@ -89,8 +89,8 @@ specs/corona/             # SSOT: chip spec in .t27 (Zig-like spec DSL)
   anchor.t27              # TG-TRIAD-X 0x47C0 anchor
   d2d_routing.t27         # die-to-die routing to Gamma
 src/rtl/                  # 19 Verilog modules (top + ROM + 17 decoders)
-test/                     # cocotb tests (49) + gate-level simulation (50/50 PASS)
-formal/                   # SymbiYosys formal verification (19 configs, 57 tasks)
+test/                     # cocotb tests (50) + gate-level simulation (50/50 PASS)
+formal/                   # SymbiYosys formal verification (19 configs, 58 tasks)
 tools/                    # ROM emitter (gen_rom.py)
 docs/                     # design notes, loop reports
 PLAN.md                   # full plan (also corona_plan.pdf, 23 pages)
