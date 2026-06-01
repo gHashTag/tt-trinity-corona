@@ -19,8 +19,9 @@ width, encoding kind, cluster ID, claim-status ID, phi-distance (Q16), and a
 reference index. The ROM is generated mechanically by `tools/gen_rom.py`.
 
 18 Tier-1 RTL decode modules convert on-die formats to IEEE 754 FP32 (or INT32),
-covering BF16, TF32, FP8 E5M2, FP8 E4M3, FP8 E4M3 FNUZ, FP6 E3M2, FP6 E2M3,
-FP4 E2M1, Posit8, LNS8, INT4, INT8, BCD, NF4, E8M0, MXINT8, and BitNet 1.58b.
+covering BF16, TF32, FP8 E5M2, FP8 E4M3, FP8 E4M3 FNUZ, MXFP8 E4M3, FP6 E3M2,
+FP6 E2M3, FP4 E2M1, Posit8, LNS8, INT4, INT8, BCD, NF4, E8M0, MXINT8, and
+BitNet 1.58b.
 
 A die-to-die (D2D) adapter on `uio[3:0]` (TX) and `uio[7:4]` (RX) routes
 queries for Gamma-native formats (GF4-GF256, FP8, INT4/8, NF4, Posit16, BitNet)
@@ -36,7 +37,7 @@ The chip uses Protocol v2, a two-byte CMD serial protocol on the TinyTapeout pin
 
 - **CMD1** (`ui_in[7]=0`): `ui_in[6:0]` selects a format index (0-79) or the
   anchor probe (`7'h7F`).
-- **CMD2**: `ui_in[3:0]` = byte count (0-15 data bytes to follow).
+- **CMD2**: `ui_in[3:0]` = byte count (0 = ROM readback, 1-4 = data bytes; values >4 clamped to 4).
 - **DATA**: exactly `byte_count` cycles of raw 8-bit data on `ui_in[7:0]`.
   All 256 byte values are valid (no reserved mode bits).
 - **STATUS**: auto-entered after the last data byte; result bytes stream on

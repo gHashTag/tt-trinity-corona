@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 // Formal verification: FP8 E5M2 → FP32 decode
 // Independently verifies subnormal normalization, Inf/NaN classification
 `default_nettype none

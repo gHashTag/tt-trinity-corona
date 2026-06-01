@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 // Formal verification: FP6 E3M2 → FP32 decode
 // Verifies subnormal normalization for 2-bit mantissa
 `default_nettype none

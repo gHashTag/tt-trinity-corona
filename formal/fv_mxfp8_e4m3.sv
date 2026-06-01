@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 // Formal verification: OCP MX FP8 E4M3 → FP32 decode
 // bias=7, NaN = S.1111.111 only, has subnormals
 `default_nettype none

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 // Formal verification: FP4 E2M1 → FP32 LUT decode
 // Verifies structural properties: sign preservation, symmetry, ordering
 `default_nettype none

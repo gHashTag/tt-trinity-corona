@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 // Formal verification of format_rom -- SSOT catalog integrity.
 // Verifies: self-index, default-zero, non-zero, exhaustive 80-entry golden LUT,
 //           field-range bounds, cross-field consistency.

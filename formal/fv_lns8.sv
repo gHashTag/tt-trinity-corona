@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 // Formal verification: LNS8 antilog decode
 // Verifies LUT correctness and shift logic for 2^(Q3.4) computation
 `default_nettype none

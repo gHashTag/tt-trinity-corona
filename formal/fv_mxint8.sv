@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 // Formal verification: MXINT8 -> FP32 decode
 // Exhaustive golden reference: algorithmic int8-to-FP32 with 2^(-6) scale.
 // Covers all 256 input values via independent leading-one computation.

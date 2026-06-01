@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 // Formal verification: INT4 sign-extension decode
 `default_nettype none
 

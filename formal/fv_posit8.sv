@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 // Formal verification: Posit8(es=0) → FP32 decode
 // Exhaustive 256-entry golden LUT cross-validated against johndcook.com/eightbit.html
 `default_nettype none

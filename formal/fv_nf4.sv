@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 // Formal verification: NF4 (NormalFloat4, QLoRA) → FP32 LUT decode
 `default_nettype none
 

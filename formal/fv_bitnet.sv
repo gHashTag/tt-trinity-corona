@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 // Formal verification: BitNet 1.58b ternary → FP32 decode
 `default_nettype none
 

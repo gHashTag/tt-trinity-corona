@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 // Formal verification: E8M0 exponent-only decode
 `default_nettype none
 

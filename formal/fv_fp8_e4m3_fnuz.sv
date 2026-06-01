@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 // Formal verification: FP8 E4M3 FNUZ → FP32 decode
 // AMD MI300 variant: bias=8, 0x80=NaN, no -0, has subnormals
 `default_nettype none

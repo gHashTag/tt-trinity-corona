@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 // Formal verification: BCD → binary decode
 // Verifies arithmetic (tens*10 + ones) and validity flag
 `default_nettype none

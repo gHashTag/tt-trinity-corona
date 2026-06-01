@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 // Formal verification: BF16 → FP32 decode (structural wiring proof)
 `default_nettype none
 

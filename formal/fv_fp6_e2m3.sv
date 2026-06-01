@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 // Formal verification: FP6 E2M3 → FP32 decode
 // Blackwell tensor core format: 1s + 2e(bias=1) + 3m, no Inf/NaN
 `default_nettype none
