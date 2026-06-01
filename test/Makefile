@@ -13,6 +13,6 @@ SRC_DIR = $(PWD)/../src/rtl
 VERILOG_SOURCES = $(addprefix $(SRC_DIR)/,$(PROJECT_SOURCES))
 
 TOPLEVEL = tt_um_trinity_corona
-MODULE = test_anchor,test_decoders
+MODULE = test_anchor,test_decoders,test_stress
 
 include $(shell cocotb-config --makefiles)/Makefile.sim
