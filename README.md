@@ -19,7 +19,7 @@ The fourth chip in the TRI-NET line, after Phi, Euler, and Gamma. Corona is a
 ## What Corona is
 
 A silicon chip whose primary deliverable is a **~1.2-1.4 KB ROM encoding all
-77 numeric-format records** from the TRI-NET SSOT, plus approximately 12-15
+80 numeric-format records** from the TRI-NET SSOT, plus approximately 12-15
 **reference RTL encode/decode modules** for formats not already owned by
 Gamma. A query arrives as a 7-bit format index on `ui_in[6:0]`; the chip
 returns the requested record fields across `uo_out` over N read cycles.
@@ -42,7 +42,7 @@ silicon end-to-end mechanical.
 - **NOT a closed-IP product.** All RTL, ROM generation scripts, and
   testbenches are open-source under Apache 2.0.
 - **NOT a complete numeric co-processor.** It exposes format metadata
-  for all 77 formats and performs encode/decode only on the Tier-1 module
+  for all 80 formats and performs encode/decode only on the Tier-1 module
   subset. For formats owned by Gamma (GF4..GF256, FP8, INT4/8, NF4, Posit16,
   BitNet), the correct compute answer requires D2D routing to Gamma.
 - **Takum** (Hunhold 2024 [arXiv:2412.20273](https://arxiv.org/abs/2412.20273))

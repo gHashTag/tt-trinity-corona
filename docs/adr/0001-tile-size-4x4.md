@@ -10,7 +10,7 @@ Corona targets the TTGF26a shuttle on GF180MCU 180nm. The original plan consider
 8x2 (MVP, 16 tiles) vs 8x4 (full Tier-1, 32 tiles). GF180MCU has ~2.1x fewer
 gates per tile than SKY130A (~480-520 cells vs ~1,000), so tile budget is tight.
 
-The project requires ~1.2 KB combinational ROM (77 records x 10 bytes) plus 12
+The project requires ~1.2 KB combinational ROM (80 records x 10 bytes) plus 12
 Tier-1 decode modules (estimated 6,000-12,000 cells total) plus protocol/D2D
 overhead (~300-500 cells).
 

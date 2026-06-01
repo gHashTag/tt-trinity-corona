@@ -6,7 +6,7 @@ Verilog source. **Phase C deliverable -- not yet populated.**
 
 ```
 tt_um_trinity_corona.v             -- TinyTapeout top-level wrapper
-format_rom.generated.v             -- 77-record ROM (Phase B codegen)
+format_rom.generated.v             -- 80-record ROM (Phase B codegen)
 format_strings.generated.v         -- string table for ref_index
 anchor_probe.v                     -- TG-TRIAD-X 0x47C0 emitter
 

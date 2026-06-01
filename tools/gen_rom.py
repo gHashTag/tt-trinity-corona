@@ -94,7 +94,7 @@ def pack_record(fmt_id, cluster, status, total_bits, sign_bits,
     return word
 
 
-# 77 format records, ordered by format_index_id (0-76).
+# 80 format records, ordered by format_index_id (0-79).
 # Fields: (fmt_id, cluster, status, total_bits, sign, exp, mant, enc_kind, ref_idx, flags)
 CATALOG = [
     # Cluster 0: IEEE 754 binary (5)

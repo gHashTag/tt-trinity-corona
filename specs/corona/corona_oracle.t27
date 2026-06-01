@@ -45,7 +45,7 @@ module CoronaOracle {
 
     // What Corona IS:
     //   A read-only conformance oracle. A silicon chip whose primary
-    //   deliverable is a ~1.2-1.4 KB ROM encoding all 77 numeric-format
+    //   deliverable is a ~1.2-1.4 KB ROM encoding all 80 numeric-format
     //   records from the SSOT, plus ~12-15 reference RTL encode/decode
     //   modules for formats not already covered by Gamma.
 
@@ -162,7 +162,7 @@ module CoronaOracle {
     // 7. TIER-2 ROM-ONLY (NO ON-DIE RTL)
     // ========================================================================
 
-    // Formats present in the 77-record ROM with full metadata but no
+    // Formats present in the 80-record ROM with full metadata but no
     // encode/decode RTL on Corona. Status: respond with "not-implemented"
     // code in compute mode, but ROM record IS returned.
     pub const TIER2_ROM_ONLY : [13]string = [

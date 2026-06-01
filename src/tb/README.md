@@ -8,7 +8,7 @@ cocotb testbenches. **Phase E deliverable -- not yet populated.**
 | --- | --- | --- |
 | `t27c_parse`           | t27c parser clean on `specs/corona/*.t27` | A |
 | `rom_generate`         | Verilog ROM emitter runs without error; output deterministic | B |
-| `rom_readback`         | 77-record sweep; zero bit errors vs PR #1028 golden reference | B (gate) |
+| `rom_readback`         | 80-record sweep; zero bit errors vs PR #1028 golden reference | B (gate) |
 | `anchor_test`          | `format_index = 7'h7F -> 0x47C0` in sim | A |
 | `synth_area`           | OpenLane2 synthesis area report per module; tile utilization | C (gate) |
 | `module_roundtrip`     | Per-module encode/decode round-trip, 10k random vectors, >=99.9% pass | C (gate) |

@@ -4,7 +4,7 @@
 
 The primary toolchain artefact for Corona is a Verilog ROM emitter added to
 `tools/gen_formats_catalog.py` in `gHashTag/t27` as the **17th output
-language**. The emitter reads the 77-record SSOT from
+language**. The emitter reads the 80-record SSOT from
 `gHashTag/t27 specs/numeric/formats_catalog.t27` (PR #1028) and produces:
 
 1. `src/rtl/format_rom.generated.v` -- a Verilog `case` statement
@@ -12,7 +12,7 @@ language**. The emitter reads the 77-record SSOT from
    `specs/corona/rom_layout.t27`.
 2. `src/rtl/format_strings.generated.v` -- the ~500-byte ASCII string
    table referenced by `ref_index` in each record.
-3. `tests/golden_rom_vectors.json` -- a 77-record reference dump for the
+3. `tests/golden_rom_vectors.json` -- an 80-record reference dump for the
    `rom_readback` CI gate (Phase B).
 
 ## Why upstream in t27 and not here
