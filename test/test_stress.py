@@ -363,7 +363,7 @@ async def test_last_valid_rom_entry(dut):
 
 @cocotb.test()
 async def test_byte_count_clamping(dut):
-    """Sending byte_count > 4 is clamped to 4; only first 4 data bytes are used."""
+    """Sending byte_count > 4 is clamped to 4; FSM collects 4 bytes and decodes."""
     clock = Clock(dut.clk, 40, units="ns")
     cocotb.start_soon(clock.start())
     await reset_dut(dut)
@@ -373,13 +373,15 @@ async def test_byte_count_clamping(dut):
     dut.ui_in.value = 0x0F  # byte_count=15, should clamp to 4
     await RisingEdge(dut.clk)
 
+    # Shift register: {ui_in, data_in_buf[31:8]} each cycle (right shift).
+    # Last byte sent ends up at [31:24]. INT8 reads [31:24].
     for i in range(4):
-        dut.ui_in.value = 0x01 if i == 0 else 0x00
+        dut.ui_in.value = 0x2A if i == 3 else 0x00
         await RisingEdge(dut.clk)
 
     result = await read_result_bytes(dut, 4)
     got = bytes_to_u32(result)
-    expected = ref_int8(0x01)
+    expected = ref_int8(0x2A)
     assert got == expected, \
         f"Clamped decode: expected 0x{expected:08X}, got 0x{got:08X}"
     dut.ui_in.value = 0x80
