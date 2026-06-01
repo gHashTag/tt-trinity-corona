@@ -51,8 +51,8 @@ async def read_result_bytes(dut, n):
     """Read n result bytes during STATUS state (auto-entered after data)."""
     result = []
     for _ in range(n):
-        await Timer(1, units="ns")
-        result.append(dut.uo_out.value.integer)
+        await Timer(1, unit="ns")
+        result.append(dut.uo_out.value.to_unsigned())
         await RisingEdge(dut.clk)
     return result
 
@@ -189,7 +189,7 @@ def ref_lns8(byte_val):
 @cocotb.test()
 async def test_fp4_exhaustive(dut):
     """FP4 E2M1: exhaustive test of all 16 values."""
-    clock = Clock(dut.clk, 20, units="ns")
+    clock = Clock(dut.clk, 20, unit="ns")
     cocotb.start_soon(clock.start())
 
     for inp in range(16):
@@ -211,7 +211,7 @@ async def test_fp4_exhaustive(dut):
 @cocotb.test()
 async def test_nf4_exhaustive(dut):
     """NF4 QLoRA: exhaustive test of all 16 values."""
-    clock = Clock(dut.clk, 20, units="ns")
+    clock = Clock(dut.clk, 20, unit="ns")
     cocotb.start_soon(clock.start())
 
     for inp in range(16):
@@ -233,7 +233,7 @@ async def test_nf4_exhaustive(dut):
 @cocotb.test()
 async def test_fp6_e3m2_exhaustive(dut):
     """FP6 E3M2: exhaustive test of all 64 values."""
-    clock = Clock(dut.clk, 20, units="ns")
+    clock = Clock(dut.clk, 20, unit="ns")
     cocotb.start_soon(clock.start())
 
     for inp in range(64):
@@ -255,7 +255,7 @@ async def test_fp6_e3m2_exhaustive(dut):
 @cocotb.test()
 async def test_mxfp8_e4m3_exhaustive(dut):
     """MXFP8 E4M3: exhaustive test of all 256 values."""
-    clock = Clock(dut.clk, 20, units="ns")
+    clock = Clock(dut.clk, 20, unit="ns")
     cocotb.start_soon(clock.start())
 
     fail_count = 0
@@ -281,7 +281,7 @@ async def test_mxfp8_e4m3_exhaustive(dut):
 @cocotb.test()
 async def test_posit8_exhaustive(dut):
     """Posit8(es=0): exhaustive test of all 256 values."""
-    clock = Clock(dut.clk, 20, units="ns")
+    clock = Clock(dut.clk, 20, unit="ns")
     cocotb.start_soon(clock.start())
 
     fail_count = 0
@@ -307,7 +307,7 @@ async def test_posit8_exhaustive(dut):
 @cocotb.test()
 async def test_bcd_values(dut):
     """BCD decode: packed BCD bytes -> binary."""
-    clock = Clock(dut.clk, 20, units="ns")
+    clock = Clock(dut.clk, 20, unit="ns")
     cocotb.start_soon(clock.start())
 
     test_cases = [
@@ -338,7 +338,7 @@ async def test_bcd_values(dut):
 @cocotb.test()
 async def test_lns8_exhaustive(dut):
     """LNS8: exhaustive test of all 256 values."""
-    clock = Clock(dut.clk, 20, units="ns")
+    clock = Clock(dut.clk, 20, unit="ns")
     cocotb.start_soon(clock.start())
 
     fail_count = 0
@@ -364,7 +364,7 @@ async def test_lns8_exhaustive(dut):
 @cocotb.test()
 async def test_not_implemented_sentinel(dut):
     """Unknown fmt_id returns NOT_IMPL sentinel (0xFF, fmt_id, 0x07, 'N')."""
-    clock = Clock(dut.clk, 20, units="ns")
+    clock = Clock(dut.clk, 20, unit="ns")
     cocotb.start_soon(clock.start())
     await reset_dut(dut)
 
@@ -386,7 +386,7 @@ async def test_not_implemented_sentinel(dut):
 @cocotb.test()
 async def test_bf16_key_values(dut):
     """BF16: key values -> FP32 (zero-extends lower 16 bits)."""
-    clock = Clock(dut.clk, 20, units="ns")
+    clock = Clock(dut.clk, 20, unit="ns")
     cocotb.start_soon(clock.start())
 
     test_cases = [
@@ -425,8 +425,8 @@ async def read_rom_record(dut, fmt_id):
     await send_cmd(dut, fmt_id, 0)
     result = []
     for _ in range(10):
-        await Timer(1, units="ns")
-        result.append(dut.uo_out.value.integer)
+        await Timer(1, unit="ns")
+        result.append(dut.uo_out.value.to_unsigned())
         await RisingEdge(dut.clk)
     return result
 
@@ -442,7 +442,7 @@ def rom_bytes_to_u80(b):
 @cocotb.test()
 async def test_rom_readback_all(dut):
     """ROM readback: verify all ROM records match expected packed values."""
-    clock = Clock(dut.clk, 20, units="ns")
+    clock = Clock(dut.clk, 20, unit="ns")
     cocotb.start_soon(clock.start())
 
     fail_count = 0
@@ -463,7 +463,7 @@ async def test_rom_readback_all(dut):
 @cocotb.test()
 async def test_rom_readback_key_fields(dut):
     """ROM readback: verify key fields can be extracted from a few records."""
-    clock = Clock(dut.clk, 20, units="ns")
+    clock = Clock(dut.clk, 20, unit="ns")
     cocotb.start_soon(clock.start())
 
     # Check fp32 (fmt_id=1): total_bits=32, exp=8, mant=23, encoding=FP(0)
@@ -489,7 +489,7 @@ async def test_rom_readback_key_fields(dut):
 @cocotb.test()
 async def test_rom_unused_address(dut):
     """ROM unused address returns zero."""
-    clock = Clock(dut.clk, 20, units="ns")
+    clock = Clock(dut.clk, 20, unit="ns")
     cocotb.start_soon(clock.start())
     await reset_dut(dut)
 
@@ -549,7 +549,7 @@ def ref_fp8_e5m2(byte_val):
 @cocotb.test()
 async def test_tf32_key_values(dut):
     """TF32: key values -> FP32 (wire-concat decode)."""
-    clock = Clock(dut.clk, 20, units="ns")
+    clock = Clock(dut.clk, 20, unit="ns")
     cocotb.start_soon(clock.start())
 
     test_cases = [
@@ -589,7 +589,7 @@ async def test_tf32_key_values(dut):
 @cocotb.test()
 async def test_fp8_e5m2_exhaustive(dut):
     """FP8 E5M2: exhaustive test of all 256 values."""
-    clock = Clock(dut.clk, 20, units="ns")
+    clock = Clock(dut.clk, 20, unit="ns")
     cocotb.start_soon(clock.start())
 
     fail_count = 0
@@ -643,7 +643,7 @@ def ref_fp6_e2m3(val):
 @cocotb.test()
 async def test_fp6_e2m3_exhaustive(dut):
     """FP6 E2M3 (Blackwell): exhaustive test of all 64 values."""
-    clock = Clock(dut.clk, 20, units="ns")
+    clock = Clock(dut.clk, 20, unit="ns")
     cocotb.start_soon(clock.start())
 
     fail_count = 0
@@ -676,7 +676,7 @@ def ref_int8(byte_val):
 @cocotb.test()
 async def test_int8_exhaustive(dut):
     """INT8 signed: exhaustive test of all 256 values (sign-extension)."""
-    clock = Clock(dut.clk, 20, units="ns")
+    clock = Clock(dut.clk, 20, unit="ns")
     cocotb.start_soon(clock.start())
 
     fail_count = 0
@@ -707,7 +707,7 @@ def ref_bf16(val_16bit):
 @cocotb.test()
 async def test_bf16_exhaustive(dut):
     """BF16: exhaustive test of all 65,536 values."""
-    clock = Clock(dut.clk, 20, units="ns")
+    clock = Clock(dut.clk, 20, unit="ns")
     cocotb.start_soon(clock.start())
 
     fail_count = 0

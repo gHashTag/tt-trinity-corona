@@ -1,0 +1,29 @@
+name: GDS
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  gds:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Harden GDS (GF180MCU)
+        uses: TinyTapeout/tt-gds-action@main
+        with:
+          pdk: gf180mcuD
+
+      - name: Upload GDS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gds-files
+          path: runs/
+
+      - name: Print warnings
+        if: always()
+        run: ./tt/tt_tool.py --gf --print-warnings || true
