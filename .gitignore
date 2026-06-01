@@ -1,0 +1,46 @@
+# OpenLane2 + flow artefacts
+runs/
+work/
+*.gds
+*.lef
+*.def
+*.spef
+*.sdf
+*.log
+*.tmp
+*.bak
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# cocotb
+sim_build/
+results.xml
+dump.vcd
+dump.fst
+*.vvp
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# LaTeX (PDF is committed; intermediates are not)
+*.aux
+*.toc
+*.out
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+
+# Generated ROM (committed only when frozen for a release)
+src/rtl/format_rom.generated.v

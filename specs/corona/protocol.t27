@@ -1,0 +1,104 @@
+// SPDX-License-Identifier: Apache-2.0
+// specs/corona/protocol.t27
+// Corona oracle protocol: 8-bit serial CMD/DATA on TinyTapeout pins.
+// phi^2 + 1/phi^2 = 3 | TRINITY
+
+// Status: [Spec]. The protocol is the read-back interface for the 77-record
+// ROM and the encode/decode dispatch for Tier-1 modules.
+
+module CoronaProtocol {
+    use base::types;
+    use corona::corona_oracle;
+    use corona::rom_layout;
+
+    // ========================================================================
+    // 1. PIN BUDGET (TinyTapeout standard)
+    // ========================================================================
+
+    pub const N_UI_IN  : u8 = 8;   // input only
+    pub const N_UO_OUT : u8 = 8;   // output only
+    pub const N_UIO    : u8 = 8;   // bidirectional
+
+    // When D2D is active:
+    //   uio[3:0] -> inter-die TX
+    //   uio[7:4] -> inter-die RX
+    // Leaves all 8 ui_in, all 8 uo_out, and up to 4 spare uio bits for the
+    // primary oracle interface.
+
+    // ========================================================================
+    // 2. MODE FIELD (ui_in[7:6])
+    // ========================================================================
+
+    pub const MODE_CMD       : u2 = 0;   // 00 -- ui_in[6:0] = fmt_id (0..76; 0x7F = anchor)
+    pub const MODE_DATA_IN   : u2 = 1;   // 01 -- ui_in[7:0] = next byte of input bit pattern
+    pub const MODE_STATUS    : u2 = 2;   // 10 -- trigger decode/encode; result on uo_out
+    pub const MODE_RESERVED  : u2 = 3;   // 11 -- reserved (must be 0 in current spec)
+
+    // ========================================================================
+    // 3. ANCHOR PROBE
+    // ========================================================================
+
+    // CMD with fmt_id = 0x7F produces {uio_out, uo_out} == 16'h47C0 on
+    // cycle 0 unconditionally. This is the cross-die identity check.
+    pub const FMT_ID_ANCHOR : u8 = 0x7F;
+    pub const ANCHOR_OUTPUT : u16 = 0x47C0;
+
+    // ========================================================================
+    // 4. CYCLE SEQUENCES
+    // ========================================================================
+
+    // 4.1 ROM record fetch (10 bytes per record).
+    //   Cycle 1:   MODE = CMD,    ui_in[6:0] = fmt_id
+    //   Cycle 2:   MODE = STATUS  (trigger ROM read)
+    //   Cycles 3..12: uo_out streams the 10 bytes of the record, LSB first.
+    pub const CYCLES_ROM_FETCH : u8 = 12;
+
+    // 4.2 32-bit-format decode query.
+    //   Cycle 1:   MODE = CMD,     ui_in[6:0] = fmt_id
+    //   Cycles 2..5: MODE = DATA_IN, ui_in[7:0] = byte_k for k in 0..3
+    //   Cycle 6:   MODE = STATUS
+    //   Cycles 7..10: uo_out streams 4 bytes of decoded value
+    pub const CYCLES_DECODE_32 : u8 = 10;
+
+    // 4.3 64-bit decode (Tier-1 64-bit formats).
+    pub const CYCLES_DECODE_64 : u8 = 18;
+
+    // 4.4 128-bit decode (Tier-2 ROM-only formats return a not-implemented code).
+    pub const CYCLES_DECODE_128 : u8 = 34;
+
+    // ========================================================================
+    // 5. UIO CONTROL ENCODING
+    // ========================================================================
+
+    // For multi-byte ROM record reads (field-select access):
+    //   uio_in[3:0] = field selector (one of the 11 fields in rom_layout)
+    //   uio_in[7:4] = cycle-within-field (for fields > 8 bits)
+    //   uio_out[7]  = valid flag
+    //   uio_out[6:0] = field-specific metadata
+
+    // ========================================================================
+    // 6. CONFORMANCE PROOF (PER FORMAT)
+    // ========================================================================
+
+    // Minimum conformance proof per Tier-1 format:
+    //   encode(canonical_value, N) produces the expected bit pattern;
+    //   decode(expected_bit_pattern, N) returns the canonical value
+    //   within round-trip tolerance.
+    //
+    // Test vector counts:
+    pub const VECTORS_PER_FORMAT_MIN     : u16 = 10;     // basic conformance
+    pub const VECTORS_PER_FORMAT_ROBUST  : u16 = 50;     // robust conformance
+    pub const VECTORS_PER_FORMAT_FULL    : u16 = 10000;  // CI module_roundtrip gate (Phase C)
+
+    // ========================================================================
+    // 7. NOT-IMPLEMENTED RESPONSE
+    // ========================================================================
+
+    // For Tier-2 ROM-only formats, a decode/encode query returns:
+    //   uo_out byte 0 = 0xFF (sentinel)
+    //   uo_out byte 1 = format_index (echo)
+    //   uo_out byte 2 = status_id (echo from ROM)
+    //   uo_out byte 3 = 0x4E (ASCII 'N' for Not-implemented)
+    pub const NOT_IMPLEMENTED_SENTINEL : u8 = 0xFF;
+    pub const NOT_IMPLEMENTED_TAG      : u8 = 0x4E;
+}
