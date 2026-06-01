@@ -6,5 +6,9 @@
   "DIE_AREA": "0 0 1440.32 736.96",
   "RT_MAX_LAYER": "Metal4",
   "DESIGN_IS_CORE": false,
-  "FP_PDN_SKIPTRIM": true
+  "FP_PDN_SKIPTRIM": true,
+  "FP_PDN_HOFFSET": 5,
+  "FP_PDN_HPITCH": 75,
+  "FP_PDN_VOFFSET": 5,
+  "FP_PDN_VPITCH": 75
 }
