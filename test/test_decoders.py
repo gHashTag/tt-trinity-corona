@@ -24,6 +24,7 @@ FMT_E8M0         = 78
 FMT_MXINT8       = 79
 FMT_E4M3_FNUZ    = 14
 FMT_E4M3_FNUZ_ALT= 69
+FMT_BITNET       = 71
 FMT_FP8_E4M3    = 11
 FMT_FP6_E3M2_ML = 12
 FMT_FP4_ML      = 13
@@ -376,12 +377,12 @@ async def test_not_implemented_sentinel(dut):
     cocotb.start_soon(clock.start())
     await reset_dut(dut)
 
-    await send_cmd(dut, 0x01, 1)  # fmt_id=1 has no decoder
+    await send_cmd(dut, 0x03, 1)  # fmt_id=3 (fp128) has no decoder
     await send_data(dut, [0x00])
     result = await read_result_bytes(dut, 4)
 
     assert result[0] == 0xFF, f"byte 0: expected 0xFF, got 0x{result[0]:02X}"
-    assert result[1] == 0x01, f"byte 1: expected 0x01 (fmt_id), got 0x{result[1]:02X}"
+    assert result[1] == 0x03, f"byte 1: expected 0x03 (fmt_id), got 0x{result[1]:02X}"
     assert result[2] == 0x07, f"byte 2: expected 0x07 (SPEC), got 0x{result[2]:02X}"
     assert result[3] == 0x4E, f"byte 3: expected 0x4E ('N'), got 0x{result[3]:02X}"
     dut._log.info(f"PASS: not-impl -> {[hex(b) for b in result]}")
@@ -859,6 +860,37 @@ async def test_fp8_e4m3_fnuz_exhaustive(dut):
             fail_count += 1
     assert fail_count == 0, f"E4M3 FNUZ: {fail_count}/256 values failed"
     dut._log.info("PASS: FP8 E4M3 FNUZ exhaustive (256/256)")
+
+
+def ref_bitnet(val):
+    """BitNet 1.58b ternary -> FP32 reference. 00=0, 01=+1, 10=-1, 11=NaN."""
+    v = val & 0x3
+    if v == 0:
+        return 0x00000000
+    elif v == 1:
+        return 0x3F800000
+    elif v == 2:
+        return 0xBF800000
+    else:
+        return 0x7FC00000
+
+
+@cocotb.test()
+async def test_bitnet_exhaustive(dut):
+    """BitNet 1.58b ternary (fmt_id=71): 4 values exhaustive."""
+    clock = Clock(dut.clk, 20, unit="ns")
+    cocotb.start_soon(clock.start())
+
+    for inp in range(4):
+        await reset_dut(dut)
+        expected = ref_bitnet(inp)
+        await send_cmd(dut, FMT_BITNET, 1)
+        await send_data(dut, [inp])
+        result = await read_result_bytes(dut, 4)
+        got = bytes_to_u32(result)
+        assert got == expected, \
+            f"BitNet 0x{inp:X}: expected 0x{expected:08X}, got 0x{got:08X}"
+    dut._log.info("PASS: BitNet ternary exhaustive (4/4)")
 
 
 # =========================================================================

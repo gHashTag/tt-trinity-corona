@@ -49,6 +49,8 @@ module tt_um_trinity_corona (
     // FP8 E4M3 FNUZ (AMD MI300/CDNA3 variant, genuinely different encoding)
     localparam [6:0] FMT_E4M3_FNUZ    = 7'd14;   // cluster 2: bias=8, 0x80=NaN
     localparam [6:0] FMT_E4M3_FNUZ_ALT= 7'd69;   // cluster 10: same FNUZ encoding
+    // BitNet 1.58b ternary
+    localparam [6:0] FMT_BITNET       = 7'd71;   // cluster 10: ternary {-1,0,+1}
     // Aliases: same encoding as MX variants, different catalog cluster
     localparam [6:0] FMT_FP8_E4M3    = 7'd11;   // cluster 2: same as MXFP8 E4M3
     localparam [6:0] FMT_FP6_E3M2_ML = 7'd12;   // cluster 2: same as MXFP6 E3M2
@@ -246,6 +248,13 @@ module tt_um_trinity_corona (
         .is_zero(fnuz_zero), .is_nan(fnuz_nan)
     );
 
+    wire [31:0] bitnet_fp32;
+    wire        bitnet_zero, bitnet_reserved;
+    bitnet_decode u_bitnet (
+        .ternary_in(data_in_buf[25:24]), .fp32_out(bitnet_fp32),
+        .is_zero(bitnet_zero), .is_reserved(bitnet_reserved)
+    );
+
     // =====================================================================
     // ROM instance (placeholder -- Phase B populates)
     // =====================================================================
@@ -280,6 +289,7 @@ module tt_um_trinity_corona (
             FMT_MXINT8:      begin decode_result = mxint8_fp32; has_decoder = 1'b1; end
             FMT_E4M3_FNUZ:   begin decode_result = fnuz_fp32;   has_decoder = 1'b1; end
             FMT_E4M3_FNUZ_ALT:begin decode_result = fnuz_fp32;  has_decoder = 1'b1; end
+            FMT_BITNET:      begin decode_result = bitnet_fp32; has_decoder = 1'b1; end
             FMT_FP8_E4M3:   begin decode_result = mxfp8_fp32;  has_decoder = 1'b1; end
             FMT_FP6_E3M2_ML:begin decode_result = fp6_fp32;    has_decoder = 1'b1; end
             FMT_FP4_ML:     begin decode_result = fp4_fp32;    has_decoder = 1'b1; end
@@ -353,6 +363,7 @@ module tt_um_trinity_corona (
                      fp6e2m3_zero, int8_zero,
                      e8m0_nan, mxint8_zero, mxint8_reserved,
                      fnuz_zero, fnuz_nan,
+                     bitnet_zero, bitnet_reserved,
                      1'b0};
 
 endmodule
