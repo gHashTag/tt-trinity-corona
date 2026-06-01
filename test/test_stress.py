@@ -49,7 +49,7 @@ async def read_result_bytes(dut, n):
     result = []
     for _ in range(n):
         await Timer(1, units="ns")
-        result.append(dut.uo_out.value.to_unsigned())
+        result.append(dut.uo_out.value.integer)
         await RisingEdge(dut.clk)
     return result
 
@@ -74,7 +74,7 @@ async def transact_rom(dut, fmt_id):
     result = []
     for _ in range(10):
         await Timer(1, units="ns")
-        result.append(dut.uo_out.value.to_unsigned())
+        result.append(dut.uo_out.value.integer)
         await RisingEdge(dut.clk)
     dut.ui_in.value = 0x80
     await RisingEdge(dut.clk)  # DONE -> IDLE

@@ -29,11 +29,11 @@ async def test_anchor_probe(dut):
     # Combinational output: read immediately
     await cocotb.triggers.Timer(1, units="ns")
 
-    uo = dut.uo_out.value.to_unsigned()
-    uio = dut.uio_out.value.to_unsigned()
+    uo = dut.uo_out.value.integer
+    uio = dut.uio_out.value.integer
     combined = (uio << 8) | uo
 
-    oe = dut.uio_oe.value.to_unsigned()
+    oe = dut.uio_oe.value.integer
 
     assert uo == 0xC0, f"uo_out expected 0xC0, got 0x{uo:02X}"
     assert uio == 0x47, f"uio_out expected 0x47, got 0x{uio:02X}"
@@ -53,8 +53,8 @@ async def test_anchor_stable_across_cycles(dut):
     for cycle in range(10):
         await RisingEdge(dut.clk)
         await cocotb.triggers.Timer(1, units="ns")
-        uo = dut.uo_out.value.to_unsigned()
-        uio = dut.uio_out.value.to_unsigned()
+        uo = dut.uo_out.value.integer
+        uio = dut.uio_out.value.integer
         combined = (uio << 8) | uo
         assert combined == 0x47C0, f"cycle {cycle}: expected 0x47C0, got 0x{combined:04X}"
     dut._log.info("PASS: anchor stable across 10 cycles")
@@ -71,9 +71,9 @@ async def test_non_anchor_returns_zero(dut):
         dut.ui_in.value = fmt_id  # mode=00, fmt_id varies
         await RisingEdge(dut.clk)
         await cocotb.triggers.Timer(1, units="ns")
-        uo = dut.uo_out.value.to_unsigned()
-        uio = dut.uio_out.value.to_unsigned()
-        oe = dut.uio_oe.value.to_unsigned()
+        uo = dut.uo_out.value.integer
+        uio = dut.uio_out.value.integer
+        oe = dut.uio_oe.value.integer
         combined = (uio << 8) | uo
         assert combined != 0x47C0, f"fmt_id=0x{fmt_id:02X} should not produce anchor"
         assert oe == 0x00, f"fmt_id=0x{fmt_id:02X}: uio_oe should be 0x00, got 0x{oe:02X}"
@@ -92,7 +92,7 @@ async def test_reset_clears_state(dut):
     dut.uio_in.value = 0
     await ClockCycles(dut.clk, 5)
 
-    uo = dut.uo_out.value.to_unsigned()
+    uo = dut.uo_out.value.integer
     assert uo == 0, f"after reset, uo_out expected 0, got 0x{uo:02X}"
     dut._log.info("PASS: reset clears outputs")
 
@@ -123,7 +123,7 @@ async def test_ena_gate_freezes_fsm(dut):
     result = []
     for _ in range(4):
         await cocotb.triggers.Timer(1, units="ns")
-        result.append(dut.uo_out.value.to_unsigned())
+        result.append(dut.uo_out.value.integer)
         await RisingEdge(dut.clk)
     got = result[0] | (result[1] << 8) | (result[2] << 16) | (result[3] << 24)
     import struct

@@ -5,5 +5,6 @@
   "FP_SIZING": "absolute",
   "DIE_AREA": "0 0 1440.32 736.96",
   "RT_MAX_LAYER": "Metal4",
-  "DESIGN_IS_CORE": false
+  "DESIGN_IS_CORE": false,
+  "FP_PDN_SKIPTRIM": true
 }
