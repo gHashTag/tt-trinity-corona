@@ -341,6 +341,37 @@ async def test_bcd_values(dut):
     dut._log.info("PASS: BCD values correct")
 
 
+def ref_bcd(val):
+    """BCD packed byte -> 7-bit binary: tens*10 + ones."""
+    tens = (val >> 4) & 0xF
+    ones = val & 0xF
+    return tens * 10 + ones
+
+
+@cocotb.test()
+async def test_bcd_exhaustive_valid(dut):
+    """BCD: exhaustive test of all 100 valid packed BCD values (0x00-0x99)."""
+    clock = Clock(dut.clk, 40, units="ns")
+    cocotb.start_soon(clock.start())
+
+    fail_count = 0
+    for tens in range(10):
+        for ones in range(10):
+            bcd_in = (tens << 4) | ones
+            await reset_dut(dut)
+            expected = ref_bcd(bcd_in)
+            await send_cmd(dut, FMT_BCD, 1)
+            await send_data(dut, [bcd_in])
+            result = await read_result_bytes(dut, 4)
+            got = bytes_to_u32(result)
+            if got != expected:
+                dut._log.error(
+                    f"BCD 0x{bcd_in:02X}: expected {expected}, got {got}")
+                fail_count += 1
+    assert fail_count == 0, f"BCD: {fail_count}/100 values failed"
+    dut._log.info("PASS: BCD exhaustive valid (100/100)")
+
+
 # =========================================================================
 # LNS8 Exhaustive (256 values)
 # =========================================================================
@@ -590,6 +621,35 @@ async def test_tf32_key_values(dut):
         assert got == expected, \
             f"TF32 0x{tf32_in:05X}: expected 0x{expected:08X}, got 0x{got:08X}"
     dut._log.info("PASS: TF32 key values correct")
+
+
+@cocotb.test()
+async def test_tf32_random_sample(dut):
+    """TF32: random sample of 1024 values from the 19-bit input space."""
+    import random
+    rng = random.Random(42)
+    clock = Clock(dut.clk, 40, units="ns")
+    cocotb.start_soon(clock.start())
+
+    fail_count = 0
+    n_samples = 1024
+    for _ in range(n_samples):
+        tf32_in = rng.randint(0, (1 << 19) - 1)
+        await reset_dut(dut)
+        expected = ref_tf32(tf32_in)
+        b0 = tf32_in & 0xFF
+        b1 = (tf32_in >> 8) & 0xFF
+        b2 = (tf32_in >> 16) & 0xFF
+        await send_cmd(dut, FMT_TF32, 3)
+        await send_data(dut, [b0, b1, b2])
+        result = await read_result_bytes(dut, 4)
+        got = bytes_to_u32(result)
+        if got != expected:
+            dut._log.error(
+                f"TF32 0x{tf32_in:05X}: expected 0x{expected:08X}, got 0x{got:08X}")
+            fail_count += 1
+    assert fail_count == 0, f"TF32: {fail_count}/{n_samples} values failed"
+    dut._log.info(f"PASS: TF32 random sample ({n_samples}/{n_samples})")
 
 
 # =========================================================================
