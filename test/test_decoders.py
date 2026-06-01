@@ -178,7 +178,7 @@ def ref_posit8(byte_val):
 
 def ref_lns8(byte_val):
     """LNS8: 1 sign + 7-bit Q3.4 log -> {sign, 15'b0, magnitude[15:0]}."""
-    LUT = [256, 267, 279, 291, 304, 317, 331, 345,
+    LUT = [256, 267, 279, 292, 304, 318, 332, 347,
            362, 378, 395, 412, 431, 450, 470, 490]
     sign = (byte_val >> 7) & 1
     log_val = byte_val & 0x7F

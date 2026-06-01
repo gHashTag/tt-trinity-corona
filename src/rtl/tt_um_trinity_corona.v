@@ -504,6 +504,18 @@ module tt_um_trinity_corona (
             assert(uio_out == 8'h00);
             assert(uio_oe == 8'h00);
         end
+
+    // Cover points — prove each FSM state and key scenario is reachable
+    always @(posedge clk) begin
+        cover(rst_n && state == ST_IDLE);
+        cover(rst_n && state == ST_CMD2);
+        cover(rst_n && state == ST_DATA && data_cnt == 4'd15);
+        cover(rst_n && state == ST_DATA && data_cnt == 4'd1);
+        cover(rst_n && state == ST_STATUS && !rom_mode);
+        cover(rst_n && state == ST_STATUS && rom_mode);
+        cover(rst_n && state == ST_DONE);
+        cover(rst_n && is_anchor_cmd);
+    end
 `endif
 
     wire _unused = &{uio_in, bcd_valid, bf16_zero, bf16_inf, bf16_nan,
