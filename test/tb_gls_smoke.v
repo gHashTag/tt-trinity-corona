@@ -1,5 +1,5 @@
 // Gate-level simulation smoke test (no cocotb dependency).
-// Tests anchor probe + one BF16 decode against the synthesized netlist.
+// Tests: anchor probe, BF16 decode, posit8 decode, FP4 decode, reset re-entry.
 // Usage: yosys -> synth_netlist.v, then iverilog + simcells.v + this file.
 `timescale 1ns/1ps
 
@@ -72,8 +72,71 @@ module tb_gls_smoke;
         @(posedge clk); #1;
         check(8'h3F, 8'h00, "bf16 status[3]");
 
-        // DONE cycle
+        // DONE→IDLE: FSM needs 2 cycles (STATUS→DONE→IDLE)
         @(posedge clk); #1;
+        @(posedge clk); #1;
+
+        // --- Test 3: Posit8 decode of +1.0 (0x40 -> 0x3F800000) ---
+        // CMD1: fmt_id = 31 (posit8)
+        ui_in = 8'h1F;
+        @(posedge clk); #1;
+        // CMD2: byte_count = 1
+        ui_in = 8'h01;
+        @(posedge clk); #1;
+        // DATA: 0x40 = posit8(+1.0)
+        ui_in = 8'h40;
+        @(posedge clk); #1;
+        // STATUS: expect FP32 0x3F800000 (00, 00, 80, 3F LSB-first)
+        ui_in = 8'h80;
+        check(8'h00, 8'h00, "posit8 status[0]");
+        @(posedge clk); #1;
+        check(8'h00, 8'h00, "posit8 status[1]");
+        @(posedge clk); #1;
+        check(8'h80, 8'h00, "posit8 status[2]");
+        @(posedge clk); #1;
+        check(8'h3F, 8'h00, "posit8 status[3]");
+        // DONE→IDLE: FSM needs 2 cycles (STATUS→DONE→IDLE)
+        @(posedge clk); #1;
+        @(posedge clk); #1;
+
+        // --- Test 4: FP4 decode of +1.0 (0x02 -> 0x3F800000) ---
+        // CMD1: fmt_id = 41 (FP4 E2M1, OCP MX alias)
+        ui_in = 8'h29;
+        @(posedge clk); #1;
+        // CMD2: byte_count = 1
+        ui_in = 8'h01;
+        @(posedge clk); #1;
+        // DATA: 0x02 = fp4(+1.0)
+        ui_in = 8'h02;
+        @(posedge clk); #1;
+        // STATUS: expect FP32 0x3F800000
+        ui_in = 8'h80;
+        check(8'h00, 8'h00, "fp4 status[0]");
+        @(posedge clk); #1;
+        check(8'h00, 8'h00, "fp4 status[1]");
+        @(posedge clk); #1;
+        check(8'h80, 8'h00, "fp4 status[2]");
+        @(posedge clk); #1;
+        check(8'h3F, 8'h00, "fp4 status[3]");
+        @(posedge clk); #1;
+
+        // --- Test 5: Reset re-entry (FSM recovery) ---
+        // Start a transaction then assert reset mid-protocol
+        ui_in = 8'h08;  // CMD1: BF16
+        @(posedge clk); #1;
+        rst_n = 0;       // Assert reset mid-CMD2
+        @(posedge clk); @(posedge clk); #1;
+        rst_n = 1;       // Release reset
+        @(posedge clk); #1;
+        // Verify FSM recovered: anchor probe should work
+        ui_in = 8'h7F;
+        #2;
+        if (uo_out !== 8'hC0 || uio_out !== 8'h47) begin
+            $display("FAIL: reset-recovery anchor uo=%02X uio=%02X", uo_out, uio_out);
+            errors = errors + 1;
+        end else begin
+            $display("PASS: reset-recovery anchor = 0x47C0");
+        end
 
         // --- Summary ---
         @(posedge clk);
