@@ -44,6 +44,8 @@ module tt_um_trinity_corona (
     localparam [6:0] FMT_NF4           = 7'd70;   // cluster 10: compression
     localparam [6:0] FMT_INT8          = 7'd47;   // cluster 7: integer/fixed
     localparam [6:0] FMT_FP6_E2M3     = 7'd77;   // cluster 2: Blackwell sub-8-bit
+    localparam [6:0] FMT_E8M0         = 7'd78;   // cluster 5: OCP MX shared scale
+    localparam [6:0] FMT_MXINT8       = 7'd79;   // cluster 5: OCP MX integer
 
     // =====================================================================
     // Anchor probe (combinational, always active)
@@ -215,6 +217,20 @@ module tt_um_trinity_corona (
         .is_zero(int8_zero)
     );
 
+    wire [31:0] e8m0_fp32;
+    wire        e8m0_nan;
+    e8m0_decode u_e8m0 (
+        .e8m0_in(data_in_buf[31:24]), .fp32_out(e8m0_fp32),
+        .is_nan(e8m0_nan)
+    );
+
+    wire [31:0] mxint8_fp32;
+    wire        mxint8_zero, mxint8_reserved;
+    mxint8_decode u_mxint8 (
+        .mxint8_in(data_in_buf[31:24]), .fp32_out(mxint8_fp32),
+        .is_zero(mxint8_zero), .is_reserved(mxint8_reserved)
+    );
+
     // =====================================================================
     // ROM instance (placeholder -- Phase B populates)
     // =====================================================================
@@ -245,6 +261,8 @@ module tt_um_trinity_corona (
             FMT_FP8_E5M2:   begin decode_result = fp8e5m2_fp32; has_decoder = 1'b1; end
             FMT_FP6_E2M3:   begin decode_result = fp6e2m3_fp32; has_decoder = 1'b1; end
             FMT_INT8:        begin decode_result = int8_i32;    has_decoder = 1'b1; end
+            FMT_E8M0:        begin decode_result = e8m0_fp32;   has_decoder = 1'b1; end
+            FMT_MXINT8:      begin decode_result = mxint8_fp32; has_decoder = 1'b1; end
             default:         begin decode_result = 32'd0;       has_decoder = 1'b0; end
         endcase
     end
@@ -312,6 +330,7 @@ module tt_um_trinity_corona (
                      tf32_zero, tf32_inf, tf32_nan,
                      fp8e5m2_zero, fp8e5m2_inf, fp8e5m2_nan,
                      fp6e2m3_zero, int8_zero,
+                     e8m0_nan, mxint8_zero, mxint8_reserved,
                      1'b0};
 
 endmodule

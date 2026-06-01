@@ -30,6 +30,8 @@ project:
     - "rtl/fp8_e5m2_decode.v"
     - "rtl/fp6_e2m3_decode.v"
     - "rtl/int8_decode.v"
+    - "rtl/e8m0_decode.v"
+    - "rtl/mxint8_decode.v"
 
 # -----------------------------------------------------------------------------
 # Pin assignments

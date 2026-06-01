@@ -20,6 +20,8 @@ FMT_FP8_E5M2    = 10
 FMT_NF4         = 70
 FMT_INT8        = 47
 FMT_FP6_E2M3    = 77
+FMT_E8M0         = 78
+FMT_MXINT8       = 79
 
 
 async def reset_dut(dut):
@@ -728,3 +730,77 @@ async def test_bf16_exhaustive(dut):
                 break
     assert fail_count == 0, f"BF16: {fail_count}/65536 values failed"
     dut._log.info("PASS: BF16 exhaustive (65536/65536)")
+
+
+# =========================================================================
+# E8M0 Exhaustive (256 values)
+# =========================================================================
+
+def ref_e8m0(val):
+    """E8M0: 8-bit exponent-only. Value = 2^(e - 127). 0xFF = NaN."""
+    if val == 0xFF:
+        return 0x7FC00000  # quiet NaN
+    if val == 0x00:
+        return 0x00400000  # 2^(-127) as FP32 subnormal
+    # For e in [1, 254]: FP32 = {0, e, 23'b0}
+    return (val << 23) & 0x7FFFFFFF
+
+
+@cocotb.test()
+async def test_e8m0_exhaustive(dut):
+    """E8M0 shared scale: exhaustive test of all 256 values."""
+    clock = Clock(dut.clk, 20, unit="ns")
+    cocotb.start_soon(clock.start())
+
+    fail_count = 0
+    for inp in range(256):
+        await reset_dut(dut)
+        expected = ref_e8m0(inp)
+        await send_cmd(dut, FMT_E8M0, 1)
+        await send_data(dut, [inp])
+        result = await read_result_bytes(dut, 4)
+        got = bytes_to_u32(result)
+        if got != expected:
+            dut._log.error(
+                f"E8M0 0x{inp:02X}: expected 0x{expected:08X}, got 0x{got:08X}")
+            fail_count += 1
+    assert fail_count == 0, f"E8M0: {fail_count}/256 values failed"
+    dut._log.info("PASS: E8M0 exhaustive (256/256)")
+
+
+# =========================================================================
+# MXINT8 Exhaustive (256 values)
+# =========================================================================
+
+def ref_mxint8(val):
+    """MXINT8: two's complement * 2^(-6). -128 (0x80) = reserved -> NaN."""
+    if val == 0x00:
+        return 0x00000000
+    if val == 0x80:
+        return 0x7FC00000  # reserved -> NaN
+    # Signed interpretation
+    signed_val = val if val < 128 else val - 256
+    f = signed_val / 64.0  # * 2^(-6)
+    return struct.unpack('>I', struct.pack('>f', f))[0]
+
+
+@cocotb.test()
+async def test_mxint8_exhaustive(dut):
+    """MXINT8: exhaustive test of all 256 values (fixed-point * 2^-6)."""
+    clock = Clock(dut.clk, 20, unit="ns")
+    cocotb.start_soon(clock.start())
+
+    fail_count = 0
+    for inp in range(256):
+        await reset_dut(dut)
+        expected = ref_mxint8(inp)
+        await send_cmd(dut, FMT_MXINT8, 1)
+        await send_data(dut, [inp])
+        result = await read_result_bytes(dut, 4)
+        got = bytes_to_u32(result)
+        if got != expected:
+            dut._log.error(
+                f"MXINT8 0x{inp:02X}: expected 0x{expected:08X}, got 0x{got:08X}")
+            fail_count += 1
+    assert fail_count == 0, f"MXINT8: {fail_count}/256 values failed"
+    dut._log.info("PASS: MXINT8 exhaustive (256/256)")

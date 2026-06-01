@@ -202,9 +202,13 @@ CATALOG = [
 
     # Cluster 2 (continued): Blackwell sub-8-bit
     (77, CL_ML_LOW, ST_SPEC,         6, 1, 2, 3, ENC_FP, 12, FLAG_ON_DIE),  # fp6 e2m3 (Blackwell)
+
+    # Cluster 5 (continued): OCP MX scale + integer element types
+    (78, CL_OCP_MX, ST_SPEC,  8, 0, 8, 0, ENC_MX, 19, FLAG_ON_DIE),  # E8M0 (shared scale)
+    (79, CL_OCP_MX, ST_SPEC,  8, 1, 0, 7, ENC_MX, 19, FLAG_ON_DIE),  # MXINT8
 ]
 
-assert len(CATALOG) == 78, f"Expected 78 records, got {len(CATALOG)}"
+assert len(CATALOG) == 80, f"Expected 80 records, got {len(CATALOG)}"
 
 
 def generate_verilog(records, output_path):
