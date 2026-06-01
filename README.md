@@ -1,16 +1,17 @@
 # tt-trinity-corona
 
-TRI-1 Corona -- Format Conformance Oracle (TTGF26b / GF180MCU).
+TRI-1 Corona -- Format Conformance Oracle (TTGF26a / GF180MCU).
 
 The fourth chip in the TRI-NET line, after Phi, Euler, and Gamma. Corona is a
 **read-only conformance oracle**, not a compute accelerator.
 
 | Field | Value |
 | --- | --- |
-| Shuttle | TTGF26b (TinyTapeout, GF180MCU 180nm) |
-| Submission target | 2026 Q4 (approximate; date not yet published) |
-| Expected silicon | early 2027 (consistent with 5-6 months observed on TTGF26a) |
-| Document status | paper-design, pre-Phase-A |
+| Shuttle | TTGF26a (TinyTapeout, GF180MCU 180nm) |
+| Submission target | 2026-06-22 (TTGF26a close) |
+| Expected silicon | 2026-10 to 2026-11 |
+| Tile size | 4x4 (16 tiles) |
+| Document status | Phase A (stub RTL + anchor test) |
 | SSOT | `gHashTag/t27 specs/numeric/formats_catalog.t27` (PR #1028, issue #1029) |
 | License | Apache-2.0 |
 | Contact | admin@t27.ai, ORCID 0009-0008-4294-6159 |
@@ -64,7 +65,7 @@ Claim status of the sentence itself: **[Open conjecture]**.
 | Phi | `gHashTag/tt-trinity-phi` | TTSKY26b / SKY130A | 1x1 | Identity baseline | [Verified] |
 | Euler | `gHashTag/tt-trinity-euler` | TTSKY26b / SKY130A | 8x2 | Safety boundary | [Empirical fit] |
 | Gamma | `gHashTag/tt-trinity-gamma` | TTSKY26b / SKY130A | 8x4 | Ternary mesh compute (submitted 2026-05-17) | [Empirical fit] |
-| **Corona** | `gHashTag/tt-trinity-corona` | **TTGF26b / GF180MCU** | 8x2 or 8x4 (Phase A) | Format-completeness oracle | **[Spec]** |
+| **Corona** | `gHashTag/tt-trinity-corona` | **TTGF26a / GF180MCU** | 4x4 | Format-completeness oracle | **[Spec]** |
 
 ## The TG-TRIAD-X cross-die anchor
 
@@ -86,12 +87,14 @@ specs/corona/             # SSOT: chip spec in .t27 (Zig-like spec DSL)
   protocol.t27            # 8-bit serial CMD/DATA on TinyTapeout pins
   anchor.t27              # TG-TRIAD-X 0x47C0 anchor
   d2d_routing.t27         # die-to-die routing to Gamma
-src/rtl/                  # Verilog modules (Phase C, not yet populated)
+src/rtl/                  # Verilog modules (stub RTL with anchor probe)
 src/tb/                   # cocotb testbenches (Phase E, not yet populated)
+test/                     # cocotb test infrastructure (anchor test)
 tools/                    # ROM emitter (proposed as 17th lang in t27 PR)
 docs/                     # design notes, ADRs, PDK memos
+docs/adr/                 # Architecture Decision Records
 PLAN.md                   # full plan (also corona_plan.pdf, 23 pages)
-info.yaml                 # TinyTapeout chip metadata (Phase A skeleton)
+info.yaml                 # TinyTapeout chip metadata
 ```
 
 ## Claim-status discipline
@@ -116,7 +119,7 @@ The CI job `claim_status_lint` enforces that every claim in `.t27`, `.v`,
 
 | Phase | What | Days (solo, estimate) |
 | --- | --- | --- |
-| A | GF180MCU PDK exploration + tile-size decision (8x2 vs 8x4) | 3 |
+| A | GF180MCU PDK exploration + tile-size decision (4x4 confirmed) | 3 |
 | B | Verilog ROM emitter as 17th `gen_formats_catalog.py` lang | 5 |
 | C | Tier-1 RTL converters (12-15 modules) + per-module CI | 20-30 |
 | D | D2D wiring + Gamma routing simulation | 7 |

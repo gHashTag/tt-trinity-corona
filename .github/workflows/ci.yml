@@ -1,0 +1,67 @@
+# SPDX-License-Identifier: Apache-2.0
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate info.yaml
+        run: python3 -c "import yaml; d=yaml.safe_load(open('info.yaml')); assert 'project' in d, 'missing project section'"
+      - name: Install Icarus Verilog
+        run: sudo apt-get update && sudo apt-get install -y iverilog
+      - name: Verilog lint
+        run: make lint
+
+  claim-status-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check claim-status tags
+        run: |
+          python3 << 'SCRIPT'
+          import re, glob, sys
+
+          TAGS = [
+              "[Verified]", "[Empirical fit]", "[Open conjecture]",
+              "[Risk]", "[Retracted]", "[Experimental]", "[Historical]", "[Spec]",
+              "[Open / aggressive]", "[Open]",
+          ]
+          BANNED = re.compile(
+              r'\b(breakthrough|nobel|revolution|proves|first-ever|world-first|industry-leading|prize)\b',
+              re.IGNORECASE,
+          )
+          errors = 0
+          for pattern in ["**/*.v", "**/*.py", "**/*.md", "**/*.t27"]:
+              for path in glob.glob(pattern, recursive=True):
+                  if ".git/" in path or "node_modules/" in path:
+                      continue
+                  with open(path, errors="replace") as f:
+                      for i, line in enumerate(f, 1):
+                          m = BANNED.search(line)
+                          if m:
+                              print(f"::error file={path},line={i}::banned word '{m.group()}' in: {line.rstrip()}")
+                              errors += 1
+          if errors:
+              print(f"\n{errors} banned-word violation(s) found.")
+              sys.exit(1)
+          else:
+              print("claim-status-lint: PASS (no banned words found)")
+          SCRIPT
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Icarus Verilog
+        run: sudo apt-get update && sudo apt-get install -y iverilog
+      - name: Install cocotb
+        run: pip install cocotb
+      - name: Run tests
+        run: make test
