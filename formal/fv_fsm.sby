@@ -1,0 +1,52 @@
+[tasks]
+bmc
+
+[options]
+bmc: mode bmc
+bmc: depth 30
+
+[engines]
+smtbmc z3
+
+[script]
+read -formal -DFORMAL tt_um_trinity_corona.v
+read -formal format_rom.v
+read -formal bf16_decode.v
+read -formal tf32_decode.v
+read -formal fp8_e5m2_decode.v
+read -formal fp8_e4m3_fnuz_decode.v
+read -formal mxfp8_e4m3_decode.v
+read -formal fp6_e3m2_decode.v
+read -formal fp6_e2m3_decode.v
+read -formal fp4_decode.v
+read -formal nf4_decode.v
+read -formal bitnet_decode.v
+read -formal int4_decode.v
+read -formal int8_decode.v
+read -formal e8m0_decode.v
+read -formal mxint8_decode.v
+read -formal posit8_decode.v
+read -formal lns8_decode.v
+read -formal bcd_decode.v
+prep -top tt_um_trinity_corona
+
+[files]
+../src/rtl/tt_um_trinity_corona.v
+../src/rtl/format_rom.v
+../src/rtl/bf16_decode.v
+../src/rtl/tf32_decode.v
+../src/rtl/fp8_e5m2_decode.v
+../src/rtl/fp8_e4m3_fnuz_decode.v
+../src/rtl/mxfp8_e4m3_decode.v
+../src/rtl/fp6_e3m2_decode.v
+../src/rtl/fp6_e2m3_decode.v
+../src/rtl/fp4_decode.v
+../src/rtl/nf4_decode.v
+../src/rtl/bitnet_decode.v
+../src/rtl/int4_decode.v
+../src/rtl/int8_decode.v
+../src/rtl/e8m0_decode.v
+../src/rtl/mxint8_decode.v
+../src/rtl/posit8_decode.v
+../src/rtl/lns8_decode.v
+../src/rtl/bcd_decode.v

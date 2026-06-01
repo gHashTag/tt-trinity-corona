@@ -366,6 +366,93 @@ module tt_um_trinity_corona (
     assign uio_out = uio_out_r;
     assign uio_oe  = is_anchor_cmd ? 8'hFF : 8'h00;
 
+    // =====================================================================
+    // Formal verification properties (active only under SymbiYosys)
+    // =====================================================================
+`ifdef FORMAL
+    reg f_past_valid = 1'b0;
+    initial assume(!rst_n);
+    always @(posedge clk) f_past_valid <= 1'b1;
+
+    // P1: Safety — state always valid
+    always @(posedge clk)
+        if (rst_n) assert(state <= 3'd4);
+
+    // P2: Reset — all registers cleared
+    always @(posedge clk)
+        if (!rst_n) begin
+            assert(state == 3'd0);
+            assert(fmt_id_r == 7'd0);
+            assert(data_cnt == 4'd0);
+            assert(status_cnt == 4'd0);
+            assert(rom_mode == 1'b0);
+            assert(data_in_buf == 32'd0);
+        end
+
+    // P3: ena gate — FSM frozen when ena=0
+    always @(posedge clk)
+        if (f_past_valid && rst_n && !$past(ena)) begin
+            assert(state == $past(state));
+            assert(fmt_id_r == $past(fmt_id_r));
+            assert(data_cnt == $past(data_cnt));
+            assert(status_cnt == $past(status_cnt));
+            assert(rom_mode == $past(rom_mode));
+            assert(data_in_buf == $past(data_in_buf));
+        end
+
+    // P4: Anchor isolation — 0x7F never latched
+    always @(posedge clk)
+        if (rst_n) assert(fmt_id_r != 7'h7F);
+
+    // P5: State transition validity
+    always @(posedge clk)
+        if (f_past_valid && rst_n && $past(ena)) begin
+            if ($past(state) == ST_IDLE)
+                assert(state == ST_IDLE || state == ST_CMD2);
+            if ($past(state) == ST_CMD2)
+                assert(state == ST_DATA || state == ST_STATUS);
+            if ($past(state) == ST_DATA)
+                assert(state == ST_DATA || state == ST_STATUS);
+            if ($past(state) == ST_STATUS)
+                assert(state == ST_STATUS || state == ST_DONE);
+            if ($past(state) == ST_DONE)
+                assert(state == ST_IDLE);
+        end
+
+    // P6: Counter invariants
+    always @(posedge clk)
+        if (rst_n) begin
+            if (state == ST_DATA) assert(data_cnt >= 4'd1);
+            if (state == ST_STATUS && rom_mode) assert(status_cnt <= 4'd10);
+            if (state == ST_STATUS && !rom_mode) assert(status_cnt <= 4'd4);
+        end
+
+    // P7: fmt_id_r stable after latching
+    always @(posedge clk)
+        if (f_past_valid && rst_n && $past(ena) && $past(state) != ST_IDLE)
+            assert(fmt_id_r == $past(fmt_id_r));
+
+    // P8: rom_mode=0 in DATA state
+    always @(posedge clk)
+        if (rst_n && state == ST_DATA) assert(rom_mode == 1'b0);
+
+    // P9: data_in_buf cleared on IDLE→CMD2
+    always @(posedge clk)
+        if (f_past_valid && rst_n && $past(ena) && $past(state) == ST_IDLE && state == ST_CMD2)
+            assert(data_in_buf == 32'd0);
+
+    // P10: Bounded liveness — never more than 28 cycles from IDLE
+    reg [4:0] f_idle_timer;
+    always @(posedge clk or negedge rst_n)
+        if (!rst_n) f_idle_timer <= 5'd0;
+        else if (ena) begin
+            if (state == ST_IDLE) f_idle_timer <= 5'd0;
+            else f_idle_timer <= f_idle_timer + 5'd1;
+        end
+    always @(posedge clk)
+        if (rst_n) assert(f_idle_timer <= 5'd28);
+`endif
+
     wire _unused = &{uio_in, bcd_valid, bf16_zero, bf16_inf, bf16_nan,
                      mxfp8_zero, mxfp8_nan, lns8_zero, posit8_zero, posit8_nar,
                      tf32_zero, tf32_inf, tf32_nan,
