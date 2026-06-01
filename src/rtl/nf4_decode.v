@@ -29,6 +29,7 @@ module nf4_decode (
             4'hD: fp32_out = 32'h3F1007AB;  // +0.5626
             4'hE: fp32_out = 32'h3F3913B3;  // +0.7230
             4'hF: fp32_out = 32'h3F800000;  // +1.0
+            default: fp32_out = 32'h00000000;
         endcase
     end
 

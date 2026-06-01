@@ -41,5 +41,10 @@ module fv_nf4;
         if (nf4_in < 4'h7) assert(fp32_out[31] == 1'b1);
         if (nf4_in == 4'h7) assert(fp32_out == 32'h00000000);
         if (nf4_in > 4'h7) assert(fp32_out[31] == 1'b0);
+
+        cover(nf4_in == 4'h0);  // -1.0 (min)
+        cover(nf4_in == 4'h7);  // 0.0 (zero)
+        cover(nf4_in == 4'hF);  // +1.0 (max)
+        cover(nf4_in == 4'h8);  // smallest positive
     end
 endmodule

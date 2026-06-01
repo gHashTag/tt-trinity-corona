@@ -42,5 +42,10 @@ module fv_fp4;
         // ±1.0 at positions 2 and A
         if (fp4_in == 4'h2) assert(fp32_out == 32'h3F800000);
         if (fp4_in == 4'hA) assert(fp32_out == 32'hBF800000);
+
+        cover(fp4_in == 4'h0);  // +0.0
+        cover(fp4_in == 4'h7);  // +6.0 (max positive)
+        cover(fp4_in == 4'hF);  // -6.0 (max negative)
+        cover(fp4_in == 4'h2);  // +1.0
     end
 endmodule

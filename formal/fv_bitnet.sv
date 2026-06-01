@@ -34,5 +34,10 @@ module fv_bitnet;
         // Reserved → quiet NaN
         if (ternary_in == 2'b11)
             assert(fp32_out == 32'h7FC00000);
+
+        cover(ternary_in == 2'b00);  // zero
+        cover(ternary_in == 2'b01);  // +1
+        cover(ternary_in == 2'b10);  // -1
+        cover(ternary_in == 2'b11);  // NaN (reserved)
     end
 endmodule

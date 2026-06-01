@@ -28,6 +28,7 @@ module fp4_decode (
             4'hD: fp32_out = 32'hC0400000;  // -3.0
             4'hE: fp32_out = 32'hC0800000;  // -4.0
             4'hF: fp32_out = 32'hC0C00000;  // -6.0
+            default: fp32_out = 32'h00000000;
         endcase
     end
 

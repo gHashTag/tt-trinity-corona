@@ -243,5 +243,17 @@ module fv_rom (
             if (f_enc_kind == 4'd1) assert(f_mant_bits == 8'd0);
         end
 
+        // ===========================================================
+        // P8: Cover properties — prove the proof exercises key entries
+        // ===========================================================
+        cover(addr == 7'd 0);   // first entry (fp16)
+        cover(addr == 7'd79);   // last entry
+        cover(addr == 7'd80);   // first out-of-range (default zero)
+        cover(f_cluster_id == 4'd3);   // posit cluster
+        cover(f_cluster_id == 4'd8);   // decimal-float cluster
+        cover(f_enc_kind == 4'd6);     // unsigned integer encoding
+        cover(f_enc_kind == 4'd7);     // posit encoding
+        cover(f_status_id == 4'd6);    // historical status
+
     end
 endmodule

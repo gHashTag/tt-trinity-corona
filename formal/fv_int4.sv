@@ -15,5 +15,10 @@ module fv_int4;
         assert(is_zero == (int4_in == 4'd0));
         if (!int4_in[3]) assert(int32_out[31:4] == 28'd0);
         if (int4_in[3])  assert(int32_out[31:4] == {28{1'b1}});
+
+        cover(int4_in == 4'd0);   // zero
+        cover(int4_in == 4'd7);   // max positive (+7)
+        cover(int4_in == 4'hF);   // -1
+        cover(int4_in == 4'h8);   // min negative (-8)
     end
 endmodule
