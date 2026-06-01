@@ -1,10 +1,10 @@
 # TRI-1 Corona -- Format Conformance Oracle (TTGF26a)
 
-Project repo (proposed): gHashTag/tt-trinity-corona
+Project repo: gHashTag/tt-trinity-corona
 Target shuttle: TTGF26a (GlobalFoundries GF180MCU, 180nm)
-Target submission: 2026 Q4 (approximate; not yet published as a calendar date)
-Expected silicon delivery: early 2027 (consistent with 5-6 months observed on TTGF26a)
-Document status: paper-design, pre-repo-creation
+Target submission: 2026-06-22 (TTGF26a shuttle close)
+Expected silicon delivery: 2026-10-01 (approximately 4 months post-submission)
+Document status: post-Phase-C, GDS iteration (18 RTL modules, CI 6/6 green, GDS hardening OK)
 Document version: corona_plan-v1.0 (merged from corona_plan_skeleton.md and corona_research.md)
 
 Claim-status key used throughout: [Verified], [Empirical fit], [Open conjecture], [Risk], [Retracted], [Experimental], [Historical], [Spec].
@@ -637,4 +637,4 @@ The CI pipeline for gHashTag/tt-trinity-corona mirrors Gamma and Euler, with Cor
 
 ---
 
-*Document version: corona_plan-v1.0. Produced as the merged final plan from `corona_research.md` (research) and `corona_plan_skeleton.md` (skeleton). All claims carry an explicit status tag. No claim is asserted without either a verifiable URL or an explicit [Open conjecture] / [Historical] tag. Repo gHashTag/tt-trinity-corona is NOT yet created; this plan awaits go/no-go from the user before any GitHub action is taken.*
+*Document version: corona_plan-v1.0. Produced as the merged final plan from `corona_research.md` (research) and `corona_plan_skeleton.md` (skeleton). All claims carry an explicit status tag. No claim is asserted without either a verifiable URL or an explicit [Open conjecture] / [Historical] tag. Repo gHashTag/tt-trinity-corona is active with 18 RTL modules, 44 formal tasks, 44 cocotb tests, and CI 6/6 green.*
