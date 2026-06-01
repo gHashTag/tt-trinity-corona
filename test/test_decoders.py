@@ -22,6 +22,8 @@ FMT_INT8        = 47
 FMT_FP6_E2M3    = 77
 FMT_E8M0         = 78
 FMT_MXINT8       = 79
+FMT_E4M3_FNUZ    = 14
+FMT_E4M3_FNUZ_ALT= 69
 FMT_FP8_E4M3    = 11
 FMT_FP6_E3M2_ML = 12
 FMT_FP4_ML      = 13
@@ -810,6 +812,55 @@ async def test_mxint8_exhaustive(dut):
     dut._log.info("PASS: MXINT8 exhaustive (256/256)")
 
 
+def ref_fp8_e4m3_fnuz(val):
+    """FP8 E4M3 FNUZ -> FP32 reference. Bias=8, 0x80=NaN, no inf."""
+    val = val & 0xFF
+    if val == 0x00:
+        return 0x00000000
+    if val == 0x80:
+        return 0x7FC00000
+    sign = (val >> 7) & 1
+    exp = (val >> 3) & 0xF
+    mant = val & 0x7
+    if exp == 0:
+        if mant & 0x4:
+            fp32_exp = 119
+            fp32_mant = (mant & 0x3) << 21
+        elif mant & 0x2:
+            fp32_exp = 118
+            fp32_mant = (mant & 0x1) << 22
+        else:
+            fp32_exp = 117
+            fp32_mant = 0
+        return (sign << 31) | (fp32_exp << 23) | fp32_mant
+    else:
+        fp32_exp = exp + 119
+        fp32_mant = mant << 20
+        return (sign << 31) | (fp32_exp << 23) | fp32_mant
+
+
+@cocotb.test()
+async def test_fp8_e4m3_fnuz_exhaustive(dut):
+    """FP8 E4M3 FNUZ (fmt_id=14): bias=8, 0x80=NaN. 256 exhaustive."""
+    clock = Clock(dut.clk, 20, unit="ns")
+    cocotb.start_soon(clock.start())
+
+    fail_count = 0
+    for inp in range(256):
+        await reset_dut(dut)
+        expected = ref_fp8_e4m3_fnuz(inp)
+        await send_cmd(dut, FMT_E4M3_FNUZ, 1)
+        await send_data(dut, [inp])
+        result = await read_result_bytes(dut, 4)
+        got = bytes_to_u32(result)
+        if got != expected:
+            dut._log.error(
+                f"E4M3_FNUZ 0x{inp:02X}: expected 0x{expected:08X}, got 0x{got:08X}")
+            fail_count += 1
+    assert fail_count == 0, f"E4M3 FNUZ: {fail_count}/256 values failed"
+    dut._log.info("PASS: FP8 E4M3 FNUZ exhaustive (256/256)")
+
+
 # =========================================================================
 # Alias decoder tests: same encoding, different fmt_id
 # =========================================================================
@@ -892,3 +943,25 @@ async def test_nf4_bnb_alias(dut):
         assert got == expected, \
             f"NF4_BNB 0x{inp:X}: expected 0x{expected:08X}, got 0x{got:08X}"
     dut._log.info("PASS: NF4 bitsandbytes alias exhaustive (16/16)")
+
+
+@cocotb.test()
+async def test_e4m3_fnuz_alt_alias(dut):
+    """E4M3 FNUZ alt (fmt_id=69) uses same decoder as FNUZ (fmt_id=14)."""
+    clock = Clock(dut.clk, 20, unit="ns")
+    cocotb.start_soon(clock.start())
+
+    fail_count = 0
+    for inp in range(256):
+        await reset_dut(dut)
+        expected = ref_fp8_e4m3_fnuz(inp)
+        await send_cmd(dut, FMT_E4M3_FNUZ_ALT, 1)
+        await send_data(dut, [inp])
+        result = await read_result_bytes(dut, 4)
+        got = bytes_to_u32(result)
+        if got != expected:
+            dut._log.error(
+                f"E4M3_FNUZ_ALT 0x{inp:02X}: expected 0x{expected:08X}, got 0x{got:08X}")
+            fail_count += 1
+    assert fail_count == 0, f"E4M3 FNUZ alt: {fail_count}/256 values failed"
+    dut._log.info("PASS: E4M3 FNUZ alt alias exhaustive (256/256)")

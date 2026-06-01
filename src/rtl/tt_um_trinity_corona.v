@@ -46,6 +46,9 @@ module tt_um_trinity_corona (
     localparam [6:0] FMT_FP6_E2M3     = 7'd77;   // cluster 2: Blackwell sub-8-bit
     localparam [6:0] FMT_E8M0         = 7'd78;   // cluster 5: OCP MX shared scale
     localparam [6:0] FMT_MXINT8       = 7'd79;   // cluster 5: OCP MX integer
+    // FP8 E4M3 FNUZ (AMD MI300/CDNA3 variant, genuinely different encoding)
+    localparam [6:0] FMT_E4M3_FNUZ    = 7'd14;   // cluster 2: bias=8, 0x80=NaN
+    localparam [6:0] FMT_E4M3_FNUZ_ALT= 7'd69;   // cluster 10: same FNUZ encoding
     // Aliases: same encoding as MX variants, different catalog cluster
     localparam [6:0] FMT_FP8_E4M3    = 7'd11;   // cluster 2: same as MXFP8 E4M3
     localparam [6:0] FMT_FP6_E3M2_ML = 7'd12;   // cluster 2: same as MXFP6 E3M2
@@ -236,6 +239,13 @@ module tt_um_trinity_corona (
         .is_zero(mxint8_zero), .is_reserved(mxint8_reserved)
     );
 
+    wire [31:0] fnuz_fp32;
+    wire        fnuz_zero, fnuz_nan;
+    fp8_e4m3_fnuz_decode u_fnuz (
+        .e4m3_in(data_in_buf[31:24]), .fp32_out(fnuz_fp32),
+        .is_zero(fnuz_zero), .is_nan(fnuz_nan)
+    );
+
     // =====================================================================
     // ROM instance (placeholder -- Phase B populates)
     // =====================================================================
@@ -268,6 +278,8 @@ module tt_um_trinity_corona (
             FMT_INT8:        begin decode_result = int8_i32;    has_decoder = 1'b1; end
             FMT_E8M0:        begin decode_result = e8m0_fp32;   has_decoder = 1'b1; end
             FMT_MXINT8:      begin decode_result = mxint8_fp32; has_decoder = 1'b1; end
+            FMT_E4M3_FNUZ:   begin decode_result = fnuz_fp32;   has_decoder = 1'b1; end
+            FMT_E4M3_FNUZ_ALT:begin decode_result = fnuz_fp32;  has_decoder = 1'b1; end
             FMT_FP8_E4M3:   begin decode_result = mxfp8_fp32;  has_decoder = 1'b1; end
             FMT_FP6_E3M2_ML:begin decode_result = fp6_fp32;    has_decoder = 1'b1; end
             FMT_FP4_ML:     begin decode_result = fp4_fp32;    has_decoder = 1'b1; end
@@ -340,6 +352,7 @@ module tt_um_trinity_corona (
                      fp8e5m2_zero, fp8e5m2_inf, fp8e5m2_nan,
                      fp6e2m3_zero, int8_zero,
                      e8m0_nan, mxint8_zero, mxint8_reserved,
+                     fnuz_zero, fnuz_nan,
                      1'b0};
 
 endmodule

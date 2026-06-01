@@ -116,7 +116,7 @@ CATALOG = [
     (11, CL_ML_LOW,   ST_EXPERIMENTAL,8,  1,  4,  3, ENC_FP,11, FLAG_ON_DIE), # fp8 e4m3
     (12, CL_ML_LOW,   ST_SPEC,        6,  1,  3,  2, ENC_FP,12, FLAG_ON_DIE), # fp6 e3m2
     (13, CL_ML_LOW,   ST_SPEC,        4,  1,  2,  1, ENC_FP,13, FLAG_ON_DIE), # fp4 e2m1
-    (14, CL_ML_LOW,   ST_EXPERIMENTAL,8,  1,  4,  3, ENC_FP,14, 0),           # fp8 e4m3 fnuz
+    (14, CL_ML_LOW,   ST_EXPERIMENTAL,8,  1,  4,  3, ENC_FP,14, FLAG_ON_DIE), # fp8 e4m3 fnuz
 
     # Cluster 3: GoldenFloat (16)
     (15, CL_GOLDENFLOAT, ST_CONJECTURE, 4, 1, 1, 2, ENC_GF,15, FLAG_GAMMA|FLAG_D2D),  # GF4
@@ -187,7 +187,7 @@ CATALOG = [
 
     # Cluster 10: Compression (4)
     (68, CL_COMPRESSION, ST_SPEC,        16, 1, 5,10, ENC_FP, 37, 0),           # fp16 e5m10 alt
-    (69, CL_COMPRESSION, ST_EXPERIMENTAL, 8, 1, 4, 3, ENC_FP, 38, 0),           # fp8 e4m3 fnuz-alt
+    (69, CL_COMPRESSION, ST_EXPERIMENTAL, 8, 1, 4, 3, ENC_FP, 38, FLAG_ON_DIE), # fp8 e4m3 fnuz-alt
     (70, CL_COMPRESSION, ST_EXPERIMENTAL, 4, 0, 0, 4, ENC_INT,39, FLAG_ON_DIE), # nf4 (QLoRA)
     (71, CL_COMPRESSION, ST_EXPERIMENTAL, 2, 1, 0, 1, ENC_INT,40, FLAG_GAMMA|FLAG_D2D),  # bitnet
 
