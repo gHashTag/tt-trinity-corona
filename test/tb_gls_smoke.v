@@ -1,6 +1,6 @@
 // Gate-level simulation smoke test (no cocotb dependency).
-// 42 tests: all 18 decoders (positive+edge), NaN/Inf/subnormal, sign extension,
-// aliases, NOT_IMPL sentinel, ROM readback, reset recovery.
+// 63 tests: all 18 decoders (positive + negative + boundary + subnormal),
+// NaN/Inf/-0, sign extension, aliases, NOT_IMPL, ROM, synthesis stress, reset.
 // Usage: yosys -> synth_netlist.v, then iverilog + simcells.v + this file.
 `timescale 1ns/1ps
 
@@ -310,9 +310,59 @@ module tb_gls_smoke;
         // --- Test 51: FP8 E5M2 -Inf (0xFC) ---
         decode_1byte(7'd10, 8'hFC, 32'hFF800000, "fp8e5m2 -Inf");
 
+        // ============= Remaining decoder boundaries =============
+
+        // --- Test 52: Posit8 zero (0x00) ---
+        decode_1byte(7'd31, 8'h00, 32'h00000000, "posit8 zero");
+
+        // --- Test 53: Posit8 NaR (0x80 -> qNaN) ---
+        decode_1byte(7'd31, 8'h80, 32'h7FC00000, "posit8 NaR");
+
+        // --- Test 54: Posit8 -1.0 (0xC0) ---
+        decode_1byte(7'd31, 8'hC0, 32'hBF800000, "posit8 -1.0");
+
+        // --- Test 55: BF16 +Inf (0x7F80) ---
+        pre_err = errors;
+        ui_in = 8'h08; @(posedge clk); #1;
+        ui_in = 8'h02; @(posedge clk); #1;
+        ui_in = 8'h80; @(posedge clk); #1;
+        ui_in = 8'h7F; @(posedge clk); #1;
+        ui_in = 8'h80;
+        check(8'h00, 8'h00, "bf16inf s[0]");
+        @(posedge clk); #1;
+        check(8'h00, 8'h00, "bf16inf s[1]");
+        @(posedge clk); #1;
+        check(8'h80, 8'h00, "bf16inf s[2]");
+        @(posedge clk); #1;
+        check(8'h7F, 8'h00, "bf16inf s[3]");
+        if (errors == pre_err) $display("PASS: bf16 +Inf -> 7F800000");
+        @(posedge clk); #1;
+        @(posedge clk); #1;
+
+        // --- Test 56: FP6 E3M2 subnormal (0x01, exp=123) ---
+        decode_1byte(7'd40, 8'h01, 32'h3D800000, "fp6e3m2 sub");
+
+        // --- Test 57: LNS8 max positive (0x7F, mag=62720) ---
+        decode_1byte(7'd42, 8'h7F, 32'h0000F500, "lns8 max");
+
+        // --- Test 58: LNS8 signed (0x80, sign=1 mag=256) ---
+        decode_1byte(7'd42, 8'h80, 32'h80000100, "lns8 neg");
+
+        // --- Test 59: BCD zero (0x00) ---
+        decode_1byte(7'd53, 8'h00, 32'h00000000, "bcd zero");
+
+        // --- Test 60: BCD max valid (0x99 = 99 decimal = 0x63) ---
+        decode_1byte(7'd53, 8'h99, 32'h00000063, "bcd 99");
+
+        // --- Test 61: Alias fmt_id=12 (FP6 E3M2 ML) == fmt_id=40 ---
+        decode_1byte(7'd12, 8'h0C, 32'h3F800000, "alias 12=40");
+
+        // --- Test 62: Alias fmt_id=69 (FNUZ alt) == fmt_id=14 ---
+        decode_1byte(7'd69, 8'h40, 32'h3F800000, "alias 69=14");
+
         // ===================== Infrastructure tests =====================
 
-        // --- Test 52: Reset re-entry (FSM recovery) ---
+        // --- Test 63: Reset re-entry (FSM recovery) ---
         ui_in = 8'h08;  // CMD1: BF16
         @(posedge clk); #1;
         rst_n = 0;       // Assert reset mid-CMD2

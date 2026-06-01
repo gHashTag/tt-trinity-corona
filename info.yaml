@@ -8,7 +8,7 @@ project:
   discord:      ""
   description:  "Read-only conformance oracle for 80 numeric formats. ROM stores the full SSOT catalog from gHashTag/t27 (PR #1028); 18 Tier-1 RTL decoders convert on-die formats to FP32/INT32. D2D routes Gamma-owned formats to the Gamma die."
   language:     "Verilog"
-  clock_hz:     50000000
+  clock_hz:     25000000
   tiles:        "4x4"
 
   # Shuttle: ttgf26a (GlobalFoundries GF180MCU 180nm, open Apache-2.0 PDK)

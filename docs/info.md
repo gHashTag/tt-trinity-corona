@@ -73,4 +73,4 @@ is needed:
   TTSKY26b / SKY130A).
 - 8 wires connecting Corona's `uio[7:0]` to Gamma's `uio[7:0]` on a shared
   breakout board (4 TX + 4 RX, directly connected or active buffered at 3.3V).
-- Both modules clocked at the same frequency (50 MHz nominal).
+- Both modules clocked at the same frequency (25 MHz nominal).

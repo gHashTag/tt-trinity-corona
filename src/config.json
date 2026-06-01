@@ -1,4 +1,4 @@
 {
-  "CLOCK_PERIOD": 20,
+  "CLOCK_PERIOD": 40,
   "CLOCK_PORT": "clk"
 }
