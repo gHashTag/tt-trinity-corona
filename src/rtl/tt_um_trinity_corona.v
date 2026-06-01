@@ -133,81 +133,85 @@ module tt_um_trinity_corona (
     // Tier-1 decoder instances
     // =====================================================================
 
+    // Decoder bit positions: right-shift register {ui_in, data_in_buf[31:8]}
+    // puts data at MSB side. After N bytes: data at [31 : 32-8*N].
+    // 1-byte formats: [31:24]; 2-byte: [31:16]; 3-byte: [26:8] for 19-bit TF32.
+
     wire [31:0] bf16_fp32;
     wire        bf16_zero, bf16_inf, bf16_nan;
     bf16_decode u_bf16 (
-        .bf16_in(data_in_buf[15:0]), .fp32_out(bf16_fp32),
+        .bf16_in(data_in_buf[31:16]), .fp32_out(bf16_fp32),
         .is_zero(bf16_zero), .is_inf(bf16_inf), .is_nan(bf16_nan)
     );
 
     wire [31:0] mxfp8_fp32;
     wire        mxfp8_zero, mxfp8_nan;
     mxfp8_e4m3_decode u_mxfp8 (
-        .e4m3_in(data_in_buf[7:0]), .fp32_out(mxfp8_fp32),
+        .e4m3_in(data_in_buf[31:24]), .fp32_out(mxfp8_fp32),
         .is_zero(mxfp8_zero), .is_nan(mxfp8_nan)
     );
 
     wire [6:0] bcd_bin;
     wire       bcd_valid;
     bcd_decode u_bcd (
-        .bcd_in(data_in_buf[7:0]), .bin_out(bcd_bin), .valid(bcd_valid)
+        .bcd_in(data_in_buf[31:24]), .bin_out(bcd_bin), .valid(bcd_valid)
     );
 
     wire        lns8_sign;
     wire [15:0] lns8_mag;
     wire        lns8_zero;
     lns8_decode u_lns8 (
-        .lns_in(data_in_buf[7:0]), .sign_out(lns8_sign),
+        .lns_in(data_in_buf[31:24]), .sign_out(lns8_sign),
         .magnitude(lns8_mag), .is_zero(lns8_zero)
     );
 
     wire [31:0] posit8_fp32;
     wire        posit8_zero, posit8_nar;
     posit8_decode u_posit8 (
-        .posit_in(data_in_buf[7:0]), .fp32_out(posit8_fp32),
+        .posit_in(data_in_buf[31:24]), .fp32_out(posit8_fp32),
         .is_zero(posit8_zero), .is_nar(posit8_nar)
     );
 
     wire [31:0] fp4_fp32;
     fp4_decode u_fp4 (
-        .fp4_in(data_in_buf[3:0]), .fp32_out(fp4_fp32)
+        .fp4_in(data_in_buf[27:24]), .fp32_out(fp4_fp32)
     );
 
     wire [31:0] fp6_fp32;
     fp6_e3m2_decode u_fp6 (
-        .fp6_in(data_in_buf[5:0]), .fp32_out(fp6_fp32)
+        .fp6_in(data_in_buf[29:24]), .fp32_out(fp6_fp32)
     );
 
     wire [31:0] nf4_fp32;
     nf4_decode u_nf4 (
-        .nf4_in(data_in_buf[3:0]), .fp32_out(nf4_fp32)
+        .nf4_in(data_in_buf[27:24]), .fp32_out(nf4_fp32)
     );
 
     wire [31:0] tf32_fp32;
     wire        tf32_zero, tf32_inf, tf32_nan;
     tf32_decode u_tf32 (
-        .tf32_in(data_in_buf[18:0]), .fp32_out(tf32_fp32),
+        .tf32_in(data_in_buf[26:8]), .fp32_out(tf32_fp32),
         .is_zero(tf32_zero), .is_inf(tf32_inf), .is_nan(tf32_nan)
     );
 
     wire [31:0] fp8e5m2_fp32;
     wire        fp8e5m2_zero, fp8e5m2_inf, fp8e5m2_nan;
     fp8_e5m2_decode u_fp8e5m2 (
-        .e5m2_in(data_in_buf[7:0]), .fp32_out(fp8e5m2_fp32),
+        .e5m2_in(data_in_buf[31:24]), .fp32_out(fp8e5m2_fp32),
         .is_zero(fp8e5m2_zero), .is_inf(fp8e5m2_inf), .is_nan(fp8e5m2_nan)
     );
 
     wire [31:0] fp6e2m3_fp32;
     wire        fp6e2m3_zero;
     fp6_e2m3_decode u_fp6e2m3 (
-        .fp6_in(data_in_buf[5:0]), .fp32_out(fp6e2m3_fp32),
+        .fp6_in(data_in_buf[29:24]), .fp32_out(fp6e2m3_fp32),
         .is_zero(fp6e2m3_zero)
     );
 
     wire [31:0] int8_i32;
     wire        int8_zero;
     int8_decode u_int8 (
-        .int8_in(data_in_buf[7:0]), .int32_out(int8_i32),
+        .int8_in(data_in_buf[31:24]), .int32_out(int8_i32),
         .is_zero(int8_zero)
     );
 
@@ -287,12 +291,12 @@ module tt_um_trinity_corona (
     reg [7:0] uio_out_r;
 
     always @(*) begin
-        if (is_anchor_cmd) begin
-            uo_out_r  = ANCHOR_UO;
-            uio_out_r = ANCHOR_UIO;
-        end else if (state == ST_STATUS) begin
+        if (state == ST_STATUS) begin
             uo_out_r  = status_byte;
             uio_out_r = 8'h00;
+        end else if (is_anchor_cmd) begin
+            uo_out_r  = ANCHOR_UO;
+            uio_out_r = ANCHOR_UIO;
         end else begin
             uo_out_r  = 8'h00;
             uio_out_r = 8'h00;

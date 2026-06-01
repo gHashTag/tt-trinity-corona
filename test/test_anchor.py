@@ -9,7 +9,7 @@ from cocotb.triggers import ClockCycles, RisingEdge
 async def reset_dut(dut):
     dut.rst_n.value = 0
     dut.ena.value = 1
-    dut.ui_in.value = 0
+    dut.ui_in.value = 0x80  # bit7=1 keeps FSM in IDLE after reset
     dut.uio_in.value = 0
     await ClockCycles(dut.clk, 5)
     dut.rst_n.value = 1

@@ -25,7 +25,7 @@ FMT_FP6_E2M3    = 77
 async def reset_dut(dut):
     dut.rst_n.value = 0
     dut.ena.value = 1
-    dut.ui_in.value = 0
+    dut.ui_in.value = 0x80  # bit7=1 keeps FSM in IDLE after reset
     dut.uio_in.value = 0
     await ClockCycles(dut.clk, 5)
     dut.rst_n.value = 1
@@ -51,9 +51,9 @@ async def read_result_bytes(dut, n):
     """Read n result bytes during STATUS state (auto-entered after data)."""
     result = []
     for _ in range(n):
-        await RisingEdge(dut.clk)
         await Timer(1, units="ns")
         result.append(dut.uo_out.value.integer)
+        await RisingEdge(dut.clk)
     return result
 
 
@@ -425,9 +425,9 @@ async def read_rom_record(dut, fmt_id):
     await send_cmd(dut, fmt_id, 0)
     result = []
     for _ in range(10):
-        await RisingEdge(dut.clk)
         await Timer(1, units="ns")
         result.append(dut.uo_out.value.integer)
+        await RisingEdge(dut.clk)
     return result
 
 

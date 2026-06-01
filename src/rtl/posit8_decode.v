@@ -34,14 +34,14 @@ module posit8_decode (
     reg [2:0] lzc;
     always @(*) begin
         casez (regime_bits)
-            7'b0??????: lzc = 3'd1;
-            7'b10?????: lzc = 3'd2;
-            7'b110????: lzc = 3'd3;
-            7'b1110???: lzc = 3'd4;
-            7'b11110??: lzc = 3'd5;
-            7'b111110?: lzc = 3'd6;
-            7'b1111110: lzc = 3'd7;
-            7'b1111111: lzc = 3'd7;
+            7'b1??????: lzc = 3'd0;
+            7'b01?????: lzc = 3'd1;
+            7'b001????: lzc = 3'd2;
+            7'b0001???: lzc = 3'd3;
+            7'b00001??: lzc = 3'd4;
+            7'b000001?: lzc = 3'd5;
+            7'b0000001: lzc = 3'd6;
+            7'b0000000: lzc = 3'd7;
             default:    lzc = 3'd1;
         endcase
     end
