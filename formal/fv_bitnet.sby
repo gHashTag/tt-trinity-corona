@@ -1,0 +1,18 @@
+[tasks]
+bmc
+
+[options]
+bmc: mode bmc
+bmc: depth 1
+
+[engines]
+smtbmc z3
+
+[script]
+read -formal fv_bitnet.sv
+read -formal bitnet_decode.v
+prep -top fv_bitnet
+
+[files]
+fv_bitnet.sv
+../src/rtl/bitnet_decode.v

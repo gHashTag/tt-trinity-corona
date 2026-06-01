@@ -1,0 +1,18 @@
+[tasks]
+bmc
+
+[options]
+bmc: mode bmc
+bmc: depth 1
+
+[engines]
+smtbmc z3
+
+[script]
+read -formal fv_fp4.sv
+read -formal fp4_decode.v
+prep -top fv_fp4
+
+[files]
+fv_fp4.sv
+../src/rtl/fp4_decode.v

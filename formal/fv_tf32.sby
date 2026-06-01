@@ -1,0 +1,18 @@
+[tasks]
+bmc
+
+[options]
+bmc: mode bmc
+bmc: depth 1
+
+[engines]
+smtbmc z3
+
+[script]
+read -formal fv_tf32.sv
+read -formal tf32_decode.v
+prep -top fv_tf32
+
+[files]
+fv_tf32.sv
+../src/rtl/tf32_decode.v
