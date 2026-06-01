@@ -87,6 +87,23 @@ jobs:
         working-directory: formal
         run: make all SBY=sby
 
+  gls:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Yosys + Icarus Verilog
+        run: sudo apt-get update && sudo apt-get install -y yosys iverilog
+      - name: Synthesize to generic cells
+        run: |
+          yosys -p "read_verilog src/rtl/*.v; synth -top tt_um_trinity_corona -flatten; stat; write_verilog -noattr /tmp/corona_synth.v" 2>&1 | tee synth.log
+          grep "Number of cells" synth.log
+      - name: Gate-level simulation smoke test
+        run: |
+          SIMCELLS=$(yosys-config --datdir)/simcells.v
+          iverilog -o /tmp/corona_gls "$SIMCELLS" /tmp/corona_synth.v test/tb_gls_smoke.v
+          vvp /tmp/corona_gls 2>&1 | tee gls.log
+          grep -q "ALL PASS" gls.log
+
   test:
     runs-on: ubuntu-latest
     steps:

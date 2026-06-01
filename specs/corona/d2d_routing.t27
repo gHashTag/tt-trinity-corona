@@ -91,6 +91,6 @@ module CoronaD2DRouting {
 
     // Two-die assembly: Gamma + Corona via D2D is the FIRST configuration
     // in the TRI-NET line at which a single board answers oracle queries
-    // for all 77 SSOT format indices. [Spec]
+    // for all 80 SSOT format indices. [Spec]
     pub const FULL_CATALOG_REQUIRES_GAMMA : bool = true;
 }

@@ -3,7 +3,7 @@
 // Corona oracle protocol: 8-bit serial CMD/DATA on TinyTapeout pins.
 // phi^2 + 1/phi^2 = 3 | TRINITY
 
-// Status: [Spec]. The protocol is the read-back interface for the 77-record
+// Status: [Spec]. The protocol is the read-back interface for the 80-record
 // ROM and the encode/decode dispatch for Tier-1 modules.
 
 module CoronaProtocol {

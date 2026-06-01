@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 // specs/corona/rom_layout.t27
-// Corona ROM bit-layout: 80 bits per format record, 77 records total.
+// Corona ROM bit-layout: 80 bits per format record, 80 records total.
 // phi^2 + 1/phi^2 = 3 | TRINITY
 
 // Status: [Spec]. Bit widths and field order are FROZEN at Phase B start;
@@ -18,16 +18,16 @@ module CoronaRomLayout {
 
     pub const RECORD_BITS    : u8 = 80;
     pub const RECORD_BYTES   : u8 = 10;
-    pub const RECORD_COUNT   : u8 = 77;       // == corona_oracle.TOTAL_FORMATS
+    pub const RECORD_COUNT   : u8 = 80;       // == corona_oracle.TOTAL_FORMATS
 
-    pub const ROM_TOTAL_BITS  : u16 = 80 * 77;             // 6160 bits ROM core
+    pub const ROM_TOTAL_BITS  : u16 = 80 * 80;             // 6400 bits ROM core
     pub const ROM_TOTAL_BYTES : u16 = RECORD_BYTES * RECORD_COUNT;  // 770 bytes
 
     // ========================================================================
     // 2. FIELD LAYOUT (80 bits total)
     // ========================================================================
     //
-    //   bits [79:72]  format_index_id    -- 0..76, mirrors PR #1028 ordering
+    //   bits [79:72]  format_index_id    -- 0..79, mirrors SSOT catalog ordering
     //   bits [71:68]  cluster_id         -- 0..12, one of the 13 clusters
     //   bits [67:64]  status_id          -- claim-status, see corona_oracle
     //   bits [63:56]  total_bits         -- e.g. 16 for GF16, 32 for fp32
