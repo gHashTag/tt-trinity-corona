@@ -1,5 +1,5 @@
 // Gate-level simulation smoke test (no cocotb dependency).
-// Tests: anchor probe, BF16 decode, posit8 decode, FP4 decode, reset re-entry.
+// Tests: anchor, BF16, posit8, FP4, NF4, BitNet, INT4, FP8 E5M2, E8M0, MXINT8, ROM readback, reset.
 // Usage: yosys -> synth_netlist.v, then iverilog + simcells.v + this file.
 `timescale 1ns/1ps
 
@@ -28,6 +28,35 @@ module tb_gls_smoke;
                      label, uo_out, uio_out, expected_uo, expected_uio);
             errors = errors + 1;
         end
+    end
+    endtask
+
+    integer pre_err;
+    task decode_1byte(
+        input [6:0] fmt_id,
+        input [7:0] data_byte,
+        input [31:0] expected_fp32,
+        input [159:0] name
+    );
+    begin
+        pre_err = errors;
+        ui_in = {1'b0, fmt_id};
+        @(posedge clk); #1;
+        ui_in = 8'h01;
+        @(posedge clk); #1;
+        ui_in = data_byte;
+        @(posedge clk); #1;
+        ui_in = 8'h80;
+        check(expected_fp32[7:0],   8'h00, name);
+        @(posedge clk); #1;
+        check(expected_fp32[15:8],  8'h00, name);
+        @(posedge clk); #1;
+        check(expected_fp32[23:16], 8'h00, name);
+        @(posedge clk); #1;
+        check(expected_fp32[31:24], 8'h00, name);
+        if (errors == pre_err) $display("PASS: %0s -> %08X", name, expected_fp32);
+        @(posedge clk); #1;
+        @(posedge clk); #1;
     end
     endtask
 
@@ -77,51 +106,47 @@ module tb_gls_smoke;
         @(posedge clk); #1;
 
         // --- Test 3: Posit8 decode of +1.0 (0x40 -> 0x3F800000) ---
-        // CMD1: fmt_id = 31 (posit8)
-        ui_in = 8'h1F;
-        @(posedge clk); #1;
-        // CMD2: byte_count = 1
-        ui_in = 8'h01;
-        @(posedge clk); #1;
-        // DATA: 0x40 = posit8(+1.0)
-        ui_in = 8'h40;
-        @(posedge clk); #1;
-        // STATUS: expect FP32 0x3F800000 (00, 00, 80, 3F LSB-first)
-        ui_in = 8'h80;
-        check(8'h00, 8'h00, "posit8 status[0]");
-        @(posedge clk); #1;
-        check(8'h00, 8'h00, "posit8 status[1]");
-        @(posedge clk); #1;
-        check(8'h80, 8'h00, "posit8 status[2]");
-        @(posedge clk); #1;
-        check(8'h3F, 8'h00, "posit8 status[3]");
-        // DONE→IDLE: FSM needs 2 cycles (STATUS→DONE→IDLE)
-        @(posedge clk); #1;
-        @(posedge clk); #1;
+        decode_1byte(7'd31, 8'h40, 32'h3F800000, "posit8 +1.0");
 
-        // --- Test 4: FP4 decode of +1.0 (0x02 -> 0x3F800000) ---
-        // CMD1: fmt_id = 41 (FP4 E2M1, OCP MX alias)
-        ui_in = 8'h29;
-        @(posedge clk); #1;
-        // CMD2: byte_count = 1
-        ui_in = 8'h01;
-        @(posedge clk); #1;
-        // DATA: 0x02 = fp4(+1.0)
-        ui_in = 8'h02;
-        @(posedge clk); #1;
-        // STATUS: expect FP32 0x3F800000
-        ui_in = 8'h80;
-        check(8'h00, 8'h00, "fp4 status[0]");
-        @(posedge clk); #1;
-        check(8'h00, 8'h00, "fp4 status[1]");
-        @(posedge clk); #1;
-        check(8'h80, 8'h00, "fp4 status[2]");
-        @(posedge clk); #1;
-        check(8'h3F, 8'h00, "fp4 status[3]");
-        @(posedge clk); #1;
+        // --- Test 4: FP4 E2M1 decode of +1.0 (0x02 -> 0x3F800000) ---
+        decode_1byte(7'd41, 8'h02, 32'h3F800000, "fp4 +1.0");
 
-        // --- Test 5: Reset re-entry (FSM recovery) ---
-        // Start a transaction then assert reset mid-protocol
+        // --- Test 5: NF4 decode of +1.0 (0x0F -> 0x3F800000) ---
+        decode_1byte(7'd70, 8'h0F, 32'h3F800000, "nf4 +1.0");
+
+        // --- Test 6: BitNet decode of +1 (0x01 -> 0x3F800000) ---
+        decode_1byte(7'd71, 8'h01, 32'h3F800000, "bitnet +1");
+
+        // --- Test 7: INT4 decode of +1 (0x01 -> 0x00000001) ---
+        decode_1byte(7'd46, 8'h01, 32'h00000001, "int4 +1");
+
+        // --- Test 8: FP8 E5M2 decode of +1.0 (0x3C -> 0x3F800000) ---
+        decode_1byte(7'd10, 8'h3C, 32'h3F800000, "fp8e5m2 +1.0");
+
+        // --- Test 9: E8M0 decode of 2^0 (0x7F -> 0x3F800000) ---
+        decode_1byte(7'd78, 8'h7F, 32'h3F800000, "e8m0 2^0");
+
+        // --- Test 10: MXINT8 decode of +1.0 (0x40 -> 0x3F800000) ---
+        decode_1byte(7'd79, 8'h40, 32'h3F800000, "mxint8 +1.0");
+
+        // --- Test 11: ROM readback for fmt_id=8 (BF16) ---
+        ui_in = 8'h08;
+        @(posedge clk); #1;
+        ui_in = 8'h00;
+        @(posedge clk); #1;
+        ui_in = 8'h80;
+        // ROM streams 10 bytes LSB-first; just verify byte 0 is non-zero
+        // (full ROM correctness proven by formal fv_rom)
+        if (uo_out === 8'h00 && uio_out === 8'h00) begin
+            $display("FAIL: ROM readback byte[0] all zeros");
+            errors = errors + 1;
+        end else begin
+            $display("PASS: ROM readback byte[0] = %02X", uo_out);
+        end
+        // Wait through remaining 9 STATUS + DONE + IDLE cycles
+        repeat(11) begin @(posedge clk); #1; end
+
+        // --- Test 12: Reset re-entry (FSM recovery) ---
         ui_in = 8'h08;  // CMD1: BF16
         @(posedge clk); #1;
         rst_n = 0;       // Assert reset mid-CMD2
