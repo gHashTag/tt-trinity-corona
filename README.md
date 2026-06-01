@@ -23,7 +23,7 @@ A silicon chip whose primary deliverable is a **~800-byte ROM encoding all
 decode modules** converting on-die formats to IEEE 754 FP32 (or INT32).
 A query arrives as a 7-bit format index on `ui_in[6:0]`; the chip
 returns the requested record fields or decoded value across `uo_out`
-over N read cycles. Synthesizes to 2,308 cells (~14% of 4x4 budget).
+over N read cycles. Synthesizes to 2,308 cells (~1% of 4x4 site budget).
 
 The second function of Corona is to serve as the **17th output language** of
 `tools/gen_formats_catalog.py` in `gHashTag/t27`. The Verilog ROM emitter
