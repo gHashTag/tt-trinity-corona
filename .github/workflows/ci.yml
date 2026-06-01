@@ -37,6 +37,8 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y iverilog
       - name: Verilog lint
         run: make lint
+      - name: ROM spec cross-check (23 formats vs published specs)
+        run: python3 test/test_rom_spec_crosscheck.py
 
   claim-status-lint:
     runs-on: ubuntu-latest

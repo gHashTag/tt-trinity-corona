@@ -449,3 +449,61 @@ async def test_mid_transaction_reset(dut):
     assert got == expected, f"Post-reset decode: expected 0x{expected:08X}, got 0x{got:08X}"
 
     dut._log.info("PASS: mid-transaction reset recovery (CMD2, DATA, STATUS, post-reset decode)")
+
+
+@cocotb.test()
+async def test_ena_gate_data_and_status(dut):
+    """ena=0 freezes FSM in DATA and STATUS states, resumes correctly."""
+    from cocotb.triggers import ClockCycles
+    clock = Clock(dut.clk, 40, units="ns")
+    cocotb.start_soon(clock.start())
+
+    # Case 1: ena=0 during ST_DATA
+    await reset_dut(dut)
+    dut.ui_in.value = FMT_INT8  # CMD1
+    await RisingEdge(dut.clk)
+    dut.ui_in.value = 0x02  # CMD2: byte_count=2
+    await RisingEdge(dut.clk)
+    dut.ui_in.value = 0x00  # First data byte
+    await RisingEdge(dut.clk)
+    # Now in ST_DATA with 1 byte remaining — freeze
+    dut.ena.value = 0
+    dut.ui_in.value = 0x2A  # This byte should NOT be consumed
+    await ClockCycles(dut.clk, 5)
+    dut.ena.value = 1
+    # Now send the real last byte
+    dut.ui_in.value = 0x2A
+    await RisingEdge(dut.clk)
+    # Should be in STATUS now
+    result = await read_result_bytes(dut, 4)
+    got = bytes_to_u32(result)
+    expected = ref_int8(0x2A)
+    assert got == expected, \
+        f"ena gate DATA: expected 0x{expected:08X}, got 0x{got:08X}"
+
+    # Case 2: ena=0 during ST_STATUS
+    await reset_dut(dut)
+    await send_cmd(dut, FMT_FP4, 1)
+    await send_data(dut, [0x03])
+    # Now in ST_STATUS — read first byte, then freeze
+    await Timer(1, units="ns")
+    byte0 = dut.uo_out.value.integer
+    await RisingEdge(dut.clk)
+    dut.ena.value = 0
+    await ClockCycles(dut.clk, 5)
+    dut.ena.value = 1
+    # Continue reading remaining bytes
+    await Timer(1, units="ns")
+    byte1 = dut.uo_out.value.integer
+    await RisingEdge(dut.clk)
+    await Timer(1, units="ns")
+    byte2 = dut.uo_out.value.integer
+    await RisingEdge(dut.clk)
+    await Timer(1, units="ns")
+    byte3 = dut.uo_out.value.integer
+    got = byte0 | (byte1 << 8) | (byte2 << 16) | (byte3 << 24)
+    expected = ref_fp4(0x03)
+    assert got == expected, \
+        f"ena gate STATUS: expected 0x{expected:08X}, got 0x{got:08X}"
+
+    dut._log.info("PASS: ena=0 freezes FSM in DATA and STATUS states")
