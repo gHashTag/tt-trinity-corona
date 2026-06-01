@@ -15,7 +15,7 @@ module bcd_decode (
     wire [3:0] ones = bcd_in[3:0];
 
     // tens * 10 = (tens << 3) + (tens << 1)
-    wire [7:0] tens_x10 = {1'b0, tens, 3'b0} + {3'b0, tens, 1'b0};
+    wire [6:0] tens_x10 = {tens, 3'b0} + {2'b0, tens, 1'b0};
 
     assign bin_out = tens_x10[6:0] + {3'b0, ones};
 

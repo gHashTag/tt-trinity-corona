@@ -60,13 +60,13 @@ module posit8_decode (
     // Fraction starts after regime+terminator, from bit position (6 - regime_total)
     // Fraction bits available = 7 - regime_total
     wire [6:0] shifted = abs_val << regime_total;
-    wire [5:0] fraction = shifted[6:1];
+    wire [5:0] fraction = shifted[6:1];  // shifted[0] dropped (beyond precision)
 
     // Step 4: Build FP32
     // For posit8(es=0): value = (-1)^S * 2^k * (1.fraction)
     // FP32 exponent = k + 127
-    wire signed [8:0] fp32_exp_signed = $signed({1'b0, 8'd127}) + $signed({{5{regime_k[3]}}, regime_k});
-    wire [7:0] fp32_exp = fp32_exp_signed[7:0];
+    wire [8:0] fp32_exp_wide = {1'b0, 8'd127} + {{5{regime_k[3]}}, regime_k};
+    wire [7:0] fp32_exp = fp32_exp_wide[7:0];
 
     always @(*) begin
         if (is_zero)
@@ -76,5 +76,7 @@ module posit8_decode (
         else
             fp32_out = {sign, fp32_exp, fraction[5:0], 17'b0};
     end
+
+    wire _unused = &{shifted[0], fp32_exp_wide[8]};
 
 endmodule

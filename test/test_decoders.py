@@ -24,6 +24,7 @@ FMT_E8M0         = 78
 FMT_MXINT8       = 79
 FMT_E4M3_FNUZ    = 14
 FMT_E4M3_FNUZ_ALT= 69
+FMT_INT4         = 46
 FMT_BITNET       = 71
 FMT_FP8_E4M3    = 11
 FMT_FP6_E3M2_ML = 12
@@ -860,6 +861,31 @@ async def test_fp8_e4m3_fnuz_exhaustive(dut):
             fail_count += 1
     assert fail_count == 0, f"E4M3 FNUZ: {fail_count}/256 values failed"
     dut._log.info("PASS: FP8 E4M3 FNUZ exhaustive (256/256)")
+
+
+def ref_int4(val):
+    """INT4 signed -> INT32 reference. Two's complement sign extension."""
+    val = val & 0xF
+    signed_val = val if val < 8 else val - 16
+    return struct.unpack('>I', struct.pack('>i', signed_val))[0]
+
+
+@cocotb.test()
+async def test_int4_exhaustive(dut):
+    """INT4 signed (fmt_id=46): 16 values exhaustive."""
+    clock = Clock(dut.clk, 20, unit="ns")
+    cocotb.start_soon(clock.start())
+
+    for inp in range(16):
+        await reset_dut(dut)
+        expected = ref_int4(inp)
+        await send_cmd(dut, FMT_INT4, 1)
+        await send_data(dut, [inp])
+        result = await read_result_bytes(dut, 4)
+        got = bytes_to_u32(result)
+        assert got == expected, \
+            f"INT4 0x{inp:X}: expected 0x{expected:08X}, got 0x{got:08X}"
+    dut._log.info("PASS: INT4 signed exhaustive (16/16)")
 
 
 def ref_bitnet(val):

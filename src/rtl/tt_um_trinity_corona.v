@@ -49,6 +49,8 @@ module tt_um_trinity_corona (
     // FP8 E4M3 FNUZ (AMD MI300/CDNA3 variant, genuinely different encoding)
     localparam [6:0] FMT_E4M3_FNUZ    = 7'd14;   // cluster 2: bias=8, 0x80=NaN
     localparam [6:0] FMT_E4M3_FNUZ_ALT= 7'd69;   // cluster 10: same FNUZ encoding
+    // INT4 signed (GPTQ/AWQ quantization)
+    localparam [6:0] FMT_INT4         = 7'd46;   // cluster 7: signed 4-bit integer
     // BitNet 1.58b ternary
     localparam [6:0] FMT_BITNET       = 7'd71;   // cluster 10: ternary {-1,0,+1}
     // Aliases: same encoding as MX variants, different catalog cluster
@@ -248,6 +250,13 @@ module tt_um_trinity_corona (
         .is_zero(fnuz_zero), .is_nan(fnuz_nan)
     );
 
+    wire [31:0] int4_i32;
+    wire        int4_zero;
+    int4_decode u_int4 (
+        .int4_in(data_in_buf[27:24]), .int32_out(int4_i32),
+        .is_zero(int4_zero)
+    );
+
     wire [31:0] bitnet_fp32;
     wire        bitnet_zero, bitnet_reserved;
     bitnet_decode u_bitnet (
@@ -284,6 +293,7 @@ module tt_um_trinity_corona (
             FMT_TF32:        begin decode_result = tf32_fp32;   has_decoder = 1'b1; end
             FMT_FP8_E5M2:   begin decode_result = fp8e5m2_fp32; has_decoder = 1'b1; end
             FMT_FP6_E2M3:   begin decode_result = fp6e2m3_fp32; has_decoder = 1'b1; end
+            FMT_INT4:        begin decode_result = int4_i32;    has_decoder = 1'b1; end
             FMT_INT8:        begin decode_result = int8_i32;    has_decoder = 1'b1; end
             FMT_E8M0:        begin decode_result = e8m0_fp32;   has_decoder = 1'b1; end
             FMT_MXINT8:      begin decode_result = mxint8_fp32; has_decoder = 1'b1; end
@@ -363,7 +373,9 @@ module tt_um_trinity_corona (
                      fp6e2m3_zero, int8_zero,
                      e8m0_nan, mxint8_zero, mxint8_reserved,
                      fnuz_zero, fnuz_nan,
+                     int4_zero,
                      bitnet_zero, bitnet_reserved,
+                     data_in_buf[7:0],
                      1'b0};
 
 endmodule

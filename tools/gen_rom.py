@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: Apache-2.0
 # tools/gen_rom.py -- Generate format_rom.v from SSOT catalog data.
-# Packs 77 records x 80 bits per specs/corona/rom_layout.t27.
+# Packs 80 records x 80 bits per specs/corona/rom_layout.t27.
 #
 # ROM layout (80 bits per record):
 #   [79:72] format_index_id  (8 bits)
@@ -158,7 +158,7 @@ CATALOG = [
     (45, CL_LNS, ST_EXPERIMENTAL, 32, 1, 8,23, ENC_LNS, 22, 0),            # Coleman LNS32
 
     # Cluster 7: Integer/fixed (8)
-    (46, CL_INT_FIXED, ST_SPEC,  4, 1, 0, 3, ENC_INT, 23, FLAG_GAMMA|FLAG_D2D),  # int4
+    (46, CL_INT_FIXED, ST_SPEC,  4, 1, 0, 3, ENC_INT, 23, FLAG_ON_DIE|FLAG_GAMMA|FLAG_D2D),  # int4
     (47, CL_INT_FIXED, ST_SPEC,  8, 1, 0, 7, ENC_INT, 23, FLAG_ON_DIE|FLAG_GAMMA|FLAG_D2D),  # int8
     (48, CL_INT_FIXED, ST_SPEC, 16, 1, 0,15, ENC_INT, 23, 0),                    # int16
     (49, CL_INT_FIXED, ST_SPEC, 32, 1, 0,31, ENC_INT, 23, 0),                    # int32
