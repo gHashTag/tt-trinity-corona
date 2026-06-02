@@ -156,8 +156,8 @@ drift.
 2. Read the `.t27` SSOT files in `specs/corona/` in this order:
    `corona_oracle.t27` -> `rom_layout.t27` -> `protocol.t27` -> `anchor.t27`
    -> `d2d_routing.t27`.
-3. Inspect the seven open questions in Section 10 of `PLAN.md` and answer them
-   in `docs/adr/` before any RTL is written.
+3. The seven Phase-A open questions (PLAN.md Section 10) are all decided and
+   recorded as ADRs in `docs/adr/` (see `docs/OPEN_QUESTIONS.md` for the Q->ADR map).
 
 ## Permanent anchors (verbatim, not to be paraphrased)
 

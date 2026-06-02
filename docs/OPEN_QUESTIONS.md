@@ -1,7 +1,24 @@
-# Open questions for the user (before any RTL is written)
+# Open questions (RESOLVED -- recorded as ADRs)
 
-These are the seven open questions from PLAN.md Section 10. Each must be
-answered via a short ADR in `docs/adr/` before Phase C starts.
+These are the seven questions from PLAN.md Section 10. Phases C-F are complete,
+so all seven are decided; each is now recorded as an ADR in `docs/adr/`. The
+original question text is kept below for historical context.
+
+| Q | Topic | Decision | ADR |
+| --- | --- | --- | --- |
+| Q1 | Tile size | 4x4 (16 tiles) | [`0001`](adr/0001-tile-size-4x4.md) |
+| Q2 | Takum16 tier | Tier-2 (ROM-only) | [`0003`](adr/0003-takum-tier-2.md) |
+| Q3 | Posit32 module | Not on-die (posit8 on-die, posit16 D2D, posit32 ROM-only) | [`0004`](adr/0004-no-posit32-module.md) |
+| Q4 | Decimal (DPD) | Tier-2 ROM-only + software oracle | [`0005`](adr/0005-decimal-tier-2-software-oracle.md) |
+| Q5 | D2D protocol | Holographic mesh (spec'd), implementation deferred | [`0006`](adr/0006-d2d-holographic-mesh-deferred.md) |
+| Q6 | License | Apache-2.0 | [`0007`](adr/0007-license-apache-2.0.md) |
+| Q7 | Preprint Sec. 5.9 | Chain claim `[Empirical fit]`; FL-002 stays `[Open conjecture]` | [`0008`](adr/0008-preprint-sec-5-9-status.md) |
+
+(The shuttle choice TTGF26a is recorded separately in [`0002`](adr/0002-shuttle-ttgf26a.md).)
+
+---
+
+## Historical: the seven questions as originally posed
 
 ## Q1 -- Tile size: 8x2 (MVP) or 8x4 (full Tier-1)?
 
