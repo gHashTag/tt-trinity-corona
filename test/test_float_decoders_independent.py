@@ -113,6 +113,10 @@ DECODERS = {
 }
 
 
+# Decoders this test pins (read by test_independent_oracle_coverage.py).
+COVERED = frozenset(DECODERS)
+
+
 def build_tb(mod, width, inst, decl):
     n = 1 << width
     return (f"`timescale 1ns/1ps\n"

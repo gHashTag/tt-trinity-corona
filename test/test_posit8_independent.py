@@ -36,6 +36,9 @@ TB_V = os.path.join(ROOT, "test", "tb_posit8_sweep.v")
 
 QNAN = 0x7FC00000
 
+# Decoder this test pins (read by test_independent_oracle_coverage.py).
+COVERED = frozenset({"posit8"})
+
 
 def posit8_ref(p):
     """Independent posit8(es=0) -> FP32 bit pattern, matching the RTL's truncated

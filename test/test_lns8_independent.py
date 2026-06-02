@@ -37,6 +37,9 @@ ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 LNS_V = os.path.join(ROOT, "src", "rtl", "lns8_decode.v")
 TB_V = os.path.join(ROOT, "test", "tb_lns8_sweep.v")
 
+# Decoder this test pins (read by test_independent_oracle_coverage.py).
+COVERED = frozenset({"lns8"})
+
 
 def antilog_lut(i):
     """Independent: 2^(i/16) in Q0.8 (256 = 1.0), round-half-up."""

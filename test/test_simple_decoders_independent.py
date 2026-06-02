@@ -62,6 +62,10 @@ DECODERS = {
 }
 
 
+# Decoders this test pins (read by test_independent_oracle_coverage.py).
+COVERED = frozenset(DECODERS)
+
+
 def ref(mod, i):
     if mod == "int4":
         v = i - 16 if i >= 8 else i

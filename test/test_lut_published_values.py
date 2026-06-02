@@ -32,6 +32,10 @@ ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 NF4_V = os.path.join(ROOT, "src", "rtl", "nf4_decode.v")
 FP4_V = os.path.join(ROOT, "src", "rtl", "fp4_decode.v")
 
+# Decoders this test pins to an external reference (read by the coverage gate,
+# test_independent_oracle_coverage.py).
+COVERED = frozenset({"nf4", "fp4"})
+
 
 def f32_bits(x):
     """IEEE-754 float32 bit pattern (uint32) of a Python float."""

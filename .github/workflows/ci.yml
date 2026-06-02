@@ -60,6 +60,8 @@ jobs:
         run: python3 test/test_simple_decoders_independent.py
       - name: Float decoders vs independent refs (bf16/tf32/fp8/fp6, iverilog)
         run: python3 test/test_float_decoders_independent.py
+      - name: Independent-oracle coverage gate (every decoder has an external ref)
+        run: python3 test/test_independent_oracle_coverage.py
 
   claim-status-lint:
     runs-on: ubuntu-latest
