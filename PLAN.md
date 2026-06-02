@@ -4,7 +4,7 @@ Project repo: gHashTag/tt-trinity-corona
 Target shuttle: TTGF26a (GlobalFoundries GF180MCU, 180nm)
 Target submission: 2026-06-22 (TTGF26a shuttle close)
 Expected silicon delivery: 2026-10-01 (approximately 4 months post-submission)
-Document status: SUBMISSION-READY (19 RTL modules, CI green, GDS+precheck+GL PASS, 58 formal tasks, 50 cocotb tests)
+Document status: SUBMISSION-READY (19 RTL modules, CI green, GDS+precheck+GL PASS, 58 formal tasks, 51 cocotb tests)
 Document version: corona_plan-v1.0 (merged from corona_plan_skeleton.md and corona_research.md)
 
 Claim-status key used throughout: [Verified], [Empirical fit], [Open conjecture], [Risk], [Retracted], [Experimental], [Historical], [Spec].
@@ -638,4 +638,4 @@ The CI pipeline for gHashTag/tt-trinity-corona mirrors Gamma and Euler, with Cor
 
 ---
 
-*Document version: corona_plan-v1.0. Produced as the merged final plan from `corona_research.md` (research) and `corona_plan_skeleton.md` (skeleton). All claims carry an explicit status tag. No claim is asserted without either a verifiable URL or an explicit [Open conjecture] / [Historical] tag. Repo gHashTag/tt-trinity-corona is active with 19 RTL modules, 58 formal tasks, 50 cocotb tests, and CI 6/6 green.*
+*Document version: corona_plan-v1.0. Produced as the merged final plan from `corona_research.md` (research) and `corona_plan_skeleton.md` (skeleton). All claims carry an explicit status tag. No claim is asserted without either a verifiable URL or an explicit [Open conjecture] / [Historical] tag. Repo gHashTag/tt-trinity-corona is active with 19 RTL modules, 58 formal tasks, 51 cocotb tests, and CI 6/6 green.*

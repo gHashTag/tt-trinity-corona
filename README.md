@@ -11,7 +11,7 @@ The fourth chip in the TRI-NET line, after Phi, Euler, and Gamma. Corona is a
 | Submission target | 2026-06-22 (TTGF26a close) |
 | Expected silicon | 2026-10 to 2026-11 |
 | Tile size | 4x4 (16 tiles) |
-| Document status | Submission-ready (18 decoders, 50 tests PASS, GDS+precheck PASS) |
+| Document status | Submission-ready (17 decoders, 51 tests PASS, GDS+precheck PASS) |
 | SSOT | `gHashTag/t27 specs/numeric/formats_catalog.t27` (PR #1028, issue #1029) |
 | License | Apache-2.0 |
 | Contact | admin@t27.ai, ORCID 0009-0008-4294-6159 |
@@ -121,9 +121,9 @@ The CI job `claim_status_lint` enforces that every claim in `.t27`, `.v`,
 | --- | --- | --- |
 | A | GF180MCU PDK exploration + tile-size decision (4x4) | **Done** |
 | B | Verilog ROM emitter (80 records, 10 bytes each) | **Done** |
-| C | Tier-1 RTL decoders (18 modules) + formal verification | **Done** |
+| C | Tier-1 RTL decoders (17 modules) + formal verification | **Done** |
 | D | D2D wiring + Gamma routing simulation | Deferred |
-| E | Conformance suite (50 cocotb + 57 formal tasks + 49 GL tests) | **Done** |
+| E | Conformance suite (51 cocotb + 57 formal tasks + 49 GL tests) | **Done** |
 | F | LibreLane GDS + shuttle submission | **GDS+precheck PASS** |
 
 ## How to read this repo

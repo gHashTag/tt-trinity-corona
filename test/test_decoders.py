@@ -1083,3 +1083,48 @@ async def test_e4m3_fnuz_alt_alias(dut):
             fail_count += 1
     assert fail_count == 0, f"E4M3 FNUZ alt: {fail_count}/256 values failed"
     dut._log.info("PASS: E4M3 FNUZ alt alias exhaustive (256/256)")
+
+
+# =========================================================================
+# Explicit special-value conformance (Loop 78)
+# =========================================================================
+# The exhaustive sweeps above already cover every code point, so special
+# values (NaN/Inf/signed-zero/subnormal-boundary/max-finite/reserved) are
+# tested implicitly. This test makes them EXPLICIT and traceable to the
+# governing spec -- the core promise of a conformance-oracle chip. Vectors
+# and citations live in test/special_values.py and are independently
+# cross-checked against the golden reference math at import time.
+
+from special_values import SPECIAL_VALUE_VECTORS, verify_against_reference
+
+
+@cocotb.test()
+async def test_special_values_conformance(dut):
+    """Drive each cited special-value vector through the DUT and assert the
+    exact FP32 result. See test/special_values.py for spec citations."""
+    # Guard: the declared expected outputs must match the golden reference
+    # math before we trust them as hardware oracles.
+    n, ref_failures = verify_against_reference()
+    assert not ref_failures, \
+        "special-value table disagrees with reference math: " + "; ".join(ref_failures)
+
+    clock = Clock(dut.clk, 40, units="ns")
+    cocotb.start_soon(clock.start())
+
+    failures = []
+    for name, fmt_id, ins, expected, klass, note in SPECIAL_VALUE_VECTORS:
+        await reset_dut(dut)
+        await send_cmd(dut, fmt_id, len(ins))
+        await send_data(dut, ins)
+        result = await read_result_bytes(dut, 4)
+        got = bytes_to_u32(result)
+        if got != expected:
+            failures.append(
+                f"{name} [{klass}] {note}: expected 0x{expected:08X}, got 0x{got:08X}")
+            dut._log.error(failures[-1])
+        else:
+            dut._log.info(f"OK  {name:10s} [{klass:9s}] {note}")
+    assert not failures, \
+        f"{len(failures)}/{n} special-value vectors mismatched:\n" + "\n".join(failures)
+    dut._log.info(f"PASS: special-value conformance ({n}/{n} vectors, "
+                  f"{len(SPECIAL_VALUE_VECTORS)} cited)")
