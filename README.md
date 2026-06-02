@@ -126,6 +126,28 @@ The CI job `claim_status_lint` enforces that every claim in `.t27`, `.v`,
 | E | Conformance suite (51 cocotb + 57 formal tasks + 49 GL tests) | **Done** |
 | F | LibreLane GDS + shuttle submission | **GDS+precheck PASS** |
 
+## Verification
+
+Every Tier-1 decoder is validated by **five independent evidence layers**, so a
+bug shared between the RTL and any single reference model cannot hide:
+
+1. **Exhaustive sweep** — all `2^width` input codes decoded and checked (cocotb +
+   iverilog); **592,308** codes total across the 17 decoders.
+2. **Independent reference** — a spec-derived decoder written separately from the
+   RTL (QLoRA, OCP MX/OFP8, Posit Standard, IEEE, two's complement, BitNet b1.58…),
+   so the RTL is checked against external truth, not just its own model.
+3. **Formal harness** — `formal/fv_*.sv` checks decoder == golden over *all* inputs
+   (`anyconst` + SMT); each golden is cross-checked to the independent reference.
+4. **Post-silicon vector** — the RP2350 bring-up oracle's expected values are
+   **generated** from the independent references (`tools/gen_postsilicon_vectors.py`),
+   so they cannot be wrong-by-transcription.
+5. **Mutation kill** — a fault injected into each decoder is confirmed to be
+   detected, so no check is vacuous.
+
+These layers, the per-decoder evidence matrix, and the **18 CI cross-check gates**
+that enforce them are documented in [`docs/VERIFICATION.md`](docs/VERIFICATION.md)
+(itself generated from the test suite and freshness-gated, so it cannot drift).
+
 ## How to read this repo
 
 1. Read `PLAN.md` (or `corona_plan.pdf`, 23 pages landscape A4) end-to-end.
