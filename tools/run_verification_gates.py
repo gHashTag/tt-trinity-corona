@@ -43,6 +43,7 @@ def main():
         return 1
 
     failed = []
+    results = []  # (name, status, summary line)
     for path in gates:
         name = os.path.basename(path)
         r = subprocess.run([sys.executable, path], capture_output=True, text=True)
@@ -52,11 +53,14 @@ def main():
                 last = line.strip()
                 break
         status = "PASS" if r.returncode == 0 else "FAIL"
+        results.append((name, status, last))
         print(f"  [{status}] {name:42s} {last[:60]}")
         if r.returncode != 0:
             failed.append(name)
             if r.stderr.strip():
                 print("         stderr: " + r.stderr.strip().splitlines()[-1][:80])
+
+    _write_step_summary(results, failed)
 
     print("\n" + "=" * 60)
     if failed:
@@ -65,6 +69,35 @@ def main():
         return 1
     print(f"ALL PASS: {len(gates)}/{len(gates)} standalone verification gates green")
     return 0
+
+
+def _write_step_summary(results, failed):
+    """If running under GitHub Actions, append a markdown results table to the
+    job step summary (visible in the CI UI). No-op locally."""
+    dest = os.environ.get("GITHUB_STEP_SUMMARY")
+    if not dest:
+        return
+    total = len(results)
+    lines = [
+        "## Verification gates",
+        "",
+        f"**{total - len(failed)}/{total} standalone gates passed**"
+        + (f" -- FAILED: {', '.join(failed)}" if failed else " ✅"),
+        "",
+        "| Gate | Status | Result |",
+        "| --- | :-: | --- |",
+    ]
+    for name, status, summary in results:
+        mark = "✅" if status == "PASS" else "❌"
+        # escape pipes in the free-text summary so the table stays well-formed
+        safe = summary.replace("|", "\\|")[:80]
+        lines.append(f"| `{name}` | {mark} | {safe} |")
+    lines.append("")
+    try:
+        with open(dest, "a") as f:
+            f.write("\n".join(lines) + "\n")
+    except OSError:
+        pass  # summary is best-effort; never fail the run over it
 
 
 if __name__ == "__main__":
