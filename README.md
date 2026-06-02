@@ -146,7 +146,9 @@ bug shared between the RTL and any single reference model cannot hide:
 
 These layers, the per-decoder evidence matrix, and the **18 CI cross-check gates**
 that enforce them are documented in [`docs/VERIFICATION.md`](docs/VERIFICATION.md)
-(itself generated from the test suite and freshness-gated, so it cannot drift).
+(with a machine-readable [`docs/verification.json`](docs/verification.json) for
+tooling) — both generated from the test suite and freshness-gated, so they cannot
+drift.
 
 ## How to read this repo
 

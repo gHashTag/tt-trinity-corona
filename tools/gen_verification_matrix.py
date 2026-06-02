@@ -142,23 +142,75 @@ def main():
     L.append("")
     L.append("## CI gates enforcing this")
     L.append("")
-    for step in ["test_rom_spec_crosscheck", "test_ssot_layout_crosscheck",
-                 "test_rom_emitted_golden", "test_ondie_coverage_crosscheck",
-                 "test_anchor_derivation", "test_fmt_id_consistency",
-                 "test_lut_published_values", "test_posit8_independent",
-                 "test_lns8_independent", "test_simple_decoders_independent",
-                 "test_float_decoders_independent", "test_independent_oracle_coverage",
-                 "test_post_silicon_vectors", "test_postsilicon_vectors_fresh",
-                 "test_bringup_oracle_complete", "test_mutation_guards",
-                 "test_formal_goldens", "test_verification_matrix_fresh"]:
+    for step in CI_GATES:
         L.append(f"- `{step}`")
     L.append("")
     return "\n".join(L) + "\n"
 
 
+CI_GATES = [
+    "test_rom_spec_crosscheck", "test_ssot_layout_crosscheck",
+    "test_rom_emitted_golden", "test_ondie_coverage_crosscheck",
+    "test_anchor_derivation", "test_fmt_id_consistency",
+    "test_lut_published_values", "test_posit8_independent",
+    "test_lns8_independent", "test_simple_decoders_independent",
+    "test_float_decoders_independent", "test_independent_oracle_coverage",
+    "test_post_silicon_vectors", "test_postsilicon_vectors_fresh",
+    "test_bringup_oracle_complete", "test_mutation_guards",
+    "test_formal_goldens", "test_verification_matrix_fresh",
+]
+
+
+def build_data():
+    """Structured verification data (same content as the markdown matrix)."""
+    import glob as _glob
+    decoders = sorted(os.path.basename(p)[:-len("_decode.v")]
+                      for p in _glob.glob(os.path.join(ROOT, "src", "rtl", "*_decode.v")))
+    cov = covered_union()
+    ps_decs = postsilicon_decoders()
+    rows = []
+    for dec in decoders:
+        width = mg.DECODERS[dec][0] if dec in mg.DECODERS else 0
+        rows.append({
+            "decoder": dec,
+            "bits": width,
+            "codes": 1 << width,
+            "reference_source": REF_SOURCE.get(dec, ""),
+            "independent_reference": dec in cov,
+            "formal_golden": formal_golden_type(dec),
+            "post_silicon_vector": dec in ps_decs,
+            "mutation_killed": dec in mg.DECODERS,
+        })
+    return {
+        "schema": "corona-verification/1",
+        "decoders": rows,
+        "summary": {
+            "decoders": len(decoders),
+            "independent_references": len(cov & set(decoders)),
+            "formal_harnesses": len(decoders),
+            "post_silicon_coverage": len(ps_decs & set(decoders)),
+            "mutation_killed": len(set(mg.DECODERS) & set(decoders)),
+            "total_codes": sum(1 << mg.DECODERS[d][0]
+                               for d in decoders if d in mg.DECODERS),
+            "ci_gates": len(CI_GATES),
+        },
+        "ci_gates": list(CI_GATES),
+    }
+
+
+def main_json():
+    import json
+    return json.dumps(build_data(), indent=2, sort_keys=True) + "\n"
+
+
 if __name__ == "__main__":
-    out = main()
-    dest = os.path.join(ROOT, "docs", "VERIFICATION.md")
-    with open(dest, "w") as f:
-        f.write(out)
-    print(f"Generated {dest} ({len(out)} bytes)")
+    md = main()
+    md_dest = os.path.join(ROOT, "docs", "VERIFICATION.md")
+    with open(md_dest, "w") as f:
+        f.write(md)
+    print(f"Generated {md_dest} ({len(md)} bytes)")
+    js = main_json()
+    js_dest = os.path.join(ROOT, "docs", "verification.json")
+    with open(js_dest, "w") as f:
+        f.write(js)
+    print(f"Generated {js_dest} ({len(js)} bytes)")
