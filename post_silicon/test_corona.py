@@ -665,6 +665,31 @@ def _ref_nf4(v):
     return LUT[v & 0xF]
 
 
+def _ref_posit8(v):
+    if v == 0x00:
+        return 0x00000000
+    if v == 0x80:
+        return 0x7FC00000
+    sign = (v >> 7) & 1
+    abs_val = ((~v + 1) & 0x7F) if sign else (v & 0x7F)
+    regime_sign = (abs_val >> 6) & 1
+    inverted = (~abs_val & 0x7F) if regime_sign else (abs_val & 0x7F)
+    lzc = 1
+    for i in range(6, -1, -1):
+        if (inverted >> i) & 1:
+            lzc = 6 - i
+            break
+    else:
+        lzc = 7
+    if lzc == 0:
+        lzc = 1
+    k = (lzc - 1) if regime_sign else -lzc
+    regime_total = lzc + 1 if lzc < 7 else lzc
+    shifted = (abs_val << regime_total) & 0x7F
+    fraction = (shifted >> 1) & 0x3F
+    return (sign << 31) | ((k + 127) << 23) | (fraction << 17)
+
+
 def _ref_int4(v):
     v = v & 0xF
     if v >= 8:
@@ -695,6 +720,7 @@ EXHAUSTIVE_SWEEPS = [
     ("E8M0",        78, 256, _ref_e8m0),
     ("MXINT8",      79, 256, _ref_mxint8),
     ("E4M3_FNUZ",   14, 256, _ref_e4m3_fnuz),
+    ("Posit8",      31, 256, _ref_posit8),
     ("FP4",         41,  16, _ref_fp4),
     ("NF4",         70,  16, _ref_nf4),
     ("FP6_E3M2",    40,  64, _ref_fp6_e3m2),

@@ -76,6 +76,10 @@ import test_corona
 test_corona.run_all()
 ```
 
+### Auto-Boot (Plug-and-Play)
+
+Copy `test_corona.py` and `boot_corona.py` to the demoboard filesystem. Rename `boot_corona.py` to `main.py`. On power-up, the demoboard will automatically enable Corona and run all 23 quick tests, printing results to USB serial (115200 baud).
+
 ## Expected Output
 
 ```
@@ -142,9 +146,10 @@ test_corona.run_exhaustive()
 | INT4 | 46 | 16 | Two's complement 4-bit |
 | BitNet | 71 | 4 | Ternary {-1,0,+1} |
 | BCD | 53 | 100 | Valid packed BCD (00-99) |
+| Posit8 | 31 | 256 | Regime/exponent/fraction extraction |
 | BF16 | 8 | 65,536 | Zero-extend to FP32 (2-byte input) |
 | TF32 | 9 | ~1,280 | Boundary + 1024 random (3-byte input) |
 
-Total: 68,708 values swept across 16 decoder sweeps.
+Total: 69,144 values swept across 17 decoder sweeps.
 
 All reference models validated bit-exact against cocotb originals.
