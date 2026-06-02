@@ -92,7 +92,7 @@ src/rtl/                  # 19 Verilog modules (top + ROM + 17 decoders)
 test/                     # cocotb (51) + SSOT/ROM/anchor/fmt_id + 17/17 decoders + post-silicon vectors + GLS
 formal/                   # SymbiYosys formal verification (19 configs, 58 tasks)
 tools/                    # ROM emitter (gen_rom.py)
-docs/                     # design notes, loop reports
+docs/                     # design notes, loop reports, VERIFICATION.md (evidence dossier)
 PLAN.md                   # full plan (also corona_plan.pdf, 23 pages)
 info.yaml                 # TinyTapeout chip metadata
 ```
