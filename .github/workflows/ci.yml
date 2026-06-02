@@ -40,6 +40,8 @@ jobs:
         run: make lint
       - name: ROM spec cross-check (23 formats vs published specs)
         run: python3 test/test_rom_spec_crosscheck.py
+      - name: SSOT<->codegen layout cross-check (gen_rom.py vs .t27)
+        run: python3 test/test_ssot_layout_crosscheck.py
 
   claim-status-lint:
     runs-on: ubuntu-latest
