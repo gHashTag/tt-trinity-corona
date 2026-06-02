@@ -25,7 +25,10 @@
 import glob
 import os
 import re
+import shutil
+import subprocess
 import sys
+import tempfile
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 sys.path.insert(0, os.path.join(ROOT, "test"))
@@ -34,8 +37,52 @@ sys.path.insert(0, os.path.join(ROOT, "tools"))
 import test_posit8_independent as p8         # noqa: E402
 import test_lns8_independent as lns          # noqa: E402
 import test_lut_published_values as lut      # noqa: E402
+import test_float_decoders_independent as flt    # noqa: E402
+import test_simple_decoders_independent as simp  # noqa: E402
 
 _FP4 = lut.fp4_e2m1_reference()
+
+# Computed-golden harnesses: (decoder, input wire, width, golden signal, reference).
+# Their golden is procedural logic (not a value table), so we evaluate it directly
+# by instantiating the fv harness, FORCing the anyconst input across all values,
+# and reading the golden signal hierarchically -- then compare to the independent
+# reference. (bf16/tf32 assert against an inline definition with no `golden`
+# signal, so there is no separate hand-written golden to validate.)
+COMPUTED_GOLDENS = [
+    ("e8m0",          "e8m0_in",   8, "golden", lambda i: simp.ref("e8m0", i)[0]),
+    ("fp8_e5m2",      "e5m2_in",   8, "golden", flt.ref_e5m2),
+    ("mxfp8_e4m3",    "e4m3_in",   8, "golden", flt.ref_e4m3),
+    ("fp8_e4m3_fnuz", "e4m3_in",   8, "golden", flt.ref_e4m3_fnuz),
+    ("fp6_e3m2",      "fp6_in",    6, "golden", flt.ref_fp6_e3m2),
+    ("fp6_e2m3",      "fp6_in",    6, "golden", flt.ref_fp6_e2m3),
+    ("mxint8",        "mxint8_in", 8, "golden", lambda i: simp.ref("mxint8", i)[0]),
+    ("int4",          "int4_in",   4, "golden", lambda i: simp.ref("int4", i)[0]),
+    ("int8",          "int8_in",   8, "golden", lambda i: simp.ref("int8", i)[0]),
+    ("bcd",           "bcd_in",    8, "golden", lambda i: simp.ref("bcd", i)[0]),
+]
+
+
+def _force_sweep_golden(dec, in_wire, width, gsig):
+    """Instantiate formal/fv_<dec>.sv, force its anyconst input over all values,
+    read the golden signal hierarchically. Returns {i: value} or None (no iverilog)."""
+    if not shutil.which("iverilog") or not shutil.which("vvp"):
+        return None
+    fv = os.path.join(ROOT, "formal", f"fv_{dec}.sv")
+    dv = os.path.join(ROOT, "src", "rtl", f"{dec}_decode.v")
+    n = 1 << width
+    tb = (f"`timescale 1ns/1ps\nmodule tb; fv_{dec} u(); integer i;\n"
+          f" initial begin for (i=0;i<{n};i=i+1) begin force u.{in_wire}=i[{width-1}:0];"
+          f' #1; $display("%0d %08h", i, u.{gsig}); end $finish; end\nendmodule')
+    d = tempfile.mkdtemp()
+    with open(os.path.join(d, "tb.v"), "w") as f:
+        f.write(tb)
+    binp = os.path.join(d, "a.out")
+    if subprocess.run(["iverilog", "-g2012", "-o", binp,
+                       os.path.join(d, "tb.v"), fv, dv], capture_output=True).returncode:
+        return False
+    r = subprocess.run(["vvp", binp], capture_output=True, text=True)
+    return {int(l.split()[0]): int(l.split()[1], 16)
+            for l in r.stdout.splitlines() if l.split() and l.split()[0].isdigit()}
 # Output port asserted for equivalence in each formal harness.
 _OUT_PORTS = ("fp32_out", "int32_out", "bin_out", "magnitude")
 
@@ -95,12 +142,25 @@ def main():
         lns_lut.get(i) == lns.antilog_lut(i) for i in range(16)),
         "fv_lns8 antilog LUT == round(256*2^(i/16)) (16/16)")
 
+    # --- 3. Computed (procedural) formal goldens via force + hierarchical read
+    for dec, in_wire, width, gsig, ref in COMPUTED_GOLDENS:
+        out = _force_sweep_golden(dec, in_wire, width, gsig)
+        if out is None:
+            print(f"SKIP: fv_{dec} computed golden (iverilog unavailable)")
+            continue
+        if out is False:
+            check(False, f"fv_{dec} computed golden: harness compiled")
+            continue
+        n = 1 << width
+        ok = len(out) == n and all(out.get(i) == ref(i) for i in range(n))
+        check(ok, f"fv_{dec} computed golden == independent reference ({n}/{n})")
+
     print("\n" + "=" * 60)
     if errors:
         print(f"formal goldens: {len(errors)} FAILURE(S)")
         return 1
     print(f"ALL PASS: {len(decoders)} formal harnesses cover their decoder; "
-          f"4 LUT goldens match independent references")
+          f"4 LUT + {len(COMPUTED_GOLDENS)} computed goldens match independent refs")
     return 0
 
 
