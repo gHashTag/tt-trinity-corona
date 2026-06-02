@@ -539,5 +539,219 @@ def run_all(tt=None):
     return failed == 0
 
 
+def _ref_fp8_e5m2(v):
+    s, e, m = (v >> 7) & 1, (v >> 2) & 0x1F, v & 0x3
+    if e == 0x1F and m == 0:
+        return (s << 31) | 0x7F800000
+    if e == 0x1F:
+        return (s << 31) | 0x7FC00000
+    if e == 0 and m == 0:
+        return s << 31
+    if e == 0:
+        if m & 2:
+            return (s << 31) | (112 << 23) | ((m & 1) << 22)
+        return (s << 31) | (111 << 23)
+    return (s << 31) | ((e + 112) << 23) | (m << 21)
+
+
+def _ref_mxfp8_e4m3(v):
+    s, e, m = (v >> 7) & 1, (v >> 3) & 0xF, v & 0x7
+    if e == 0xF and m == 0x7:
+        return 0x7FC00000 if s == 0 else 0xFFC00000
+    if e == 0 and m == 0:
+        return 0x80000000 if s else 0x00000000
+    if e == 0:
+        if m & 4:
+            return (s << 31) | (120 << 23) | ((m & 3) << 21)
+        if m & 2:
+            return (s << 31) | (119 << 23) | ((m & 1) << 22)
+        return (s << 31) | (118 << 23)
+    return (s << 31) | ((e + 120) << 23) | (m << 20)
+
+
+def _ref_lns8(v):
+    LUT = [256, 267, 279, 292, 304, 318, 332, 347,
+           362, 378, 395, 412, 431, 450, 470, 490]
+    if v == 0x00:
+        return 0
+    s = (v >> 7) & 1
+    log = v & 0x7F
+    mag = (LUT[log & 0xF] << ((log >> 4) & 0x7)) & 0xFFFF
+    return (s << 31) | mag
+
+
+def _ref_int8(v):
+    if v & 0x80:
+        return 0xFFFFFF00 | v
+    return v
+
+
+def _ref_e8m0(v):
+    if v == 0xFF:
+        return 0x7FC00000
+    if v == 0x00:
+        return 0x00400000
+    return (v << 23) & 0x7FFFFFFF
+
+
+def _ref_mxint8(v):
+    if v == 0x00:
+        return 0x00000000
+    if v == 0x80:
+        return 0x7FC00000
+    signed = v if v < 128 else v - 256
+    try:
+        import struct
+        f = signed / 64.0
+        return struct.unpack('>I', struct.pack('>f', f))[0]
+    except ImportError:
+        if signed > 0:
+            return _float_to_u32(signed, 64)
+        return _float_to_u32(-signed, 64) | 0x80000000
+
+
+def _ref_e4m3_fnuz(v):
+    v = v & 0xFF
+    if v == 0x00:
+        return 0x00000000
+    if v == 0x80:
+        return 0x7FC00000
+    s, e, m = (v >> 7) & 1, (v >> 3) & 0xF, v & 0x7
+    if e == 0:
+        if m & 4:
+            return (s << 31) | (119 << 23) | ((m & 3) << 21)
+        if m & 2:
+            return (s << 31) | (118 << 23) | ((m & 1) << 22)
+        return (s << 31) | (117 << 23)
+    return (s << 31) | ((e + 119) << 23) | (m << 20)
+
+
+def _ref_bcd(v):
+    return ((v >> 4) & 0xF) * 10 + (v & 0xF)
+
+
+def _ref_fp6_e3m2(v):
+    s, e, m = (v >> 5) & 1, (v >> 2) & 0x7, v & 0x3
+    if e == 0 and m == 0:
+        return s << 31
+    if e == 0:
+        if m & 2:
+            return (s << 31) | (124 << 23) | ((m & 1) << 22)
+        return (s << 31) | (123 << 23)
+    return (s << 31) | ((e + 124) << 23) | (m << 21)
+
+
+def _ref_fp6_e2m3(v):
+    s, e, m = (v >> 5) & 1, (v >> 3) & 0x3, v & 0x7
+    if e == 0 and m == 0:
+        return s << 31
+    if e == 0:
+        if m & 4:
+            return (s << 31) | (126 << 23) | ((m & 3) << 21)
+        if m & 2:
+            return (s << 31) | (125 << 23) | ((m & 1) << 22)
+        return (s << 31) | (124 << 23)
+    return (s << 31) | ((e + 126) << 23) | (m << 20)
+
+
+def _ref_fp4(v):
+    LUT = [0x00000000, 0x3F000000, 0x3F800000, 0x3FC00000,
+           0x40000000, 0x40400000, 0x40800000, 0x40C00000,
+           0x80000000, 0xBF000000, 0xBF800000, 0xBFC00000,
+           0xC0000000, 0xC0400000, 0xC0800000, 0xC0C00000]
+    return LUT[v & 0xF]
+
+
+def _ref_nf4(v):
+    LUT = [0xBF800000, 0xBF3239B1, 0xBF066B30, 0xBECA32A0,
+           0xBE91A24D, 0xBE3D353F, 0xBDBA7871, 0x00000000,
+           0x3DA2FAFF, 0x3E24CAE3, 0x3E7C04DD, 0x3EAD033A,
+           0x3EE1A4B8, 0x3F1007AB, 0x3F3913B3, 0x3F800000]
+    return LUT[v & 0xF]
+
+
+def _ref_int4(v):
+    v = v & 0xF
+    if v >= 8:
+        return 0xFFFFFFF0 | v
+    return v
+
+
+def _ref_bitnet(v):
+    return [0x00000000, 0x3F800000, 0xBF800000, 0x7FC00000][v & 0x3]
+
+
+EXHAUSTIVE_SWEEPS = [
+    ("FP8_E5M2",    10, 256, _ref_fp8_e5m2),
+    ("MXFP8_E4M3", 39, 256, _ref_mxfp8_e4m3),
+    ("LNS8",        42, 256, _ref_lns8),
+    ("INT8",        47, 256, _ref_int8),
+    ("E8M0",        78, 256, _ref_e8m0),
+    ("MXINT8",      79, 256, _ref_mxint8),
+    ("E4M3_FNUZ",   14, 256, _ref_e4m3_fnuz),
+    ("FP4",         41,  16, _ref_fp4),
+    ("NF4",         70,  16, _ref_nf4),
+    ("FP6_E3M2",    40,  64, _ref_fp6_e3m2),
+    ("FP6_E2M3",    77,  64, _ref_fp6_e2m3),
+    ("INT4",        46,  16, _ref_int4),
+    ("BitNet",      71,   4, _ref_bitnet),
+    ("BCD_valid",   53, 100, None),
+]
+
+
+def run_exhaustive(tt=None):
+    if tt is None:
+        try:
+            from ttboard.demoboard import DemoBoard
+            tt = DemoBoard.get()
+            tt.shuttle.tt_um_trinity_corona.enable()
+        except ImportError:
+            print("ERROR: ttboard not available.")
+            return
+
+    drv = CoronaDriver(tt)
+    total_pass = 0
+    total_fail = 0
+
+    for name, fmt_id, count, ref_fn in EXHAUSTIVE_SWEEPS:
+        drv.reset()
+        fails = 0
+        if name == "BCD_valid":
+            for tens in range(10):
+                for ones in range(10):
+                    bcd_in = (tens << 4) | ones
+                    result = drv.decode(fmt_id, [bcd_in])
+                    got = bytes_to_u32(result)
+                    expected = _ref_bcd(bcd_in)
+                    if got != expected:
+                        print(f"  BCD 0x{bcd_in:02X}: 0x{got:08X} != 0x{expected:08X}")
+                        fails += 1
+        else:
+            for inp in range(count):
+                result = drv.decode(fmt_id, [inp])
+                got = bytes_to_u32(result)
+                expected = ref_fn(inp)
+                if got != expected:
+                    print(f"  {name} 0x{inp:02X}: 0x{got:08X} != 0x{expected:08X}")
+                    fails += 1
+        if fails == 0:
+            print(f"PASS: {name} exhaustive ({count}/{count})")
+            total_pass += 1
+        else:
+            print(f"FAIL: {name} exhaustive ({fails}/{count} failed)")
+            total_fail += 1
+
+    print(f"\n{'='*40}")
+    print(f"Exhaustive: {total_pass} passed, {total_fail} failed, "
+          f"{total_pass + total_fail} total")
+    if total_fail == 0:
+        print("ALL EXHAUSTIVE PASS")
+    return total_fail == 0
+
+
 if __name__ == "__main__":
-    run_all()
+    import sys
+    if len(sys.argv) > 1 and sys.argv[1] == "--exhaustive":
+        run_exhaustive()
+    else:
+        run_all()
