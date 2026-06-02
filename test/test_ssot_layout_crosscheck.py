@@ -26,61 +26,31 @@
 # Status: [Verified in sim] for the codegen<->SSOT structural agreement.
 
 import os
-import re
 import sys
 
 ROOT = os.path.join(os.path.dirname(__file__), "..")
 sys.path.insert(0, os.path.join(ROOT, "tools"))
 import gen_rom  # noqa: E402
+# The .t27 SSOT is parsed by exactly ONE module (Loop 80). This cross-check
+# pins gen_rom.py's hand-coded packer to whatever that single parser reads.
+import ssot_layout  # noqa: E402
 
-ROM_LAYOUT = os.path.join(ROOT, "specs", "corona", "rom_layout.t27")
-ORACLE = os.path.join(ROOT, "specs", "corona", "corona_oracle.t27")
+ROM_LAYOUT = ssot_layout.ROM_LAYOUT
+ORACLE = ssot_layout.ORACLE
 
-
-def _read(path):
-    with open(path, errors="replace") as f:
-        return f.read()
-
-
-def parse_fields(text):
-    """FIELD_NAME = struct { hi : u8 = H, lo : u8 = L, width : u8 = W }"""
-    pat = re.compile(
-        r"FIELD_(\w+)\s*=\s*struct\s*\{\s*"
-        r"hi\s*:\s*u8\s*=\s*(\d+)\s*,\s*"
-        r"lo\s*:\s*u8\s*=\s*(\d+)\s*,\s*"
-        r"width\s*:\s*u8\s*=\s*(\d+)\s*\}")
-    out = {}
-    for name, hi, lo, w in pat.findall(text):
-        out[name] = (int(hi), int(lo), int(w))
-    return out
-
-
-def parse_const_enum(text, prefix):
-    """pub const PREFIX_NAME : uN = VALUE;  (decimal or 0x hex)"""
-    pat = re.compile(
-        rf"pub\s+const\s+{prefix}_(\w+)\s*:\s*u\d+\s*=\s*(0[xX][0-9a-fA-F]+|\d+)")
-    out = {}
-    for name, val in pat.findall(text):
-        out[name] = int(val, 0)
-    return out
-
-
-def parse_cluster_counts(text):
-    m = re.search(r"CLUSTER_COUNTS\s*=\s*struct\s*\{(.*?)\}", text, re.DOTALL)
-    if not m:
-        return {}
-    body = m.group(1)
-    return {n: int(v) for n, v in re.findall(r"(\w+)\s*:\s*u8\s*=\s*(\d+)", body)}
+# Thin aliases onto the shared parser so the check logic below reads unchanged.
+parse_fields = ssot_layout.field_offsets
+parse_const_enum = ssot_layout.const_enum
+parse_cluster_counts = ssot_layout.cluster_counts
 
 
 def parse_scalar(text, name):
-    m = re.search(rf"pub\s+const\s+{name}\s*:\s*u\d+\s*=\s*(\d+)", text)
-    return int(m.group(1)) if m else None
+    return ssot_layout.scalar(name, text=text)
 
 
 def main():
-    layout = _read(ROM_LAYOUT)
-    oracle = _read(ORACLE)
+    layout = ssot_layout.read(ROM_LAYOUT)
+    oracle = ssot_layout.read(ORACLE)
     errors = []
 
     def check(cond, msg):

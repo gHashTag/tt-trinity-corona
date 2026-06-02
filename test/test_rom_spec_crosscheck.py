@@ -26,6 +26,9 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'tools'))
 # We import pack_record ONLY to decode the ROM — the EXPECTED values below
 # are independently derived from published specs, NOT from gen_rom.py's CATALOG.
 from gen_rom import pack_record, CATALOG
+# Field bit-positions come from the .t27 SSOT (rom_layout.t27), NOT a local
+# copy of the shifts. See tools/ssot_layout.py (Loop 80: single layout source).
+import ssot_layout
 
 
 # Independent spec reference: (fmt_id, total_bits, sign_bits, exp_bits, mant_bits)
@@ -68,12 +71,15 @@ SPEC_REFERENCE = {
 
 
 def extract_fields(packed_80bit):
-    """Extract metadata fields from a packed 80-bit ROM record."""
-    total = (packed_80bit >> 56) & 0xFF
-    sign = (packed_80bit >> 52) & 0xF
-    exp = (packed_80bit >> 44) & 0xFF
-    mant = (packed_80bit >> 36) & 0xFF
-    fmt_id = (packed_80bit >> 72) & 0xFF
+    """Extract metadata fields from a packed 80-bit ROM record, using the
+    bit-positions declared in rom_layout.t27 (via tools/ssot_layout.py) rather
+    than hardcoded shifts. One layout source, no third copy to drift."""
+    e = ssot_layout.extract
+    fmt_id = e(packed_80bit, "FORMAT_INDEX_ID")
+    total = e(packed_80bit, "TOTAL_BITS")
+    sign = e(packed_80bit, "SIGN_BITS")
+    exp = e(packed_80bit, "EXP_BITS")
+    mant = e(packed_80bit, "MANT_BITS")
     return fmt_id, total, sign, exp, mant
 
 
