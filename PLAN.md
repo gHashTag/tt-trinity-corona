@@ -508,6 +508,23 @@ Optional and explicitly lower priority than Phases A-F. Not started before Phase
 
 ## 10. Open Questions for the User (Before Any Commit)
 
+> **Resolution (as built, 2026-06-02).** Phases A-F are complete (GDS + precheck
+> PASS), so these planning questions are settled by the as-built design. Summary
+> (decision records live in `docs/adr/`; the related Phase-C decision set is in
+> `docs/OPEN_QUESTIONS.md`):
+>
+> | PLAN Q | Topic | Outcome |
+> | --- | --- | --- |
+> | Q1 | Tile budget (8x2/8x4/8x8) | **4x4** -- GF180MCU density drove a smaller tile than the SKY130A-oriented options ([ADR-0001](adr/0001-tile-size-4x4.md)) |
+> | Q2 | Tier-1 converter list | **17 on-die decoders** shipped (incl. posit8, bf16, mxfp8); see `docs/VERIFICATION.md` |
+> | Q3 | Two-die D2D board | **post-submission**; D2D deferred ([ADR-0006](adr/0006-d2d-holographic-mesh-deferred.md)) |
+> | Q4 | Pure-research modules | **none** -- Corona stays a registry/oracle (default held) |
+> | Q5 | MVP vs spec-complete | comprehensive Tier-1 + full conformance shipped on TTGF26a |
+> | Q6 | Hardware-archive DOI scope | DOI 10.5281/zenodo.19227877 stays hardware-archive-only; GDS archival versioning revisited post-silicon |
+> | Q7 | Legal check, historical formats | VAX / IBM HFP etc. ship **Tier-2 ROM-only** (default-to-Tier-2 held) |
+>
+> The original questions are retained below for historical context.
+
 The following questions require user input before Phase A begins (Q1, Q5, Q7) or before Phase C / Phase D scoping (Q2, Q3, Q4, Q6).
 
 **Q1. Tile budget target (before Phase A).** Three candidates: 8x2 (conservative, ~10 Tier-1 modules max), 8x4 (same as Gamma, ~15 modules comfortable), 8x8 (speculative, requires shuttle pricing confirmation). Which is the Phase A starting assumption, and what is the fallback if the Phase A PDK density analysis makes the preferred size untenable? Drives Phase C module list. [Open conjecture]

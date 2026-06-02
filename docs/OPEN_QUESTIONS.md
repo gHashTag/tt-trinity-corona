@@ -1,8 +1,10 @@
 # Open questions (RESOLVED -- recorded as ADRs)
 
-These are the seven questions from PLAN.md Section 10. Phases C-F are complete,
-so all seven are decided; each is now recorded as an ADR in `docs/adr/`. The
-original question text is kept below for historical context.
+These are the seven **Phase-C scoping decisions** (a distilled set related to,
+but not identical to, PLAN.md Section 10's planning questions -- see that section
+for the planning-stage Q1-Q7 and their as-built resolution). Phases C-F are
+complete, so all seven here are decided; each is now recorded as an ADR in
+`docs/adr/`. The original question text is kept below for historical context.
 
 | Q | Topic | Decision | ADR |
 | --- | --- | --- | --- |
