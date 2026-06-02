@@ -148,17 +148,12 @@ def main():
     return "\n".join(L) + "\n"
 
 
-CI_GATES = [
-    "test_rom_spec_crosscheck", "test_ssot_layout_crosscheck",
-    "test_rom_emitted_golden", "test_ondie_coverage_crosscheck",
-    "test_anchor_derivation", "test_fmt_id_consistency",
-    "test_lut_published_values", "test_posit8_independent",
-    "test_lns8_independent", "test_simple_decoders_independent",
-    "test_float_decoders_independent", "test_independent_oracle_coverage",
-    "test_post_silicon_vectors", "test_postsilicon_vectors_fresh",
-    "test_bringup_oracle_complete", "test_mutation_guards",
-    "test_formal_goldens", "test_verification_matrix_fresh",
-]
+# CI gates = the standalone verification gates auto-discovered by the same runner
+# CI executes (tools/run_verification_gates.py). Derived (not hand-listed) so this
+# cannot go stale when gates are added/removed.
+import run_verification_gates as _rvg  # noqa: E402
+
+CI_GATES = sorted(os.path.basename(p)[:-len(".py")] for p in _rvg.discover()[0])
 
 
 def build_data():
@@ -203,14 +198,23 @@ def main_json():
     return json.dumps(build_data(), indent=2, sort_keys=True) + "\n"
 
 
+def main_badge():
+    """shields.io endpoint JSON summarising the verification posture."""
+    import json
+    s = build_data()["summary"]
+    msg = (f"{s['decoders']} decoders - {s['ci_gates']} gates - "
+           f"{s['total_codes']:,} codes")
+    badge = {"schemaVersion": 1, "label": "verification", "message": msg,
+             "color": "brightgreen"}
+    return json.dumps(badge, indent=2, sort_keys=True) + "\n"
+
+
 if __name__ == "__main__":
-    md = main()
-    md_dest = os.path.join(ROOT, "docs", "VERIFICATION.md")
-    with open(md_dest, "w") as f:
-        f.write(md)
-    print(f"Generated {md_dest} ({len(md)} bytes)")
-    js = main_json()
-    js_dest = os.path.join(ROOT, "docs", "verification.json")
-    with open(js_dest, "w") as f:
-        f.write(js)
-    print(f"Generated {js_dest} ({len(js)} bytes)")
+    for fn, rel in ((main, "docs/VERIFICATION.md"),
+                    (main_json, "docs/verification.json"),
+                    (main_badge, "docs/verification-badge.json")):
+        out = fn()
+        dest = os.path.join(ROOT, rel)
+        with open(dest, "w") as f:
+            f.write(out)
+        print(f"Generated {dest} ({len(out)} bytes)")

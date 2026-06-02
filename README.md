@@ -1,5 +1,7 @@
 # tt-trinity-corona
 
+![verification](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/gHashTag/tt-trinity-corona/main/docs/verification-badge.json)
+
 TRI-1 Corona -- Format Conformance Oracle (TTGF26a / GF180MCU).
 
 The fourth chip in the TRI-NET line, after Phi, Euler, and Gamma. Corona is a
@@ -144,7 +146,7 @@ bug shared between the RTL and any single reference model cannot hide:
 5. **Mutation kill** — a fault injected into each decoder is confirmed to be
    detected, so no check is vacuous.
 
-These layers, the per-decoder evidence matrix, and the **18 CI cross-check gates**
+These layers, the per-decoder evidence matrix, and the **20 CI cross-check gates**
 that enforce them are documented in [`docs/VERIFICATION.md`](docs/VERIFICATION.md)
 (with a machine-readable [`docs/verification.json`](docs/verification.json) for
 tooling) — both generated from the test suite and freshness-gated, so they cannot

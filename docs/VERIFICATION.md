@@ -44,22 +44,24 @@ Every Tier-1 decoder is validated by **five independent evidence layers**. This 
 
 ## CI gates enforcing this
 
-- `test_rom_spec_crosscheck`
-- `test_ssot_layout_crosscheck`
-- `test_rom_emitted_golden`
-- `test_ondie_coverage_crosscheck`
 - `test_anchor_derivation`
-- `test_fmt_id_consistency`
-- `test_lut_published_values`
-- `test_posit8_independent`
-- `test_lns8_independent`
-- `test_simple_decoders_independent`
+- `test_bringup_oracle_complete`
+- `test_characterize_timing`
 - `test_float_decoders_independent`
+- `test_fmt_id_consistency`
+- `test_formal_goldens`
 - `test_independent_oracle_coverage`
+- `test_lns8_independent`
+- `test_lut_published_values`
+- `test_mutation_guards`
+- `test_ondie_coverage_crosscheck`
+- `test_pinout_consistency`
+- `test_posit8_independent`
 - `test_post_silicon_vectors`
 - `test_postsilicon_vectors_fresh`
-- `test_bringup_oracle_complete`
-- `test_mutation_guards`
-- `test_formal_goldens`
+- `test_rom_emitted_golden`
+- `test_rom_spec_crosscheck`
+- `test_simple_decoders_independent`
+- `test_ssot_layout_crosscheck`
 - `test_verification_matrix_fresh`
 

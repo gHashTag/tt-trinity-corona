@@ -23,6 +23,7 @@ import gen_verification_matrix as gen  # noqa: E402
 ARTIFACTS = [
     (os.path.join(ROOT, "docs", "VERIFICATION.md"), gen.main),
     (os.path.join(ROOT, "docs", "verification.json"), gen.main_json),
+    (os.path.join(ROOT, "docs", "verification-badge.json"), gen.main_badge),
 ]
 
 
