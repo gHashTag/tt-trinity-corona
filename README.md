@@ -92,7 +92,7 @@ src/rtl/                  # 19 Verilog modules (top + ROM + 17 decoders)
 test/                     # cocotb (51) + SSOT/ROM/anchor/fmt_id + 17/17 decoders + post-silicon vectors + GLS
 formal/                   # SymbiYosys formal verification (19 configs, 58 tasks)
 tools/                    # ROM emitter (gen_rom.py)
-docs/                     # design notes, loop reports, VERIFICATION.md (evidence dossier)
+docs/                     # design notes, loop reports, VERIFICATION.md; see docs/README.md (index)
 PLAN.md                   # full plan (also corona_plan.pdf, 23 pages)
 info.yaml                 # TinyTapeout chip metadata
 ```
@@ -152,6 +152,8 @@ drift.
 
 ## How to read this repo
 
+0. For a map of all documentation (specs, ADRs, verification dossier), start at
+   [`docs/README.md`](docs/README.md).
 1. Read `PLAN.md` (or `corona_plan.pdf`, 23 pages landscape A4) end-to-end.
 2. Read the `.t27` SSOT files in `specs/corona/` in this order:
    `corona_oracle.t27` -> `rom_layout.t27` -> `protocol.t27` -> `anchor.t27`
