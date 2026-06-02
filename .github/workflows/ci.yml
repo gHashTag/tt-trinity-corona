@@ -56,6 +56,8 @@ jobs:
         run: python3 test/test_posit8_independent.py
       - name: LNS8 RTL vs independent antilog reference (iverilog sweep)
         run: python3 test/test_lns8_independent.py
+      - name: Simple decoders vs closed-form refs (int/bcd/bitnet/e8m0/mxint8)
+        run: python3 test/test_simple_decoders_independent.py
 
   claim-status-lint:
     runs-on: ubuntu-latest
