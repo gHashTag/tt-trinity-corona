@@ -451,6 +451,27 @@ def test_decode_bitnet(drv):
     print(f"PASS: BitNet ternary decode ({len(BITNET_VECTORS)} vectors)")
 
 
+ALIAS_VECTORS = [
+    (11, [0x38], 0x3F800000, "FP8_E4M3 -> MXFP8"),
+    (12, [0x08], 0x3F000000, "FP6_E3M2_ML -> FP6_E3M2"),
+    (13, [0x02], 0x3F800000, "FP4_ML -> FP4"),
+    (69, [0x38], 0x3F000000, "E4M3_FNUZ_ALT -> FNUZ"),
+    (75, [0x07], 0x00000000, "NF4_BNB -> NF4"),
+]
+
+
+def test_alias_mux_routing(drv):
+    drv.reset()
+    for fmt_id, data, expected, label in ALIAS_VECTORS:
+        result = drv.decode(fmt_id, data)
+        got = bytes_to_u32(result)
+        assert got == expected, (
+            f"FAIL: alias {label} (fmt_id={fmt_id}): "
+            f"expected 0x{expected:08X}, got 0x{got:08X}"
+        )
+    print(f"PASS: alias mux routing ({len(ALIAS_VECTORS)} aliases)")
+
+
 def test_not_implemented(drv):
     drv.reset()
     result = drv.decode(15, [0x42])
@@ -481,6 +502,7 @@ ALL_TESTS = [
     test_decode_e4m3_fnuz,
     test_decode_int4,
     test_decode_bitnet,
+    test_alias_mux_routing,
     test_not_implemented,
 ]
 

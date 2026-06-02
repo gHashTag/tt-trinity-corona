@@ -14,7 +14,7 @@
 
 ## Test Suite (`test_corona.py`)
 
-22 tests covering all verification paths (4 infrastructure + 17 decoder + 1 sentinel):
+23 tests covering all verification paths (4 infrastructure + 17 decoder + 1 alias routing + 1 sentinel):
 
 | Test | What it verifies | Cocotb equivalent |
 |------|-----------------|-------------------|
@@ -39,6 +39,7 @@
 | test_decode_e4m3_fnuz | 5 E4M3 FNUZ vectors (0, NaN, 0.5, max) | test_fp8_e4m3_fnuz_exhaustive |
 | test_decode_int4 | 5 INT4 vectors (0, 1, 7, -8, -1) | test_int4_exhaustive |
 | test_decode_bitnet | 4 BitNet ternary vectors (0, +1, -1, NaN) | test_bitnet_exhaustive |
+| test_alias_mux_routing | 5 alias fmt_ids route to correct decoder | (alias tests in cocotb) |
 | test_not_implemented | Format 15 returns 0xFF + 'N' | test_not_implemented_sentinel |
 
 ## Decoder Coverage
@@ -65,7 +66,7 @@ All 17 unique hardware decoder paths tested:
 | E8M0 | 78 | 1 | 5 |
 | MXINT8 | 79 | 1 | 6 |
 
-Alias decoders (FP8_E4M3=11, FP6_E3M2_ML=12, FP4_ML=13, E4M3_FNUZ_ALT=69, NF4_BNB=75) share hardware with their primary and can be spot-checked by substituting the fmt_id.
+All 5 alias decoders (FP8_E4M3=11, FP6_E3M2_ML=12, FP4_ML=13, E4M3_FNUZ_ALT=69, NF4_BNB=75) are tested via `test_alias_mux_routing` with one spot-check vector each, verifying the case statement routes to the correct shared hardware.
 
 ## Running
 
@@ -99,19 +100,20 @@ PASS: MXINT8 decode (6 vectors)
 PASS: E4M3 FNUZ decode (5 vectors)
 PASS: INT4 decode (5 vectors)
 PASS: BitNet ternary decode (4 vectors)
+PASS: alias mux routing (5 aliases)
 PASS: not-implemented response (format 15 = GoldenFloat, no decoder)
 
 ========================================
-Results: 22 passed, 0 failed, 22 total
+Results: 23 passed, 0 failed, 23 total
 ALL PASS
 ```
 
 ## Pass/Fail Criteria
 
-- ALL 22 tests must pass for silicon validation
+- ALL 23 tests must pass for silicon validation
 - Anchor test is the first check (confirms die identity + basic I/O)
 - ROM sweep is the most comprehensive (validates all 80 records intact)
-- Decoder tests confirm all 17 combinational decode paths are functional
+- Decoder tests confirm all 22 mux case entries (17 primary + 5 alias) are functional
 - Any single failure indicates a silicon defect
 
 ## Extending

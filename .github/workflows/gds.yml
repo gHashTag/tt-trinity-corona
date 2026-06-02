@@ -11,7 +11,7 @@ jobs:
   gds:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
 
@@ -40,7 +40,7 @@ jobs:
     needs: gds
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - uses: TinyTapeout/tt-gds-action/gl_test@ttgf26a
