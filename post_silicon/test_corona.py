@@ -124,149 +124,12 @@ def test_rom_out_of_range(drv):
     print("PASS: ROM out-of-range returns zeros")
 
 
-FP8_E5M2_VECTORS = [
-    # E5M2 = 1 sign, 5 exp (bias 15), 2 mant. exp=31 -> Inf (m=0) / NaN (m!=0).
-    # NOTE (Loop 92): the previous table mislabelled exp=31 codes as max-normal/Inf
-    # and mis-scaled the subnormal; corrected against the verified RTL. The true
-    # max normal is 0x7B (exp=30, m=3) = 2^15 * 1.75 = 57344.0.
-    (0x00, 0x00000000),  # +0
-    (0x80, 0x80000000),  # -0
-    (0x7B, 0x47600000),  # max normal (57344.0)  [exp=30, m=3]
-    (0xFB, 0xC7600000),  # -max normal
-    (0x7C, 0x7F800000),  # +Inf  [exp=31, m=0]
-    (0xFC, 0xFF800000),  # -Inf
-    (0x7D, 0x7FC00000),  # NaN   [exp=31, m=1]
-    (0x01, 0x37800000),  # min subnormal (2^-16)
-    (0x3C, 0x3F800000),  # 1.0
-]
-
-BF16_VECTORS = [
-    ([0x00, 0x3F], 0x3F000000),  # 0.5
-    ([0x80, 0x3F], 0x3F800000),  # 1.0
-    ([0x00, 0x40], 0x40000000),  # 2.0
-    ([0x00, 0x00], 0x00000000),  # +0
-    ([0x00, 0x80], 0x80000000),  # -0
-    ([0x80, 0x7F], 0x7F800000),  # +Inf
-]
-
-POSIT8_VECTORS = [
-    (0x00, 0x00000000),  # zero
-    (0x40, 0x3F800000),  # 1.0
-    (0xC0, 0xBF800000),  # -1.0
-]
-
-INT8_VECTORS = [
-    (0x00, 0x00000000),  # 0
-    (0x01, 0x00000001),  # 1
-    (0x7F, 0x0000007F),  # 127
-    (0xFF, 0xFFFFFFFF),  # -1
-    (0x80, 0xFFFFFF80),  # -128
-]
-
-TF32_VECTORS = [
-    ([0x00, 0x00, 0x00], 0x00000000),  # +0
-    ([0x00, 0x00, 0x04], 0x80000000),  # -0
-    ([0x00, 0xFC, 0x01], 0x3F800000),  # 1.0
-    ([0x00, 0x00, 0x02], 0x40000000),  # 2.0
-    ([0x00, 0xFC, 0x03], 0x7F800000),  # +Inf
-]
-
-MXFP8_E4M3_VECTORS = [
-    (0x00, 0x00000000),  # +0
-    (0x80, 0x80000000),  # -0
-    (0x38, 0x3F800000),  # 1.0
-    (0x01, 0x3B000000),  # min subnormal
-    (0x7F, 0x7FC00000),  # NaN
-    (0xFF, 0xFFC00000),  # -NaN
-]
-
-LNS8_VECTORS = [
-    (0x00, 0x00000000),  # zero
-    (0x10, 0x00000200),  # log=1.0, mag=512
-    (0x01, 0x0000010B),  # log=0.0625, mag=267
-    (0x80, 0x80000100),  # negative, mag=256
-    (0x7F, 0x0000F500),  # max positive
-]
-
-BCD_VECTORS = [
-    (0x00, 0x00000000),  # 0
-    (0x01, 0x00000001),  # 1
-    (0x42, 0x0000002A),  # 42
-    (0x99, 0x00000063),  # 99
-    (0x10, 0x0000000A),  # 10
-]
-
-FP4_E2M1_VECTORS = [
-    (0x00, 0x00000000),  # +0
-    (0x02, 0x3F800000),  # 1.0
-    (0x08, 0x80000000),  # -0
-    (0x0A, 0xBF800000),  # -1.0
-    (0x0F, 0xC0C00000),  # -6.0
-]
-
-NF4_VECTORS = [
-    (0x00, 0xBF800000),  # -1.0
-    (0x07, 0x00000000),  # 0
-    (0x0F, 0x3F800000),  # 1.0
-    (0x08, 0x3DA2FAFF),  # ~0.0796
-    (0x01, 0xBF3239B1),  # ~-0.6962
-]
-
-FP6_E3M2_VECTORS = [
-    (0x00, 0x00000000),  # +0
-    (0x20, 0x80000000),  # -0
-    (0x08, 0x3F000000),  # 0.5
-    (0x3F, 0xC1E00000),  # -28.0
-    (0x01, 0x3D800000),  # min subnormal
-]
-
-FP6_E2M3_VECTORS = [
-    (0x00, 0x00000000),  # +0
-    (0x20, 0x80000000),  # -0
-    (0x08, 0x3F800000),  # 1.0
-    (0x1F, 0x40F00000),  # 7.5
-    (0x01, 0x3E000000),  # min subnormal
-]
-
-E8M0_VECTORS = [
-    (0x00, 0x00400000),  # 2^(-127) subnormal
-    (0x7F, 0x3F800000),  # 2^0 = 1.0
-    (0x01, 0x00800000),  # 2^(-126)
-    (0xFE, 0x7F000000),  # 2^127
-    (0xFF, 0x7FC00000),  # NaN
-]
-
-MXINT8_VECTORS = [
-    (0x00, 0x00000000),  # 0
-    (0x01, 0x3C800000),  # 1/64
-    (0x40, 0x3F800000),  # 64/64 = 1.0
-    (0x7F, 0x3FFE0000),  # 127/64
-    (0x80, 0x7FC00000),  # reserved -> NaN
-    (0xFF, 0xBC800000),  # -1/64
-]
-
-E4M3_FNUZ_VECTORS = [
-    (0x00, 0x00000000),  # +0
-    (0x80, 0x7FC00000),  # NaN
-    (0x38, 0x3F000000),  # 0.5 (bias=8)
-    (0x01, 0x3A800000),  # min subnormal
-    (0x7F, 0x43700000),  # max normal
-]
-
-INT4_VECTORS = [
-    (0x00, 0x00000000),  # 0
-    (0x01, 0x00000001),  # 1
-    (0x07, 0x00000007),  # 7
-    (0x08, 0xFFFFFFF8),  # -8
-    (0x0F, 0xFFFFFFFF),  # -1
-]
-
-BITNET_VECTORS = [
-    (0x00, 0x00000000),  # 0
-    (0x01, 0x3F800000),  # +1.0
-    (0x02, 0xBF800000),  # -1.0
-    (0x03, 0x7FC00000),  # NaN (unused)
-]
+from corona_vectors import (
+    FP8_E5M2_VECTORS, BF16_VECTORS, POSIT8_VECTORS, INT8_VECTORS, TF32_VECTORS,
+    MXFP8_E4M3_VECTORS, LNS8_VECTORS, BCD_VECTORS, FP4_E2M1_VECTORS, NF4_VECTORS,
+    FP6_E3M2_VECTORS, FP6_E2M3_VECTORS, E8M0_VECTORS, MXINT8_VECTORS,
+    E4M3_FNUZ_VECTORS, INT4_VECTORS, BITNET_VECTORS, ALIAS_VECTORS,
+)
 
 
 def test_decode_fp8_e5m2(drv):
@@ -454,15 +317,6 @@ def test_decode_bitnet(drv):
             f"FAIL: BitNet 0x{inp:02X}: expected 0x{expected:08X}, got 0x{got:08X}"
         )
     print(f"PASS: BitNet ternary decode ({len(BITNET_VECTORS)} vectors)")
-
-
-ALIAS_VECTORS = [
-    (11, [0x38], 0x3F800000, "FP8_E4M3 -> MXFP8"),
-    (12, [0x08], 0x3F000000, "FP6_E3M2_ML -> FP6_E3M2"),
-    (13, [0x02], 0x3F800000, "FP4_ML -> FP4"),
-    (69, [0x38], 0x3F000000, "E4M3_FNUZ_ALT -> FNUZ"),
-    (75, [0x07], 0x00000000, "NF4_BNB -> NF4"),
-]
 
 
 def test_alias_mux_routing(drv):

@@ -6,7 +6,7 @@
 # Results are printed to USB serial (115200 baud).
 #
 # Usage:
-#   1. Copy test_corona.py and boot_corona.py to demoboard filesystem
+#   1. Copy test_corona.py, corona_vectors.py and boot_corona.py to demoboard fs
 #   2. Rename boot_corona.py -> main.py (or boot.py)
 #   3. Power cycle the demoboard
 #   4. Connect via serial terminal to see results

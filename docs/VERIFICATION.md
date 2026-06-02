@@ -57,6 +57,7 @@ Every Tier-1 decoder is validated by **five independent evidence layers**. This 
 - `test_float_decoders_independent`
 - `test_independent_oracle_coverage`
 - `test_post_silicon_vectors`
+- `test_postsilicon_vectors_fresh`
 - `test_bringup_oracle_complete`
 - `test_mutation_guards`
 - `test_formal_goldens`

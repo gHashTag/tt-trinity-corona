@@ -78,7 +78,7 @@ test_corona.run_all()
 
 ### Auto-Boot (Plug-and-Play)
 
-Copy `test_corona.py` and `boot_corona.py` to the demoboard filesystem. Rename `boot_corona.py` to `main.py`. On power-up, the demoboard will automatically enable Corona and run all 23 quick tests, printing results to USB serial (115200 baud).
+Copy `test_corona.py`, `corona_vectors.py` (generated bring-up vectors) and `boot_corona.py` to the demoboard filesystem. Rename `boot_corona.py` to `main.py`. On power-up, the demoboard will automatically enable Corona and run all 23 quick tests, printing results to USB serial (115200 baud).
 
 ## Expected Output
 
