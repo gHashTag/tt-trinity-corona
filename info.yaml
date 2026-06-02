@@ -43,8 +43,9 @@ project:
 # ui_in[7]    = 0 for CMD1 cycle, any value during DATA cycles
 # ui_in[6:0]  = fmt_id (0..79, 0x7F = anchor probe) on CMD1 cycle
 # uo_out[7:0] = result stream (record bytes / decoded value bytes)
-# uio[3:0]    = D2D TX to Gamma (when D2D active)
-# uio[7:4]    = D2D RX from Gamma (when D2D active)
+# uio[7:0]    = anchor high byte (0x47) during the anchor probe (uio_oe=0xFF);
+#              inactive inputs otherwise. D2D (uio[3:0] TX / uio[7:4] RX to Gamma)
+#              is DEFERRED this shuttle -- see docs/adr/0006; no D2D RTL present.
 # -----------------------------------------------------------------------------
 pinout:
   ui[0]:    "mode_lsb_or_fmt_id_b0"
@@ -63,14 +64,14 @@ pinout:
   uo[5]:    "result_b5"
   uo[6]:    "result_b6"
   uo[7]:    "result_b7"
-  uio[0]:   "d2d_tx_0"
-  uio[1]:   "d2d_tx_1"
-  uio[2]:   "d2d_tx_2"
-  uio[3]:   "d2d_tx_3"
-  uio[4]:   "d2d_rx_0"
-  uio[5]:   "d2d_rx_1"
-  uio[6]:   "d2d_rx_2"
-  uio[7]:   "d2d_rx_3"
+  uio[0]:   "anchor_hi_b0 (d2d_tx_0 future)"
+  uio[1]:   "anchor_hi_b1 (d2d_tx_1 future)"
+  uio[2]:   "anchor_hi_b2 (d2d_tx_2 future)"
+  uio[3]:   "anchor_hi_b3 (d2d_tx_3 future)"
+  uio[4]:   "anchor_hi_b4 (d2d_rx_0 future)"
+  uio[5]:   "anchor_hi_b5 (d2d_rx_1 future)"
+  uio[6]:   "anchor_hi_b6 (d2d_rx_2 future)"
+  uio[7]:   "anchor_hi_b7 (d2d_rx_3 future)"
 
 # Do not change!
 yaml_version: 6

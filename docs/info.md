@@ -25,9 +25,12 @@ Posit8, LNS8, INT4, INT8, BCD, NF4, E8M0, MXINT8, and BitNet 1.58b. Aliased
 format indices (e.g. NF4_BNB, FP6_E3M2_ML) route to the same shared decoders, for
 22 on-die format indices in total.
 
-A die-to-die (D2D) adapter on `uio[3:0]` (TX) and `uio[7:4]` (RX) routes
-queries for Gamma-native formats (GF4-GF256, FP8, INT4/8, NF4, Posit16, BitNet)
-to the Gamma die when both chips are present on a shared bring-up board.
+Die-to-die (D2D) routing to the Gamma die for Gamma-native formats (GF4-GF256,
+FP8, INT4/8, NF4, Posit16, BitNet) is **deferred this shuttle** (see
+`docs/adr/0006`): no D2D logic is present in the RTL. The `uio[7:0]` pins instead
+carry the anchor high byte `0x47` during the anchor probe (`uio_oe = 0xFF`) and
+are inactive inputs otherwise; the `d2d_tx`/`d2d_rx` labelling reserves them for
+the future Gamma+Corona two-die assembly.
 
 The TG-TRIAD-X cross-die anchor (`{uio_out, uo_out} == 16'h47C0`, derived from
 `dot4(1,2,3,4)` over GF16) is produced when `format_index = 7'h7F` is asserted,
@@ -44,6 +47,19 @@ The chip uses Protocol v2, a two-byte CMD serial protocol on the TinyTapeout pin
   All 256 byte values are valid (no reserved mode bits).
 - **STATUS**: auto-entered after the last data byte; result bytes stream on
   `uo_out[7:0]`, one per clock cycle.
+
+### Pin map (as built)
+
+| Pin | Direction | Function |
+| --- | --- | --- |
+| `ui_in[6:0]` | in | format index (0-79) / `0x7F` = anchor probe (CMD1); raw data (DATA) |
+| `ui_in[7]` | in | mode: `0` = CMD1, `1`/any during DATA |
+| `ui_in[3:0]` | in | byte count (CMD2 cycle) |
+| `uo_out[7:0]` | out | result stream / ROM bytes (STATUS), LSB first |
+| `uio_out[7:0]` | out (anchor only) | anchor high byte `0x47` when probing `0x7F`; `uio_oe=0xFF` only then |
+| `uio_in[7:0]` | in (unused) | reserved for deferred D2D RX (see `docs/adr/0006`) |
+
+Outside the anchor probe, `uio_oe = 0x00` (all `uio` are inputs, undriven by the chip).
 
 **Anchor test (quickest check):**
 1. Assert `ui_in = 8'b0_1111111` (CMD1, `format_index = 7'h7F`).
@@ -90,8 +106,10 @@ No external hardware is required for standalone operation. The chip is fully
 functional using only the TinyTapeout demo board and a USB connection for
 clock and I/O.
 
-For **D2D operation** (routing queries to the companion Gamma die), the following
-is needed:
+**D2D is deferred this shuttle** (`docs/adr/0006`): the description below is the
+future Gamma+Corona two-die plan, not active in the shipped silicon. For that
+future **D2D operation** (routing queries to the companion Gamma die), the
+following would be needed:
 
 - A second TinyTapeout module carrying the Gamma die (gHashTag/tt-trinity-gamma,
   TTSKY26b / SKY130A).
