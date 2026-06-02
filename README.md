@@ -89,7 +89,7 @@ specs/corona/             # SSOT: chip spec in .t27 (Zig-like spec DSL)
   anchor.t27              # TG-TRIAD-X 0x47C0 anchor
   d2d_routing.t27         # die-to-die routing to Gamma
 src/rtl/                  # 19 Verilog modules (top + ROM + 17 decoders)
-test/                     # cocotb (51) + SSOT/ROM/anchor/fmt_id + 10 decoders vs external refs + GLS
+test/                     # cocotb (51) + SSOT/ROM/anchor/fmt_id + 17/17 decoders vs external refs + GLS
 formal/                   # SymbiYosys formal verification (19 configs, 58 tasks)
 tools/                    # ROM emitter (gen_rom.py)
 docs/                     # design notes, loop reports

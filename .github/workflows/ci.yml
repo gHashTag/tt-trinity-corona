@@ -58,6 +58,8 @@ jobs:
         run: python3 test/test_lns8_independent.py
       - name: Simple decoders vs closed-form refs (int/bcd/bitnet/e8m0/mxint8)
         run: python3 test/test_simple_decoders_independent.py
+      - name: Float decoders vs independent refs (bf16/tf32/fp8/fp6, iverilog)
+        run: python3 test/test_float_decoders_independent.py
 
   claim-status-lint:
     runs-on: ubuntu-latest
