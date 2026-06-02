@@ -21,8 +21,9 @@ The fourth chip in the TRI-NET line, after Phi, Euler, and Gamma. Corona is a
 ## What Corona is
 
 A silicon chip whose primary deliverable is a **~800-byte ROM encoding all
-80 numeric-format records** from the TRI-NET SSOT, plus **18 Tier-1 RTL
-decode modules** converting on-die formats to IEEE 754 FP32 (or INT32).
+80 numeric-format records** from the TRI-NET SSOT, plus **17 Tier-1 RTL
+decode modules** (covering 18 format families; FP8 E4M3 reuses the MXFP8 E4M3
+decoder) converting on-die formats to IEEE 754 FP32 (or INT32).
 A query arrives as a 7-bit format index on `ui_in[6:0]`; the chip
 returns the requested record fields or decoded value across `uo_out`
 over N read cycles. Synthesizes to 2,308 cells (~1% of 4x4 site budget).
@@ -92,7 +93,7 @@ specs/corona/             # SSOT: chip spec in .t27 (Zig-like spec DSL)
   d2d_routing.t27         # die-to-die routing to Gamma
 src/rtl/                  # 19 Verilog modules (top + ROM + 17 decoders)
 test/                     # cocotb (51) + SSOT/ROM/anchor/fmt_id + 17/17 decoders + post-silicon vectors + GLS
-formal/                   # SymbiYosys formal verification (19 configs, 58 tasks)
+formal/                   # SymbiYosys formal verification (19 configs, 57 tasks)
 tools/                    # ROM emitter (gen_rom.py)
 docs/                     # design notes, loop reports, VERIFICATION.md; see docs/README.md (index)
 PLAN.md                   # full plan (also corona_plan.pdf, 23 pages)
@@ -125,7 +126,7 @@ The CI job `claim_status_lint` enforces that every claim in `.t27`, `.v`,
 | B | Verilog ROM emitter (80 records, 10 bytes each) | **Done** |
 | C | Tier-1 RTL decoders (17 modules) + formal verification | **Done** |
 | D | D2D wiring + Gamma routing simulation | Deferred |
-| E | Conformance suite (51 cocotb + 57 formal tasks + 49 GL tests) | **Done** |
+| E | Conformance suite (51 cocotb + 57 formal tasks + 76 GL tests) | **Done** |
 | F | LibreLane GDS + shuttle submission | **GDS+precheck PASS** |
 
 ## Verification
