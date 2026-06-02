@@ -125,13 +125,18 @@ def test_rom_out_of_range(drv):
 
 
 FP8_E5M2_VECTORS = [
+    # E5M2 = 1 sign, 5 exp (bias 15), 2 mant. exp=31 -> Inf (m=0) / NaN (m!=0).
+    # NOTE (Loop 92): the previous table mislabelled exp=31 codes as max-normal/Inf
+    # and mis-scaled the subnormal; corrected against the verified RTL. The true
+    # max normal is 0x7B (exp=30, m=3) = 2^15 * 1.75 = 57344.0.
     (0x00, 0x00000000),  # +0
     (0x80, 0x80000000),  # -0
-    (0x7E, 0x477F0000),  # max normal (57344.0)
-    (0xFE, 0xC77F0000),  # -max normal
-    (0x7F, 0x7F800000),  # +Inf
-    (0xFF, 0xFF800000),  # -Inf
-    (0x01, 0x33800000),  # min subnormal
+    (0x7B, 0x47600000),  # max normal (57344.0)  [exp=30, m=3]
+    (0xFB, 0xC7600000),  # -max normal
+    (0x7C, 0x7F800000),  # +Inf  [exp=31, m=0]
+    (0xFC, 0xFF800000),  # -Inf
+    (0x7D, 0x7FC00000),  # NaN   [exp=31, m=1]
+    (0x01, 0x37800000),  # min subnormal (2^-16)
     (0x3C, 0x3F800000),  # 1.0
 ]
 

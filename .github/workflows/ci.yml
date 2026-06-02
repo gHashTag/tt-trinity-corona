@@ -62,6 +62,8 @@ jobs:
         run: python3 test/test_float_decoders_independent.py
       - name: Independent-oracle coverage gate (every decoder has an external ref)
         run: python3 test/test_independent_oracle_coverage.py
+      - name: Post-silicon bring-up vectors vs verified model
+        run: python3 test/test_post_silicon_vectors.py
 
   claim-status-lint:
     runs-on: ubuntu-latest
