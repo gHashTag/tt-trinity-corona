@@ -600,14 +600,9 @@ def _ref_mxint8(v):
     if v == 0x80:
         return 0x7FC00000
     signed = v if v < 128 else v - 256
-    try:
-        import struct
-        f = signed / 64.0
-        return struct.unpack('>I', struct.pack('>f', f))[0]
-    except ImportError:
-        if signed > 0:
-            return _float_to_u32(signed, 64)
-        return _float_to_u32(-signed, 64) | 0x80000000
+    import struct
+    f = signed / 64.0
+    return struct.unpack('>I', struct.pack('>f', f))[0]
 
 
 def _ref_e4m3_fnuz(v):
@@ -681,6 +676,17 @@ def _ref_bitnet(v):
     return [0x00000000, 0x3F800000, 0xBF800000, 0x7FC00000][v & 0x3]
 
 
+def _ref_bf16(val_16bit):
+    return val_16bit << 16
+
+
+def _ref_tf32(val_19bit):
+    s = (val_19bit >> 18) & 1
+    e = (val_19bit >> 10) & 0xFF
+    m = val_19bit & 0x3FF
+    return (s << 31) | (e << 23) | (m << 13)
+
+
 EXHAUSTIVE_SWEEPS = [
     ("FP8_E5M2",    10, 256, _ref_fp8_e5m2),
     ("MXFP8_E4M3", 39, 256, _ref_mxfp8_e4m3),
@@ -696,7 +702,56 @@ EXHAUSTIVE_SWEEPS = [
     ("INT4",        46,  16, _ref_int4),
     ("BitNet",      71,   4, _ref_bitnet),
     ("BCD_valid",   53, 100, None),
+    ("BF16_full",    8,  0, None),
+    ("TF32_sample",  9,  0, None),
 ]
+
+
+def _sweep_bf16(drv):
+    fails = 0
+    for inp in range(65536):
+        b0 = inp & 0xFF
+        b1 = (inp >> 8) & 0xFF
+        result = drv.decode(8, [b0, b1])
+        got = bytes_to_u32(result)
+        expected = _ref_bf16(inp)
+        if got != expected:
+            if fails < 3:
+                print(f"  BF16 0x{inp:04X}: 0x{got:08X} != 0x{expected:08X}")
+            fails += 1
+    return fails, 65536
+
+
+def _sweep_tf32(drv):
+    fails = 0
+    count = 0
+    boundaries = list(range(16)) + list(range(0x7FF00, 0x80000))
+    boundaries += [0x00000, 0x1FC00, 0x20000, 0x3FC00, 0x3FC01,
+                   0x40000, 0x5FC00, 0x60000, 0x7FC00, 0x7FFFF]
+    try:
+        import random
+        rng = random.Random(42)
+        boundaries += [rng.randint(0, (1 << 19) - 1) for _ in range(1024)]
+    except ImportError:
+        for i in range(1024):
+            boundaries.append((i * 511 + 137) & 0x7FFFF)
+    seen = set()
+    for val in boundaries:
+        if val in seen:
+            continue
+        seen.add(val)
+        b0 = val & 0xFF
+        b1 = (val >> 8) & 0xFF
+        b2 = (val >> 16) & 0xFF
+        result = drv.decode(9, [b0, b1, b2])
+        got = bytes_to_u32(result)
+        expected = _ref_tf32(val)
+        if got != expected:
+            if fails < 3:
+                print(f"  TF32 0x{val:05X}: 0x{got:08X} != 0x{expected:08X}")
+            fails += 1
+        count += 1
+    return fails, count
 
 
 def run_exhaustive(tt=None):
@@ -715,8 +770,8 @@ def run_exhaustive(tt=None):
 
     for name, fmt_id, count, ref_fn in EXHAUSTIVE_SWEEPS:
         drv.reset()
-        fails = 0
         if name == "BCD_valid":
+            fails = 0
             for tens in range(10):
                 for ones in range(10):
                     bcd_in = (tens << 4) | ones
@@ -726,7 +781,12 @@ def run_exhaustive(tt=None):
                     if got != expected:
                         print(f"  BCD 0x{bcd_in:02X}: 0x{got:08X} != 0x{expected:08X}")
                         fails += 1
+        elif name == "BF16_full":
+            fails, count = _sweep_bf16(drv)
+        elif name == "TF32_sample":
+            fails, count = _sweep_tf32(drv)
         else:
+            fails = 0
             for inp in range(count):
                 result = drv.decode(fmt_id, [inp])
                 got = bytes_to_u32(result)

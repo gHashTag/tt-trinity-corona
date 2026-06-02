@@ -142,7 +142,9 @@ test_corona.run_exhaustive()
 | INT4 | 46 | 16 | Two's complement 4-bit |
 | BitNet | 71 | 4 | Ternary {-1,0,+1} |
 | BCD | 53 | 100 | Valid packed BCD (00-99) |
+| BF16 | 8 | 65,536 | Zero-extend to FP32 (2-byte input) |
+| TF32 | 9 | ~1,280 | Boundary + 1024 random (3-byte input) |
 
-Total: 1,892 values swept across 14 decoder sweeps.
+Total: 68,708 values swept across 16 decoder sweeps.
 
-All reference models validated bit-exact against cocotb originals (1,892/1,892 match).
+All reference models validated bit-exact against cocotb originals.
