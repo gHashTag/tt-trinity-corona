@@ -1,9 +1,13 @@
 # SPDX-License-Identifier: Apache-2.0
 # tt-trinity-corona / Makefile
 
-.PHONY: all test lint verilator-lint formal gls rom-golden clean
+.PHONY: all test lint verilator-lint formal gls rom-golden verify clean
 
 all: lint verilator-lint
+
+verify:
+	@echo "--- Standalone verification gates (auto-discovered) ---"
+	python3 tools/run_verification_gates.py
 
 test:
 	$(MAKE) -C test
