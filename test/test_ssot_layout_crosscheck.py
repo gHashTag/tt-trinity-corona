@@ -48,6 +48,27 @@ def parse_scalar(text, name):
     return ssot_layout.scalar(name, text=text)
 
 
+# Independent golden-offset oracle (Loop 81). Since gen_rom's packer now DERIVES
+# its bit-positions from ssot_layout (one functional layout source), a bug in the
+# SSOT parser -- or an unintended edit to the FROZEN rom_layout.t27 -- would move
+# packer and extractor together and could slip past the consistency probe below.
+# This table is hand-transcribed from rom_layout.t27 Section 2 and exists ONLY to
+# pin the parser: a deliberate spec change must deliberately update it. (hi,lo,width)
+GOLDEN_LAYOUT = {
+    "FORMAT_INDEX_ID":  (79, 72, 8),
+    "CLUSTER_ID":       (71, 68, 4),
+    "STATUS_ID":        (67, 64, 4),
+    "TOTAL_BITS":       (63, 56, 8),
+    "SIGN_BITS":        (55, 52, 4),
+    "EXP_BITS":         (51, 44, 8),
+    "MANT_BITS":        (43, 36, 8),
+    "ENCODING_KIND":    (35, 32, 4),
+    "PHI_DISTANCE_Q16": (31, 16, 16),
+    "REF_INDEX":        (15,  8, 8),
+    "FLAGS":            (7,   0, 8),
+}
+
+
 def main():
     layout = ssot_layout.read(ROM_LAYOUT)
     oracle = ssot_layout.read(ORACLE)
@@ -60,8 +81,18 @@ def main():
         else:
             print(f"PASS: {msg}")
 
-    # --- 1+2. Field layout: SSOT (lo,width) vs where pack_record actually puts it
+    # --- 0. Independent oracle: SSOT parser output must match the golden table.
+    # This is the anchor now that gen_rom derives positions from the same parser.
     fields = parse_fields(layout)
+    check(fields == GOLDEN_LAYOUT,
+          "SSOT parser offsets match independent GOLDEN_LAYOUT oracle")
+    if fields != GOLDEN_LAYOUT:
+        for name in set(GOLDEN_LAYOUT) | set(fields):
+            if fields.get(name) != GOLDEN_LAYOUT.get(name):
+                print(f"  drift {name}: SSOT={fields.get(name)} "
+                      f"golden={GOLDEN_LAYOUT.get(name)}")
+
+    # --- 1+2. Field layout: SSOT (lo,width) vs where pack_record actually puts it
     check(len(fields) == 11, f"parsed 11 SSOT fields (got {len(fields)})")
 
     # Map SSOT field name -> the pack_record() argument we feed it.
@@ -73,8 +104,11 @@ def main():
     check(width_sum == record_bits,
           f"field widths sum to RECORD_BITS ({width_sum} == {record_bits})")
 
-    # Distinct probe values that fit each field's width, chosen so a swapped
-    # shift/width would change the extracted value.
+    # Consistency probe: confirm pack_record actually routes each argument
+    # through the SSOT-declared position (catches a packer that ignores the
+    # layout, drops a field, or lets fields bleed into each other). With the
+    # parser pinned by GOLDEN_LAYOUT above, this verifies the packer too.
+    # Distinct values per field so any mis-route changes the extracted value.
     probe = dict(fmt_id=0xA5, cluster=0x9, status=0x6, total_bits=0xC3,
                  sign_bits=0x1, exp_bits=0x4B, mant_bits=0x37, enc_kind=0x5,
                  ref_idx=0xD2, flags=0x8)

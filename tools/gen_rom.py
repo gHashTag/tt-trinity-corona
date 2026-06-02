@@ -20,6 +20,12 @@ import sys
 import os
 import math
 
+# Bit-field positions/widths come from the .t27 SSOT (rom_layout.t27) via this
+# reader, NOT hardcoded shifts in pack_record (Loop 81: one functional layout
+# source). gen_rom.py and ssot_layout.py live in the same directory.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import ssot_layout
+
 # Encoding kinds (from rom_layout.t27)
 ENC_FP = 0
 ENC_POSIT = 1
@@ -75,27 +81,44 @@ def phi_distance(exp_bits, mant_bits):
     return q16
 
 
+# Logical pack_record arg -> SSOT FIELD_ name. phi_distance_q16 is computed
+# here (from exp/mant), the rest are passed in.
+_FIELD_MAP = [
+    ("FORMAT_INDEX_ID",  "fmt_id"),
+    ("CLUSTER_ID",       "cluster"),
+    ("STATUS_ID",        "status"),
+    ("TOTAL_BITS",       "total_bits"),
+    ("SIGN_BITS",        "sign_bits"),
+    ("EXP_BITS",         "exp_bits"),
+    ("MANT_BITS",        "mant_bits"),
+    ("ENCODING_KIND",    "enc_kind"),
+    ("PHI_DISTANCE_Q16", "phi_q16"),
+    ("REF_INDEX",        "ref_idx"),
+    ("FLAGS",            "flags"),
+]
+
+
 def pack_record(fmt_id, cluster, status, total_bits, sign_bits,
                 exp_bits, mant_bits, enc_kind, ref_idx, flags):
-    """Pack a single 80-bit record per rom_layout.t27.
+    """Pack a single 80-bit record. Field bit-positions and widths are read
+    from the .t27 SSOT (rom_layout.t27) via ssot_layout -- the layout is NOT
+    duplicated as literal shifts here (Loop 81).
     NOTE: total_bits is 8-bit; 256 wraps to 0 (fmt_id 4=fp256, 29=GF256)."""
     if total_bits > 255:
-        import sys
         print(f"WARNING: fmt_id={fmt_id} total_bits={total_bits} truncated to "
               f"{total_bits & 0xFF} (8-bit field overflow)", file=sys.stderr)
-    phi_q16 = phi_distance(exp_bits, mant_bits)
+    values = {
+        "fmt_id": fmt_id, "cluster": cluster, "status": status,
+        "total_bits": total_bits, "sign_bits": sign_bits, "exp_bits": exp_bits,
+        "mant_bits": mant_bits, "enc_kind": enc_kind,
+        "phi_q16": phi_distance(exp_bits, mant_bits),
+        "ref_idx": ref_idx, "flags": flags,
+    }
+    layout = ssot_layout.LAYOUT
     word = 0
-    word |= (fmt_id & 0xFF) << 72
-    word |= (cluster & 0xF) << 68
-    word |= (status & 0xF) << 64
-    word |= (total_bits & 0xFF) << 56
-    word |= (sign_bits & 0xF) << 52
-    word |= (exp_bits & 0xFF) << 44
-    word |= (mant_bits & 0xFF) << 36
-    word |= (enc_kind & 0xF) << 32
-    word |= (phi_q16 & 0xFFFF) << 16
-    word |= (ref_idx & 0xFF) << 8
-    word |= (flags & 0xFF)
+    for ssot_name, key in _FIELD_MAP:
+        _hi, lo, width = layout[ssot_name]
+        word |= (values[key] & ((1 << width) - 1)) << lo
     return word
 
 
