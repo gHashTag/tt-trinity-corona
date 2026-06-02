@@ -49,8 +49,11 @@ def actuals():
     sys.path.insert(0, os.path.join(ROOT, "tools"))
     import run_verification_gates
     gates = len(run_verification_gates.discover()[0])
+    import gen_rom
+    on_die_indices = sum(1 for r in gen_rom.CATALOG if r[9] & gen_rom.FLAG_ON_DIE)
     return {"decoders": decoders, "formal": formal, "cocotb": cocotb,
-            "postsi": postsi, "gl": gl, "gates": gates}
+            "postsi": postsi, "gl": gl, "gates": gates,
+            "on_die_indices": on_die_indices}
 
 
 def _read_test(path):
@@ -73,6 +76,8 @@ def main():
         (r"ALL (\d+) tests must pass", a["postsi"]),
         (r"(\d+) tests covering all verification", a["postsi"]),
         (r"(\d+) CI cross-check gates", a["gates"]),
+        (r"(\d+) on-die format indices", a["on_die_indices"]),
+        (r"(\d+) on-die decoders", a["decoders"]),
     ]
 
     errors = []
