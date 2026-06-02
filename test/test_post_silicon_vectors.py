@@ -79,32 +79,35 @@ def independent_chip_output(fmt, data):
     raise KeyError(fmt)
 
 
-# (label, vector table, single-byte input?)
+# (label, vector table, single-byte input?, fmt_id)
 TABLES = [
-    ("e5m2",     ps.FP8_E5M2_VECTORS,   True),
-    ("bf16",     ps.BF16_VECTORS,       False),
-    ("posit8",   ps.POSIT8_VECTORS,     True),
-    ("int8",     ps.INT8_VECTORS,       True),
-    ("tf32",     ps.TF32_VECTORS,       False),
-    ("mxfp8",    ps.MXFP8_E4M3_VECTORS, True),
-    ("lns8",     ps.LNS8_VECTORS,       True),
-    ("bcd",      ps.BCD_VECTORS,        True),
-    ("fp4",      ps.FP4_E2M1_VECTORS,   True),
-    ("nf4",      ps.NF4_VECTORS,        True),
-    ("fp6_e3m2", ps.FP6_E3M2_VECTORS,   True),
-    ("fp6_e2m3", ps.FP6_E2M3_VECTORS,   True),
-    ("e8m0",     ps.E8M0_VECTORS,       True),
-    ("mxint8",   ps.MXINT8_VECTORS,     True),
-    ("fnuz",     ps.E4M3_FNUZ_VECTORS,  True),
-    ("int4",     ps.INT4_VECTORS,       True),
-    ("bitnet",   ps.BITNET_VECTORS,     True),
+    ("e5m2",     ps.FP8_E5M2_VECTORS,   True,  10),
+    ("bf16",     ps.BF16_VECTORS,       False, 8),
+    ("posit8",   ps.POSIT8_VECTORS,     True,  31),
+    ("int8",     ps.INT8_VECTORS,       True,  47),
+    ("tf32",     ps.TF32_VECTORS,       False, 9),
+    ("mxfp8",    ps.MXFP8_E4M3_VECTORS, True,  39),
+    ("lns8",     ps.LNS8_VECTORS,       True,  42),
+    ("bcd",      ps.BCD_VECTORS,        True,  53),
+    ("fp4",      ps.FP4_E2M1_VECTORS,   True,  41),
+    ("nf4",      ps.NF4_VECTORS,        True,  70),
+    ("fp6_e3m2", ps.FP6_E3M2_VECTORS,   True,  40),
+    ("fp6_e2m3", ps.FP6_E2M3_VECTORS,   True,  77),
+    ("e8m0",     ps.E8M0_VECTORS,       True,  78),
+    ("mxint8",   ps.MXINT8_VECTORS,     True,  79),
+    ("fnuz",     ps.E4M3_FNUZ_VECTORS,  True,  14),
+    ("int4",     ps.INT4_VECTORS,       True,  46),
+    ("bitnet",   ps.BITNET_VECTORS,     True,  71),
 ]
+
+# Alias fmt_ids route to a canonical decoder; map each to the reference label.
+ALIAS_REF = {11: "mxfp8", 12: "fp6_e3m2", 13: "fp4", 69: "fnuz", 75: "nf4"}
 
 
 def main():
     errors = []
     total = 0
-    for name, table, single in TABLES:
+    for name, table, single, _fmt in TABLES:
         bad = 0
         for inp, expected in table:
             data = [inp] if single else inp
@@ -120,11 +123,45 @@ def main():
         if bad:
             errors.append(name)
 
+    # --- Alias mux routing vectors vs the canonical decoder's reference -------
+    abad = 0
+    for fmt_id, data, expected, label in ps.ALIAS_VECTORS:
+        ref = independent_chip_output(ALIAS_REF[fmt_id], data)
+        total += 1
+        if ref != expected:
+            abad += 1
+            print(f"  alias {label}: post-silicon=0x{expected:08X} reference=0x{ref:08X}")
+    print(("PASS: " if abad == 0 else "FAIL: ") +
+          f"alias routing {len(ps.ALIAS_VECTORS)} vectors match reference")
+    if abad:
+        errors.append("alias")
+
+    # --- Bring-up decode coverage == on-die decoder set -----------------------
+    import gen_rom
+    on_die = {r[0] for r in gen_rom.CATALOG if r[9] & gen_rom.FLAG_ON_DIE}
+    covered = {fmt for *_, fmt in TABLES} | set(ALIAS_REF)
+    missing = sorted(on_die - covered)
+    extra = sorted(covered - on_die)
+    ok_cov = not missing and not extra
+    print(("PASS: " if ok_cov else "FAIL: ") +
+          f"bring-up decode tests cover the {len(on_die)} on-die formats "
+          f"(missing={missing}, extra={extra})")
+    if not ok_cov:
+        errors.append("coverage")
+
+    # --- NUM_FORMATS consistency ---------------------------------------------
+    ok_nf = ps.NUM_FORMATS == len(gen_rom.CATALOG) == 80
+    print(("PASS: " if ok_nf else "FAIL: ") +
+          f"NUM_FORMATS ({ps.NUM_FORMATS}) == CATALOG ({len(gen_rom.CATALOG)}) == 80")
+    if not ok_nf:
+        errors.append("NUM_FORMATS")
+
     print("\n" + "=" * 60)
     if errors:
-        print(f"post-silicon vectors: FAIL ({', '.join(errors)})")
+        print(f"post-silicon oracle: FAIL ({', '.join(errors)})")
         return 1
-    print(f"ALL PASS: {total} post-silicon bring-up vectors match the verified model")
+    print(f"ALL PASS: {total} bring-up vectors + alias/coverage/NUM_FORMATS "
+          f"match the verified model")
     return 0
 
 

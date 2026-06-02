@@ -120,6 +120,18 @@ def main():
     check("0x47C0" in ta and "0x47" in ta and "0xC0" in ta,
           "test_anchor.py asserts 0x47C0 / 0x47 / 0xC0")
 
+    # post_silicon/test_corona.py -- the 4th copy (bring-up oracle).
+    ps = _read(os.path.join(ROOT, "post_silicon", "test_corona.py"))
+
+    def pyconst(text, name):
+        m = re.search(rf"^{name}\s*=\s*(0[xX][0-9A-Fa-f]+|\d+)", text, re.M)
+        return int(m.group(1), 0) if m else None
+    check(pyconst(ps, "ANCHOR_UO") == ANCHOR_UO, "post_silicon ANCHOR_UO == 0xC0")
+    check(pyconst(ps, "ANCHOR_UIO") == ANCHOR_UIO, "post_silicon ANCHOR_UIO == 0x47")
+    check(pyconst(ps, "FMT_ID_ANCHOR") == FMT_ID_ANCHOR,
+          "post_silicon FMT_ID_ANCHOR == 0x7F")
+    check("0x47C0" in ps, "post_silicon asserts 0x47C0")
+
     # --- Step 3 honesty: report, do not fabricate ---------------------------
     v4 = [1, 2, 3, 4]
     dot = 0
