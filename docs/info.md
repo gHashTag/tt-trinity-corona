@@ -18,10 +18,12 @@ is 10 bytes (80 bits) and includes fields for sign bits, exponent width, mantiss
 width, encoding kind, cluster ID, claim-status ID, phi-distance (Q16), and a
 reference index. The ROM is generated mechanically by `tools/gen_rom.py`.
 
-18 Tier-1 RTL decode modules convert on-die formats to IEEE 754 FP32 (or INT32),
-covering BF16, TF32, FP8 E5M2, FP8 E4M3, FP8 E4M3 FNUZ, MXFP8 E4M3, FP6 E3M2,
-FP6 E2M3, FP4 E2M1, Posit8, LNS8, INT4, INT8, BCD, NF4, E8M0, MXINT8, and
-BitNet 1.58b.
+17 Tier-1 RTL decode modules convert on-die formats to IEEE 754 FP32 (or INT32),
+covering 18 format families (FP8 E4M3 reuses the MXFP8 E4M3 decoder): BF16, TF32,
+FP8 E5M2, FP8 E4M3, FP8 E4M3 FNUZ, MXFP8 E4M3, FP6 E3M2, FP6 E2M3, FP4 E2M1,
+Posit8, LNS8, INT4, INT8, BCD, NF4, E8M0, MXINT8, and BitNet 1.58b. Aliased
+format indices (e.g. NF4_BNB, FP6_E3M2_ML) route to the same shared decoders, for
+22 on-die format indices in total.
 
 A die-to-die (D2D) adapter on `uio[3:0]` (TX) and `uio[7:4]` (RX) routes
 queries for Gamma-native formats (GF4-GF256, FP8, INT4/8, NF4, Posit16, BitNet)
@@ -60,6 +62,27 @@ The chip uses Protocol v2, a two-byte CMD serial protocol on the TinyTapeout pin
 
 The cocotb testbench suite in `test/` provides automated verification including
 exhaustive sweeps for all sub-8-bit and 8-bit format decoders.
+
+## Timing
+
+Decode latency is fixed by Protocol v2 and the input byte count (deterministic;
+confirmed on silicon). From CMD1, the result streams over 4 STATUS cycles:
+
+| Input width | Formats | First result byte | Full 32-bit result |
+| --- | --- | ---: | ---: |
+| 1 byte | most (fp8, posit8, int, bcd, ...) | 4 cycles | 7 cycles |
+| 2 bytes | BF16 | 5 cycles | 8 cycles |
+| 3 bytes | TF32 | 6 cycles | 9 cycles |
+
+The anchor probe responds combinationally (same cycle). Nominal clock is 25 MHz;
+the maximum clock frequency (Fmax) and critical-path decoder will be measured
+post-silicon by sweeping the demo-board clock (`post_silicon/characterize_timing.py`):
+
+| Metric | Value |
+| --- | --- |
+| Nominal clock | 25 MHz |
+| Fmax (all decoders) | TBD (post-silicon) |
+| Critical-path decoder | TBD (post-silicon) |
 
 ## External hardware
 
