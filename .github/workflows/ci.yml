@@ -50,6 +50,8 @@ jobs:
         run: python3 test/test_anchor_derivation.py
       - name: fmt_id consistency (all FMT_ consts vs RTL localparams)
         run: python3 test/test_fmt_id_consistency.py
+      - name: LUT published values (NF4 vs QLoRA, FP4 vs OCP E2M1)
+        run: python3 test/test_lut_published_values.py
 
   claim-status-lint:
     runs-on: ubuntu-latest
