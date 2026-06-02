@@ -158,6 +158,111 @@ INT8_VECTORS = [
     (0x80, 0xFFFFFF80),  # -128
 ]
 
+TF32_VECTORS = [
+    ([0x00, 0x00, 0x00], 0x00000000),  # +0
+    ([0x00, 0x00, 0x04], 0x80000000),  # -0
+    ([0x00, 0xFC, 0x01], 0x3F800000),  # 1.0
+    ([0x00, 0x00, 0x02], 0x40000000),  # 2.0
+    ([0x00, 0xFC, 0x03], 0x7F800000),  # +Inf
+]
+
+MXFP8_E4M3_VECTORS = [
+    (0x00, 0x00000000),  # +0
+    (0x80, 0x80000000),  # -0
+    (0x38, 0x3F800000),  # 1.0
+    (0x01, 0x3B000000),  # min subnormal
+    (0x7F, 0x7FC00000),  # NaN
+    (0xFF, 0xFFC00000),  # -NaN
+]
+
+LNS8_VECTORS = [
+    (0x00, 0x00000000),  # zero
+    (0x10, 0x00000200),  # log=1.0, mag=512
+    (0x01, 0x0000010B),  # log=0.0625, mag=267
+    (0x80, 0x80000100),  # negative, mag=256
+    (0x7F, 0x0000F500),  # max positive
+]
+
+BCD_VECTORS = [
+    (0x00, 0x00000000),  # 0
+    (0x01, 0x00000001),  # 1
+    (0x42, 0x0000002A),  # 42
+    (0x99, 0x00000063),  # 99
+    (0x10, 0x0000000A),  # 10
+]
+
+FP4_E2M1_VECTORS = [
+    (0x00, 0x00000000),  # +0
+    (0x02, 0x3F800000),  # 1.0
+    (0x08, 0x80000000),  # -0
+    (0x0A, 0xBF800000),  # -1.0
+    (0x0F, 0xC0C00000),  # -6.0
+]
+
+NF4_VECTORS = [
+    (0x00, 0xBF800000),  # -1.0
+    (0x07, 0x00000000),  # 0
+    (0x0F, 0x3F800000),  # 1.0
+    (0x08, 0x3DA2FAFF),  # ~0.0796
+    (0x01, 0xBF3239B1),  # ~-0.6962
+]
+
+FP6_E3M2_VECTORS = [
+    (0x00, 0x00000000),  # +0
+    (0x20, 0x80000000),  # -0
+    (0x08, 0x3F000000),  # 0.5
+    (0x3F, 0xC1E00000),  # -28.0
+    (0x01, 0x3D800000),  # min subnormal
+]
+
+FP6_E2M3_VECTORS = [
+    (0x00, 0x00000000),  # +0
+    (0x20, 0x80000000),  # -0
+    (0x08, 0x3F800000),  # 1.0
+    (0x1F, 0x40F00000),  # 7.5
+    (0x01, 0x3E000000),  # min subnormal
+]
+
+E8M0_VECTORS = [
+    (0x00, 0x00400000),  # 2^(-127) subnormal
+    (0x7F, 0x3F800000),  # 2^0 = 1.0
+    (0x01, 0x00800000),  # 2^(-126)
+    (0xFE, 0x7F000000),  # 2^127
+    (0xFF, 0x7FC00000),  # NaN
+]
+
+MXINT8_VECTORS = [
+    (0x00, 0x00000000),  # 0
+    (0x01, 0x3C800000),  # 1/64
+    (0x40, 0x3F800000),  # 64/64 = 1.0
+    (0x7F, 0x3FFE0000),  # 127/64
+    (0x80, 0x7FC00000),  # reserved -> NaN
+    (0xFF, 0xBC800000),  # -1/64
+]
+
+E4M3_FNUZ_VECTORS = [
+    (0x00, 0x00000000),  # +0
+    (0x80, 0x7FC00000),  # NaN
+    (0x38, 0x3F000000),  # 0.5 (bias=8)
+    (0x01, 0x3A800000),  # min subnormal
+    (0x7F, 0x43700000),  # max normal
+]
+
+INT4_VECTORS = [
+    (0x00, 0x00000000),  # 0
+    (0x01, 0x00000001),  # 1
+    (0x07, 0x00000007),  # 7
+    (0x08, 0xFFFFFFF8),  # -8
+    (0x0F, 0xFFFFFFFF),  # -1
+]
+
+BITNET_VECTORS = [
+    (0x00, 0x00000000),  # 0
+    (0x01, 0x3F800000),  # +1.0
+    (0x02, 0xBF800000),  # -1.0
+    (0x03, 0x7FC00000),  # NaN (unused)
+]
+
 
 def test_decode_fp8_e5m2(drv):
     drv.reset()
@@ -203,6 +308,149 @@ def test_decode_int8(drv):
     print(f"PASS: INT8 decode ({len(INT8_VECTORS)} vectors)")
 
 
+def test_decode_tf32(drv):
+    drv.reset()
+    for data, expected in TF32_VECTORS:
+        result = drv.decode(9, data)
+        got = bytes_to_u32(result)
+        assert got == expected, (
+            f"FAIL: TF32 {data}: expected 0x{expected:08X}, got 0x{got:08X}"
+        )
+    print(f"PASS: TF32 decode ({len(TF32_VECTORS)} vectors)")
+
+
+def test_decode_mxfp8_e4m3(drv):
+    drv.reset()
+    for inp, expected in MXFP8_E4M3_VECTORS:
+        result = drv.decode(39, [inp])
+        got = bytes_to_u32(result)
+        assert got == expected, (
+            f"FAIL: MXFP8_E4M3 0x{inp:02X}: expected 0x{expected:08X}, got 0x{got:08X}"
+        )
+    print(f"PASS: MXFP8 E4M3 decode ({len(MXFP8_E4M3_VECTORS)} vectors)")
+
+
+def test_decode_lns8(drv):
+    drv.reset()
+    for inp, expected in LNS8_VECTORS:
+        result = drv.decode(42, [inp])
+        got = bytes_to_u32(result)
+        assert got == expected, (
+            f"FAIL: LNS8 0x{inp:02X}: expected 0x{expected:08X}, got 0x{got:08X}"
+        )
+    print(f"PASS: LNS8 decode ({len(LNS8_VECTORS)} vectors)")
+
+
+def test_decode_bcd(drv):
+    drv.reset()
+    for inp, expected in BCD_VECTORS:
+        result = drv.decode(53, [inp])
+        got = bytes_to_u32(result)
+        assert got == expected, (
+            f"FAIL: BCD 0x{inp:02X}: expected 0x{expected:08X}, got 0x{got:08X}"
+        )
+    print(f"PASS: BCD decode ({len(BCD_VECTORS)} vectors)")
+
+
+def test_decode_fp4(drv):
+    drv.reset()
+    for inp, expected in FP4_E2M1_VECTORS:
+        result = drv.decode(41, [inp])
+        got = bytes_to_u32(result)
+        assert got == expected, (
+            f"FAIL: FP4 0x{inp:02X}: expected 0x{expected:08X}, got 0x{got:08X}"
+        )
+    print(f"PASS: FP4 E2M1 decode ({len(FP4_E2M1_VECTORS)} vectors)")
+
+
+def test_decode_nf4(drv):
+    drv.reset()
+    for inp, expected in NF4_VECTORS:
+        result = drv.decode(70, [inp])
+        got = bytes_to_u32(result)
+        assert got == expected, (
+            f"FAIL: NF4 0x{inp:02X}: expected 0x{expected:08X}, got 0x{got:08X}"
+        )
+    print(f"PASS: NF4 QLoRA decode ({len(NF4_VECTORS)} vectors)")
+
+
+def test_decode_fp6_e3m2(drv):
+    drv.reset()
+    for inp, expected in FP6_E3M2_VECTORS:
+        result = drv.decode(40, [inp])
+        got = bytes_to_u32(result)
+        assert got == expected, (
+            f"FAIL: FP6_E3M2 0x{inp:02X}: expected 0x{expected:08X}, got 0x{got:08X}"
+        )
+    print(f"PASS: FP6 E3M2 decode ({len(FP6_E3M2_VECTORS)} vectors)")
+
+
+def test_decode_fp6_e2m3(drv):
+    drv.reset()
+    for inp, expected in FP6_E2M3_VECTORS:
+        result = drv.decode(77, [inp])
+        got = bytes_to_u32(result)
+        assert got == expected, (
+            f"FAIL: FP6_E2M3 0x{inp:02X}: expected 0x{expected:08X}, got 0x{got:08X}"
+        )
+    print(f"PASS: FP6 E2M3 decode ({len(FP6_E2M3_VECTORS)} vectors)")
+
+
+def test_decode_e8m0(drv):
+    drv.reset()
+    for inp, expected in E8M0_VECTORS:
+        result = drv.decode(78, [inp])
+        got = bytes_to_u32(result)
+        assert got == expected, (
+            f"FAIL: E8M0 0x{inp:02X}: expected 0x{expected:08X}, got 0x{got:08X}"
+        )
+    print(f"PASS: E8M0 decode ({len(E8M0_VECTORS)} vectors)")
+
+
+def test_decode_mxint8(drv):
+    drv.reset()
+    for inp, expected in MXINT8_VECTORS:
+        result = drv.decode(79, [inp])
+        got = bytes_to_u32(result)
+        assert got == expected, (
+            f"FAIL: MXINT8 0x{inp:02X}: expected 0x{expected:08X}, got 0x{got:08X}"
+        )
+    print(f"PASS: MXINT8 decode ({len(MXINT8_VECTORS)} vectors)")
+
+
+def test_decode_e4m3_fnuz(drv):
+    drv.reset()
+    for inp, expected in E4M3_FNUZ_VECTORS:
+        result = drv.decode(14, [inp])
+        got = bytes_to_u32(result)
+        assert got == expected, (
+            f"FAIL: E4M3_FNUZ 0x{inp:02X}: expected 0x{expected:08X}, got 0x{got:08X}"
+        )
+    print(f"PASS: E4M3 FNUZ decode ({len(E4M3_FNUZ_VECTORS)} vectors)")
+
+
+def test_decode_int4(drv):
+    drv.reset()
+    for inp, expected in INT4_VECTORS:
+        result = drv.decode(46, [inp])
+        got = bytes_to_u32(result)
+        assert got == expected, (
+            f"FAIL: INT4 0x{inp:02X}: expected 0x{expected:08X}, got 0x{got:08X}"
+        )
+    print(f"PASS: INT4 decode ({len(INT4_VECTORS)} vectors)")
+
+
+def test_decode_bitnet(drv):
+    drv.reset()
+    for inp, expected in BITNET_VECTORS:
+        result = drv.decode(71, [inp])
+        got = bytes_to_u32(result)
+        assert got == expected, (
+            f"FAIL: BitNet 0x{inp:02X}: expected 0x{expected:08X}, got 0x{got:08X}"
+        )
+    print(f"PASS: BitNet ternary decode ({len(BITNET_VECTORS)} vectors)")
+
+
 def test_not_implemented(drv):
     drv.reset()
     result = drv.decode(15, [0x42])
@@ -220,6 +468,19 @@ ALL_TESTS = [
     test_decode_bf16,
     test_decode_posit8,
     test_decode_int8,
+    test_decode_tf32,
+    test_decode_mxfp8_e4m3,
+    test_decode_lns8,
+    test_decode_bcd,
+    test_decode_fp4,
+    test_decode_nf4,
+    test_decode_fp6_e3m2,
+    test_decode_fp6_e2m3,
+    test_decode_e8m0,
+    test_decode_mxint8,
+    test_decode_e4m3_fnuz,
+    test_decode_int4,
+    test_decode_bitnet,
     test_not_implemented,
 ]
 

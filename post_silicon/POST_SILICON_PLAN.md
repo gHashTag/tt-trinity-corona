@@ -14,7 +14,7 @@
 
 ## Test Suite (`test_corona.py`)
 
-9 tests covering the critical verification paths:
+22 tests covering all verification paths (4 infrastructure + 17 decoder + 1 sentinel):
 
 | Test | What it verifies | Cocotb equivalent |
 |------|-----------------|-------------------|
@@ -23,10 +23,49 @@
 | test_rom_self_index_sweep | All 80 ROM entries have correct self-index | test_full_rom_self_index_sweep |
 | test_rom_out_of_range | Addresses 80-126 return zeros | test_rom_oob |
 | test_decode_fp8_e5m2 | 8 FP8 E5M2 vectors (0, Inf, subnormal, 1.0) | test_fp8_e5m2_exhaustive |
-| test_decode_bf16 | 6 BF16 vectors (0, 0.5, 1.0, 2.0, Inf) | test_bf16_sweep |
+| test_decode_bf16 | 6 BF16 vectors (0, 0.5, 1.0, 2.0, Inf) | test_bf16_key_values |
 | test_decode_posit8 | 3 Posit8 vectors (0, 1, -1) | test_posit8_exhaustive |
-| test_decode_int8 | 5 INT8 vectors (0, 1, 127, -1, -128) | test_int8_sweep |
-| test_not_implemented | Format 15 returns 0xFF + 'N' | test_no_decoder_response |
+| test_decode_int8 | 5 INT8 vectors (0, 1, 127, -1, -128) | test_int8_exhaustive |
+| test_decode_tf32 | 5 TF32 vectors (0, -0, 1.0, 2.0, Inf) | test_tf32_key_values |
+| test_decode_mxfp8_e4m3 | 6 MXFP8 E4M3 vectors (0, -0, 1.0, NaN) | test_mxfp8_e4m3_exhaustive |
+| test_decode_lns8 | 5 LNS8 vectors (zero, key magnitudes) | test_lns8_exhaustive |
+| test_decode_bcd | 5 BCD vectors (0, 1, 42, 99, 10) | test_bcd_exhaustive_valid |
+| test_decode_fp4 | 5 FP4 E2M1 vectors (0, 1.0, -0, -1.0) | test_fp4_exhaustive |
+| test_decode_nf4 | 5 NF4 QLoRA vectors (-1, 0, 1, key levels) | test_nf4_exhaustive |
+| test_decode_fp6_e3m2 | 5 FP6 E3M2 vectors (0, -0, 0.5, max) | test_fp6_e3m2_exhaustive |
+| test_decode_fp6_e2m3 | 5 FP6 E2M3 vectors (0, -0, 1.0, max) | test_fp6_e2m3_exhaustive |
+| test_decode_e8m0 | 5 E8M0 vectors (2^-127, 1.0, 2^-126, NaN) | test_e8m0_exhaustive |
+| test_decode_mxint8 | 6 MXINT8 vectors (0, 1/64, 1.0, NaN) | test_mxint8_exhaustive |
+| test_decode_e4m3_fnuz | 5 E4M3 FNUZ vectors (0, NaN, 0.5, max) | test_fp8_e4m3_fnuz_exhaustive |
+| test_decode_int4 | 5 INT4 vectors (0, 1, 7, -8, -1) | test_int4_exhaustive |
+| test_decode_bitnet | 4 BitNet ternary vectors (0, +1, -1, NaN) | test_bitnet_exhaustive |
+| test_not_implemented | Format 15 returns 0xFF + 'N' | test_not_implemented_sentinel |
+
+## Decoder Coverage
+
+All 17 unique hardware decoder paths tested:
+
+| Decoder | fmt_id | Input bytes | Vectors |
+|---------|--------|-------------|---------|
+| BF16 | 8 | 2 | 6 |
+| TF32 | 9 | 3 | 5 |
+| FP8 E5M2 | 10 | 1 | 8 |
+| E4M3 FNUZ | 14 | 1 | 5 |
+| Posit8 | 31 | 1 | 3 |
+| MXFP8 E4M3 | 39 | 1 | 6 |
+| FP6 E3M2 | 40 | 1 | 5 |
+| FP4 E2M1 | 41 | 1 | 5 |
+| LNS8 | 42 | 1 | 5 |
+| INT4 | 46 | 1 | 5 |
+| INT8 | 47 | 1 | 5 |
+| BCD | 53 | 1 | 5 |
+| NF4 QLoRA | 70 | 1 | 5 |
+| BitNet | 71 | 1 | 4 |
+| FP6 E2M3 | 77 | 1 | 5 |
+| E8M0 | 78 | 1 | 5 |
+| MXINT8 | 79 | 1 | 6 |
+
+Alias decoders (FP8_E4M3=11, FP6_E3M2_ML=12, FP4_ML=13, E4M3_FNUZ_ALT=69, NF4_BNB=75) share hardware with their primary and can be spot-checked by substituting the fmt_id.
 
 ## Running
 
@@ -47,19 +86,32 @@ PASS: FP8 E5M2 decode (8 vectors)
 PASS: BF16 decode (6 vectors)
 PASS: Posit8 decode (3 vectors)
 PASS: INT8 decode (5 vectors)
+PASS: TF32 decode (5 vectors)
+PASS: MXFP8 E4M3 decode (6 vectors)
+PASS: LNS8 decode (5 vectors)
+PASS: BCD decode (5 vectors)
+PASS: FP4 E2M1 decode (5 vectors)
+PASS: NF4 QLoRA decode (5 vectors)
+PASS: FP6 E3M2 decode (5 vectors)
+PASS: FP6 E2M3 decode (5 vectors)
+PASS: E8M0 decode (5 vectors)
+PASS: MXINT8 decode (6 vectors)
+PASS: E4M3 FNUZ decode (5 vectors)
+PASS: INT4 decode (5 vectors)
+PASS: BitNet ternary decode (4 vectors)
 PASS: not-implemented response (format 15 = GoldenFloat, no decoder)
 
 ========================================
-Results: 9 passed, 0 failed, 9 total
+Results: 22 passed, 0 failed, 22 total
 ALL PASS
 ```
 
 ## Pass/Fail Criteria
 
-- ALL 9 tests must pass for silicon validation
-- Anchor test is the first check (proves die identity + basic I/O)
-- ROM sweep is the most comprehensive (proves all 80 records intact)
-- Decoder tests prove the combinational logic is functional
+- ALL 22 tests must pass for silicon validation
+- Anchor test is the first check (confirms die identity + basic I/O)
+- ROM sweep is the most comprehensive (validates all 80 records intact)
+- Decoder tests confirm all 17 combinational decode paths are functional
 - Any single failure indicates a silicon defect
 
 ## Extending
