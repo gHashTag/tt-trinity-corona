@@ -58,6 +58,28 @@ def characterize(run_vectors_at, freqs_hz):
     }
 
 
+# --- Deterministic decode latency (Protocol v2, cycles) ----------------------
+# A decode transaction is: CMD1 (fmt_id) + CMD2 (byte_count) + N data bytes, then
+# the FSM enters STATUS and streams the 32-bit result over 4 cycles (LSB first).
+# Latency is therefore protocol-determined by the input byte count -- deterministic
+# and tabulatable now; on silicon it confirms no FSM timing defect.
+CMD_CYCLES = 2  # CMD1 + CMD2
+
+
+def protocol_latency(input_bytes):
+    """Cycle latency for a decode with `input_bytes` data bytes.
+    Returns {to_first_result, to_full_result} in clock cycles from CMD1."""
+    return {
+        "to_first_result": CMD_CYCLES + input_bytes + 1,   # first STATUS cycle
+        "to_full_result": CMD_CYCLES + input_bytes + 4,     # all 4 result bytes
+    }
+
+
+def latency_table(byte_counts):
+    """byte_counts: {fmt_label: input_byte_count} -> {fmt_label: latency dict}."""
+    return {fmt: protocol_latency(n) for fmt, n in byte_counts.items()}
+
+
 def make_runner(drv, set_freq_hz, vectors_by_fmt):
     """Wire a hardware run_vectors_at for the demoboard.
 
