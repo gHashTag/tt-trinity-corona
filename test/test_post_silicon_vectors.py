@@ -22,6 +22,7 @@
 #   python3 test/test_post_silicon_vectors.py
 
 import os
+import re
 import sys
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
@@ -37,6 +38,11 @@ import test_simple_decoders_independent as simp  # noqa: E402
 import test_lut_published_values as lut        # noqa: E402
 
 _FP4 = lut.fp4_e2m1_reference()
+
+
+def _read(path):
+    with open(path, errors="replace") as f:
+        return f.read()
 
 
 def independent_chip_output(fmt, data):
@@ -107,6 +113,12 @@ ALIAS_REF = {11: "mxfp8", 12: "fp6_e3m2", 13: "fp4", 69: "fnuz", 75: "nf4"}
 def main():
     errors = []
     total = 0
+
+    def check(cond, msg):
+        print(("PASS: " if cond else "FAIL: ") + msg)
+        if not cond:
+            errors.append(msg)
+
     for name, table, single, _fmt in TABLES:
         bad = 0
         for inp, expected in table:
@@ -155,6 +167,32 @@ def main():
           f"NUM_FORMATS ({ps.NUM_FORMATS}) == CATALOG ({len(gen_rom.CATALOG)}) == 80")
     if not ok_nf:
         errors.append("NUM_FORMATS")
+
+    # --- ROM self-index sweep oracle: byte[9] == fmt_id, record != 0 (gen_rom)
+    # The bring-up test reads 10 bytes and asserts rom[9] == fmt_id; pin that to
+    # gen_rom's packing (bits[79:72] = format_index_id; readback byte[9]).
+    rom_bad = 0
+    cat = {r[0]: gen_rom.pack_record(*r) for r in gen_rom.CATALOG}
+    for fmt_id, word in cat.items():
+        if ((word >> 72) & 0xFF) != fmt_id or word == 0:
+            rom_bad += 1
+    check(rom_bad == 0,
+          "ROM self-index: byte[9]==fmt_id and record!=0 for all 80 (gen_rom)")
+    # Out-of-range: catalog only defines 0..79, format_rom default is 0 -> reads 0.
+    check(max(cat) == 79 and min(cat) == 0 and len(cat) == 80,
+          "ROM catalog is exactly fmt_id 0..79 (out-of-range reads default 0)")
+
+    # --- not-implemented response oracle: [NOT_IMPL, fmt_id, SPEC, 'N'] -------
+    top = _read(os.path.join(ROOT, "src", "rtl", "tt_um_trinity_corona.v"))
+    m = re.search(r"localparam\s*\[7:0\]\s*NOT_IMPL\s*=\s*8'h([0-9A-Fa-f]+)", top)
+    not_impl = int(m.group(1), 16) if m else None
+    pst = _read(os.path.join(ROOT, "post_silicon", "test_corona.py"))
+    check(not_impl == 0xFF, f"RTL NOT_IMPL == 0xFF (got {not_impl})")
+    # RTL not-impl status bytes 2/3 are SPEC (0x07) and 'N' (0x4E); tie to gen_rom.
+    check("8'h4E" in top and gen_rom.ST_SPEC == 0x07,
+          "RTL not-impl response uses 'N'(0x4E) + status_id SPEC(0x07==ST_SPEC)")
+    check("0xFF" in pst and "0x4E" in pst,
+          "post_silicon test_not_implemented asserts 0xFF (byte0) and 0x4E (byte3)")
 
     print("\n" + "=" * 60)
     if errors:
