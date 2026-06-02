@@ -3,6 +3,7 @@
     "test_anchor_derivation",
     "test_bringup_oracle_complete",
     "test_characterize_timing",
+    "test_doc_counts_consistency",
     "test_float_decoders_independent",
     "test_fmt_id_consistency",
     "test_formal_goldens",
@@ -195,7 +196,7 @@
   ],
   "schema": "corona-verification/1",
   "summary": {
-    "ci_gates": 20,
+    "ci_gates": 21,
     "decoders": 17,
     "formal_harnesses": 17,
     "independent_references": 17,

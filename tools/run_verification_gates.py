@@ -15,12 +15,18 @@
 
 import glob
 import os
+import re
 import subprocess
 import sys
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 TESTDIR = os.path.join(ROOT, "test")
-MIN_GATES = 18  # current standalone-gate count is 20; floor catches gross under-run
+MIN_GATES = 18  # current standalone-gate count is 21; floor catches gross under-run
+
+# A real cocotb test imports cocotb at module level. Match that (not the mere
+# substring) so a standalone gate that merely *mentions* "import cocotb" in a
+# comment/string is not wrongly skipped.
+_COCOTB_IMPORT = re.compile(r"^\s*(?:import cocotb|from cocotb)", re.M)
 
 
 def discover():
@@ -28,7 +34,7 @@ def discover():
     for path in sorted(glob.glob(os.path.join(TESTDIR, "test_*.py"))):
         with open(path, errors="replace") as f:
             src = f.read()
-        (cocotb if "import cocotb" in src else gates).append(path)
+        (cocotb if _COCOTB_IMPORT.search(src) else gates).append(path)
     return gates, cocotb
 
 

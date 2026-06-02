@@ -147,7 +147,7 @@ bug shared between the RTL and any single reference model cannot hide:
 5. **Mutation kill** — a fault injected into each decoder is confirmed to be
    detected, so no check is vacuous.
 
-These layers, the per-decoder evidence matrix, and the **20 CI cross-check gates**
+These layers, the per-decoder evidence matrix, and the **21 CI cross-check gates**
 that enforce them are documented in [`docs/VERIFICATION.md`](docs/VERIFICATION.md)
 (with a machine-readable [`docs/verification.json`](docs/verification.json) for
 tooling) — both generated from the test suite and freshness-gated, so they cannot
