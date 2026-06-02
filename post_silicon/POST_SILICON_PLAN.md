@@ -153,3 +153,17 @@ test_corona.run_exhaustive()
 Total: 69,144 values swept across 17 decoder sweeps.
 
 All reference models validated bit-exact against cocotb originals.
+
+## Phase G: Fmax timing characterization (post-silicon)
+
+`characterize_timing.py` measures the decode critical path on the demoboard by
+sweeping the project clock upward and finding the frequency at which each decoder
+first produces a wrong result. The lowest such frequency is the chip Fmax; the
+decoder failing there is the critical-path decoder. This yields the first
+GF180MCU timing data for these combinational format converters.
+
+Bring-up: supply a `set_freq_hz(hz)` callback (demoboard-firmware specific) and
+the quick vectors, build a runner via `make_runner()`, then call
+`characterize(runner, freqs_hz)` and print `report(summary)`. The pure search
+logic is unit-tested in `test/test_characterize_timing.py` (runs in CI without
+hardware).
