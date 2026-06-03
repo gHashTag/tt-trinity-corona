@@ -53,15 +53,20 @@ matters for the shipped chips is the **instantiated** gf16 compute path. Audited
 
 | primitive | instantiated? | verdict |
 | --- | --- | --- |
-| `gf16_dot4` (4-MAC reduction tree) | yes (tiles, mesh, tops) | **correct** -- structural `gf16_mul`x4 + `gf16_add`x3; inherits only the documented gf16 add/mul caveats, no new defect |
+| `gf16_dot4` (4-MAC reduction tree) | yes (tiles, mesh, tops) | structurally fine, but inherits the **active `gf16_mul` defect below** |
+| `gf16_mul` (via gf16_dot4) | yes (MAC path) | **ACTIVE DEFECT (loop 127):** `mant_rounded` is [8:0] not [9:0], so a product mantissa that rounds up across a binade boundary is HALVED (overflow test reads a nonexistent bit). **0.072%** of normal unit-exponent products affected. Fix = `gf16_v2_mul` |
 | `tri_mant_mul` (shift-add multiplier) | yes (`fbb_active_path`) | **correct** -- standard partial-product sum, exact |
 | `gf16_to_fp16` / `fp16_to_gf16` | **no** (standalone) | had an inferred **latch** (fp_out unassigned for every \|value\|<1.0) + a wrap-prone overflow add -- **fixed** (loop 126), 65536/65536 exhaustive, ported to all three dies |
-| `gf16_to_posit16` / `posit16_to_gf16` | **no** (standalone) | a "simplified" stub: the posit regime is not a valid variable-length encoding. Dead code; left as-is (a correct posit codec is a separate task) |
+| `gf16_to_posit16` / `posit16_to_gf16` | **no** (standalone) | a "simplified" stub: the posit regime is not a valid variable-length encoding. Dead code; left as-is |
 
-**Bottom line: no active silicon arithmetic defect.** The instantiated gf16 compute
-path (`gf16_dot4`, `tri_mant_mul`) is correct; the only real bug found on the
-primitives was the `gf16_to_fp16` latch, which is dead code (not in any GDS) and is
-now fixed and exhaustively verified across all three dies.
+**Bottom line (REVISED loop 127): there IS one active silicon arithmetic defect** --
+the `gf16_mul` rounding-overflow bug, on the gf16 MAC path of all three dies, halving
+~0.072% of normal products (`tt-trinity-gamma/docs/GF_ARITH_FINDINGS.md`,
+`test/gf16_mul_silicon_bug.py`). It is small and data-dependent (a sparse 2x error
+on individual MAC terms) but on-path and not avoided by the validated workload, so it
+strengthens the respin case. The fix (`gf16_v2_mul`) exists and is verified; the
+frozen `gf16_mul.v` is left as taped out. `tri_mant_mul` is correct; the converter
+latch (dead code) was fixed line-wide.
 
 ## Recommendation
 
