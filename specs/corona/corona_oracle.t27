@@ -95,7 +95,7 @@ module CoronaOracle {
         goldenfloat          : u8 = 16,  // GF4..GF256 ladder + GFTernary
         posit_unum_iii       : u8 = 8,   // posit8/16/32/64 + takum + unum
         ocp_mx               : u8 = 5,   // MXFP8, MXFP6, MXFP4, E8M0, MXINT8
-        lns                  : u8 = 4,   // LNS8/16/32 + Coleman
+        lns                  : u8 = 4,   // LNS8/16/32 (Apache-2.0 hand-rolled)
         integer_fixed        : u8 = 8,   // int4/8/16/32/64, q4, q15, bcd
         historical_vendor    : u8 = 10,  // VAX, IBM HFP, Cray, MBF, PDP-11, x87
         theoretical          : u8 = 4,   // unum I, unum II, AFP, Q-MX
@@ -135,27 +135,36 @@ module CoronaOracle {
     // ========================================================================
 
     // Per Section 4.2 of PLAN.md. Each module requires
-    //   (a) open-source RTL reference,
+    //   (a) open-source RTL reference OR independent behavioural model,
     //   (b) compatible license,
     //   (c) fits the tile budget,
     //   (d) no duplication with any Gamma module.
     //
-    // takum16_decode is conditional on R2 license confirmation
-    // (Hunhold VHDL license not stated in arXiv arXiv:2408.10594).
+    // LICENSE AUDIT 2026-06-03: all 14 RTL files in src/rtl/ are
+    // Apache-2.0 hand-rolled behavioural models authored in this repo.
+    // NO FloPoCo / OpenCores / Coleman / Hunhold code is imported.
+    // The only third-party derivation is nf4_decode.v: 16 fp32 LUT
+    // constants are the quantiles of N(0,1) published in bitsandbytes
+    // (MIT, Tim Dettmers); fits the de minimis copyright threshold and
+    // is reproduced as numeric constants, not code. See ADR-0009.
+    //
+    // takum16_decode is NOT present as RTL (closed per ADR-0003 as
+    // Tier-2 ROM-only). Keeping the slot here for historical
+    // traceability only; pipeline must NOT attempt to compile it.
 
-    pub const TIER1_MODULES : [12]string = [
-        "posit8_decode",            // FloPoCo LGPL, 300-800 cells, [Experimental]
-        "posit32_decode",           // FloPoCo LGPL, 4000-8000 cells, [Experimental]
-        "bf16_decode",              // FloPoCo LGPL, 50-200 cells, [Verified]
-        "tf32_decode",              // FloPoCo LGPL, 50-200 cells, [Verified]
-        "mxfp8_e4m3_decode",        // hand-rolled, 200-400 cells, [Experimental]
-        "lns8_decode",              // Coleman log-add, 200-500 cells, [Experimental]
-        "decimal32_decode",         // DPD hand-rolled, 1500-5000 cells, [Experimental]
-        "fp4_decode",               // 16-entry LUT, 30-50 cells, [Verified]
-        "fp6_decode",               // 64-entry LUT, 80-200 cells, [Verified]
-        "nf4_decode",               // QLoRA LUT, 50-100 cells, [Verified]
-        "bcd_decode",               // OpenCores LGPL, 200-500 cells, [Verified]
-        "takum16_decode",           // Hunhold VHDL, 500-1000 cells, R2 GATE, [Experimental]
+    pub const TIER1_MODULES : [11]string = [
+        "posit8_decode",            // Apache-2.0 hand-rolled, 300-800 cells, [Experimental]
+        "posit32_decode",           // Apache-2.0 hand-rolled, 4000-8000 cells, [Experimental]
+        "bf16_decode",              // Apache-2.0 hand-rolled (trivial: upper 16b of fp32), 50-200 cells, [Verified]
+        "tf32_decode",              // Apache-2.0 hand-rolled, 50-200 cells, [Verified]
+        "mxfp8_e4m3_decode",        // Apache-2.0 hand-rolled, 200-400 cells, [Experimental]
+        "lns8_decode",              // Apache-2.0 hand-rolled + 16-entry antilog LUT, 200-500 cells, [Experimental]
+        "decimal32_decode",         // Apache-2.0 hand-rolled DPD, 1500-5000 cells, [Experimental]
+        "fp4_decode",               // Apache-2.0 hand-rolled 16-entry LUT, 30-50 cells, [Verified]
+        "fp6_decode",               // Apache-2.0 hand-rolled 64-entry LUT, 80-200 cells, [Verified]
+        "nf4_decode",               // Apache-2.0 hand-rolled; 16 LUT constants from bitsandbytes (MIT, de minimis), 50-100 cells, [Verified]
+        "bcd_decode",               // Apache-2.0 hand-rolled (trivial tens*10+ones), 200-500 cells, [Verified]
+        // takum16_decode REMOVED 2026-06-03 (ADR-0003: Tier-2 ROM-only)
     ];
 
     // ========================================================================
@@ -169,7 +178,7 @@ module CoronaOracle {
         "takum8",                   // demoted if R2 fails, [Experimental]
         "takum32",                  // ROM-only, [Experimental]
         "takum64",                  // ROM-only, [Experimental]
-        "posit64",                  // ROM-only, FloPoCo too large, [Experimental]
+        "posit64",                  // ROM-only, fits not the tile budget, [Experimental]
         "decimal64",                // DPD, ROM-only, [Experimental]
         "decimal128",               // DPD, ROM-only, [Experimental]
         "vax_f",                    // historical, no toolchain, [Historical]
