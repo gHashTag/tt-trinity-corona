@@ -46,6 +46,23 @@ the fabricated die. Therefore:
   + generators (`gen_gf_{add,mul}_fix.py`) + verification suite are the reference
   correction; `tt-trinity-gamma/src/gf16_v2_*` is the corrected gf16 for a respin.
 
+## Compute-path primitive audit (2026-06, loop 126)
+
+The gfN_add bugs above are in units that are NOT instantiated. The question that
+matters for the shipped chips is the **instantiated** gf16 compute path. Audited:
+
+| primitive | instantiated? | verdict |
+| --- | --- | --- |
+| `gf16_dot4` (4-MAC reduction tree) | yes (tiles, mesh, tops) | **correct** -- structural `gf16_mul`x4 + `gf16_add`x3; inherits only the documented gf16 add/mul caveats, no new defect |
+| `tri_mant_mul` (shift-add multiplier) | yes (`fbb_active_path`) | **correct** -- standard partial-product sum, exact |
+| `gf16_to_fp16` / `fp16_to_gf16` | **no** (standalone) | had an inferred **latch** (fp_out unassigned for every \|value\|<1.0) + a wrap-prone overflow add -- **fixed** (loop 126), 65536/65536 exhaustive, ported to all three dies |
+| `gf16_to_posit16` / `posit16_to_gf16` | **no** (standalone) | a "simplified" stub: the posit regime is not a valid variable-length encoding. Dead code; left as-is (a correct posit codec is a separate task) |
+
+**Bottom line: no active silicon arithmetic defect.** The instantiated gf16 compute
+path (`gf16_dot4`, `tri_mant_mul`) is correct; the only real bug found on the
+primitives was the `gf16_to_fp16` latch, which is dead code (not in any GDS) and is
+now fixed and exhaustively verified across all three dies.
+
 ## Recommendation
 
 No action on the frozen Phi/Euler silicon. For a future Phi/Euler tapeout or any
