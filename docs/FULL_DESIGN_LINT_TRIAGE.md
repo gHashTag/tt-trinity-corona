@@ -60,10 +60,21 @@ demo does not compute the 64->32->8 projection it documents (effectively
 64->16(dup)->8), and any future use with real weights would be wrong. It is on the
 fabricated Gamma/Euler silicon (frozen).
 
-**Fix (for a respin / next lineup):** widen the address path by one bit --
-`input [10:0] neuron_base;` in `ternary_dot`, `input [10:0] addr;` in `w_gen`, and
-pass `k * 11'd64`. That gives the full 0..2047 weight-address range and 32 distinct
-neurons. The frozen module is left as taped out (source must match the die).
+**Fix (DONE -- loop 129):** widen the address path to 11 bits -- `neuron_base` in
+`ternary_dot`, `addr` + the hash in `w_gen` (the hash must mix all 11 bits, else
+addr 0 and 1024 still collide). That gives the full 0..2047 range and 32 distinct
+neurons. Delivered as SEPARATE modules `bitnet_encoder_v2.v` in tt-trinity-gamma
+(commit 909baf2) and tt-trinity-euler (79eaf59); the frozen `bitnet_encoder` is left
+as taped out. `tt-trinity-gamma/test/tb_bitnet_v2.v` runs old vs v2 over 6 inputs:
+2/6 outputs DIFFER, confirming the aliasing was behaviorally significant.
+
+## Corona (primary die) -- full-design lint is CLEAN
+
+The same `verilator --lint-only -Wall` from `tt_um_trinity_corona` over `src/rtl/*.v`
+produces **0 warnings** -- no LATCH / WIDTHTRUNC / SELRANGE / UNDRIVEN / etc. in the
+submission-complete ROM-oracle's elaborated hierarchy. The methodology that found two
+real bugs in the sibling dies finds none in Corona, consistent with its five-layer
+per-decoder verification.
 
 ## Summary
 
