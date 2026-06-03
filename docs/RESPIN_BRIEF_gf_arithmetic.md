@@ -8,13 +8,17 @@ verified drop-in fixes now staged on every affected die.
 
 ## Recommendation
 
-**The gf16_mul defect is a real, on-path accuracy regression (~11x dot-product RMS
-error) and is the one finding that justifies a respin on numerical grounds.** If a
+**The gf16_mul defect is a real, on-path numerical regression (~11x dot-product RMS
+error), but its TASK-level impact is modest: on a synthetic 10-class linear classifier
+it changes the predicted class on only ~0.24% of inputs vs a corrected design (the
+inherent gf16 rounding floor itself flips ~0.12%).** So the ~11x MAC RMS largely
+washes out at argmax -- the sparse halving error only matters near decision
+boundaries. Net: it is **not a respin emergency** for the demo/research workloads the
+dies were validated on, but it is a genuine defect with a verified, free fix. If a
 next-shuttle slot is taken for any reason, fold in the staged `gf16_v2_*` (and
-`bitnet_encoder_v2`) fixes -- they are verified and free to adopt. If no respin is
-otherwise planned, the impact is a few-percent MAC RMS error tolerable by the
-demo/research workloads the dies were validated on, so it is **not by itself an
-emergency** -- a judgement call for the program.
+`bitnet_encoder_v2`) fixes. (Caveat: the 0.24% is a synthetic-classifier proxy; a
+trained net's margins could differ -- a real-workload run, Option B in the loop
+reports, would sharpen it.)
 
 ## Defect 1 -- gf16_mul rounding-overflow (ACTIVE, all three compute dies)
 
@@ -28,10 +32,14 @@ emergency** -- a judgement call for the program.
   mul alone -> 1.29e-6 (~0.11% RMS) = **~115x NMSE / ~11x RMS** improvement. The mul
   defect dominates the MAC error despite the 0.27% dot footprint (halving a term is a
   large per-term error).
+- **Task-level impact (`gamma/test/impact_task_gf16.py`, 5000 trials, 10-class linear
+  classifier):** changes the predicted class on **~0.24%** of inputs vs corrected
+  (the gf16 rounding floor alone flips ~0.12%). The ~11x MAC RMS mostly washes out at
+  argmax. (Synthetic-classifier proxy; a trained workload could differ.)
 - **On which dies:** Gamma, Phi, Euler -- `gf16_mul` is reached via `gf16_dot4` on
   every die's silicon top (the core MAC). This is on the validated MNIST/IGLA path.
 - **Fix:** `gf16_v2_mul.v` (correct M+1-bit `mant_rounded`), verified faithful
-  (`gamma/test/gf16_v2_verify.py`). Staged on Gamma, Phi, Euler.
+  (`gamma/test/gf16_v2_verify.py`); CI-gated on all three dies. Staged everywhere.
 
 ## Defect 2 -- bitnet_encoder neuron-base aliasing (ACTIVE, Gamma + Euler)
 
