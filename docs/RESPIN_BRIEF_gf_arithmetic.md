@@ -20,6 +20,15 @@ next-shuttle slot is taken for any reason, fold in the staged `gf16_v2_*` (and
 trained net's margins could differ -- a real-workload run, Option B in the loop
 reports, would sharpen it.)
 
+## Root cause fixed upstream (2026-06)
+
+The defective `gf16_mul` was copied into all three dies from the canonical
+`t27/rtl_gen/gf16_mul.v`. That master is now fixed at the source (t27 commit
+19b41635) -- both defects corrected, cross-checked EXACT-equal to the verified
+`gf16_v2_mul` over 1.8M pairs -- so any future tapeout or regeneration starts
+correct. The fabricated dies' frozen `src/gf16_mul.v` are deliberately NOT touched
+(source must match the taped-out silicon).
+
 ## Defect 1 -- gf16_mul rounding-overflow (ACTIVE, all three compute dies)
 
 - **Mechanism:** `mant_rounded` is `[8:0]` (M=9, not M+1); `mant_out + 1` wraps when
