@@ -99,6 +99,16 @@ into any respin alongside `gf16_v2_*` / `bitnet_encoder_v2`.
 
 ## Checked and cleared (not respin drivers)
 
+- **Receipt / identity / nonce-path primitives** (instantiated on Gamma + Euler,
+  audited 2026-06 against clean references, `test/receipt_path_audit.py`): all
+  **CORRECT** -- `crc32_receipt` (CRC-32 IEEE 802.3; canonical "123456789" ->
+  0xCBF43926 and 40/40 random vs zlib), `lucas_rom` (L2..L7 == Lucas sequence),
+  `hwrng_lfsr` (16-bit nonce LFSR: maximal-length, period 65535, visits every
+  nonzero state once; RTL == model -- so no short-period nonce reuse), and
+  `cassini_post` (Cassini-Lucas POST: passes clean **and** detects a corrupted
+  Lucas value -> a live checker, not a vacuous pass). This **bounds the security
+  exposure**: of everything on the receipt/identity path, only `blake3_anchor`
+  (Defect 3) is broken; the CRC, nonce source, identity ROM, and POST are sound.
 - **gfN add/mul rungs gf4..gf256** (the wider GoldenFloat ladder): had many bugs,
   all fixed + verified in Gamma and audited cross-die -- but these units are **not
   instantiated** on any die's silicon top (standalone spec RTL), so no silicon impact.
