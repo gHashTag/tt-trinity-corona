@@ -99,6 +99,19 @@ into any respin alongside `gf16_v2_*` / `bitnet_encoder_v2`.
 
 ## Checked and cleared (not respin drivers)
 
+- **Phi (nano die) instantiated blocks** (audited 2026-06, `test/phi_audit.py`):
+  `phi_anchor_post` CORRECT (Lucas-chain POST, passes clean + detects a corrupted
+  value), `sacred_constants_rom` CORRECT (60-entry Q3.5 constant ROM -- all 59
+  residual constants within +-1 LSB, 14 clamp entries -> 0x7F, zero region clean,
+  0x47 watermark intact; no transcription error), `phi_mesh_bridge` CORRECT
+  (friend/foe gate, saturating drop counter). One LATENT bug in `phi_d2d_lite` (the
+  die-to-die serial link): RX requires a 2-cycle START but its own TX emits a
+  1-cycle START, so the TX->RX path delivers NOTHING -- the receive side of the
+  inter-die mesh is non-functional. **No impact on the current single-die TTSKY26b
+  shuttle** (no second die to communicate with); it is a real bug for the intended
+  multi-die mesh feature. `phi_d2d_lite_v2` fixes the RX framing (RX_IDLE ->
+  RX_DATA; loopback round-trips every packet). Frozen source untouched. (Phi's
+  lucas_rom / hwrng_lfsr are identical to Gamma's, already cleared.)
 - **Instantiated leaf blocks** (Gamma + Euler, audited 2026-06, `test/leaf_audit.py`):
   `phi_pll_div` CORRECT (5 ticks / 8 clocks = 0.625 ~ 1/phi), `wishbone_full`
   CORRECT (scratch regs 4..15 R/W, regs 0..3 RO status mirrors, RO writes ignored),
