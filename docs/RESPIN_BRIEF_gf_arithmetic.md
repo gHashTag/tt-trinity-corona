@@ -99,6 +99,16 @@ into any respin alongside `gf16_v2_*` / `bitnet_encoder_v2`.
 
 ## Checked and cleared (not respin drivers)
 
+- **Instantiated leaf blocks** (Gamma + Euler, audited 2026-06, `test/leaf_audit.py`):
+  `phi_pll_div` CORRECT (5 ticks / 8 clocks = 0.625 ~ 1/phi), `wishbone_full`
+  CORRECT (scratch regs 4..15 R/W, regs 0..3 RO status mirrors, RO writes ignored),
+  `wb_status_reg` CORRECT (documented bit-packing + `alive` toggle). One LATENT bug
+  in `alu9_decoder`: op7 TRI_BIND uses bitwise `^` on signed lifts instead of the
+  VSA bind (= ternary multiply) -- 6/9 input pairs wrong, incl. bind(x,0) != 0 and
+  bind(1,1)=bind(-1,-1)=0. **Benign on the shipped dies:** u_alu is driven by random
+  hwrng_word bits and its result feeds `ring27_memory` (an entropy ring whose only
+  consumer is a liveness flag), so no workload depends on the ALU output.
+  `alu9_decoder_v2` fixes BIND (81/81 vs reference); frozen source untouched.
 - **Control / datapath mesh fabric** (instantiated on Gamma + Euler, audited
   2026-06, `test/fabric_audit.py`): `trinity_router_2x2` CORRECT (forward one-hot
   addressing to the dst tile + fair round-robin return), `trinity_mesh_2x2` CORRECT
