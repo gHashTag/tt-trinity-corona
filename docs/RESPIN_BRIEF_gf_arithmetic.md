@@ -63,6 +63,23 @@ correct. The fabricated dies' frozen `src/gf16_mul.v` are deliberately NOT touch
   address path + hash), behavioral diff confirmed (`gamma/test/tb_bitnet_v2.v`,
   2/6 inputs differ). Staged on Gamma, Euler.
 
+## Defect 3 -- blake3_anchor G() omits all 4 XOR diffusion steps (ACTIVE, Gamma + Euler)
+
+- **Mechanism:** the on-die DePIN RECEIPT signer `blake3_anchor` implements BLAKE3's
+  quarter-round G() WITHOUT the four XOR steps (`d = ROTR(d ^ a)`, `b = ROTR(b ^ c)`).
+  The XOR is BLAKE3's core nonlinear diffusion; without it the 256-bit digest is a
+  near-LINEAR function of the 512-bit input.
+- **Impact:** the hash is NOT preimage/collision-resistant -- the header's "~2^96"
+  security claim is false. The per-die RECEIPT signatures are cryptographically weak
+  / forgeable. This is a SECURITY defect, distinct from the numerical ones, and
+  (unlike gf16_mul's task-quiet error) it is qualitative -- a broken hash is broken.
+- **On which dies:** Gamma, Euler (instantiated as the receipt signer u_hash); absent
+  on Phi and in the t27 master.
+- **Verification / fix:** `gamma/test/blake3_anchor_verify.py` confirms the shipped
+  RTL == a no-XOR model and != real BLAKE3-G; the corrected `blake3_anchor_v2`
+  (XORs restored) == real BLAKE3-G. Staged on Gamma + Euler. (v2 is still a 4-round /
+  fixed-schedule "mini"; the XOR fix is the security-critical one.)
+
 ## Per-die exposure + fix-staged matrix
 
 | die | gf16_mul defect | gf16_v2 staged | bitnet defect | bitnet_v2 staged |
@@ -71,6 +88,14 @@ correct. The fabricated dies' frozen `src/gf16_mul.v` are deliberately NOT touch
 | Phi   | yes (MAC) | yes | no  | n/a |
 | Euler | yes (MAC) | yes | yes | yes |
 | Corona | n/a (no gfN compute) | -- | n/a | -- |
+
+**Defect 3 (blake3_anchor crypto):** active on Gamma + Euler (receipt signer);
+`blake3_anchor_v2` staged on both; absent on Phi/Corona.
+
+**Recommendation update:** Defect 3 is a security defect (broken RECEIPT hash), which
+is a stronger respin driver than the numerical Defect 1 -- if the DePIN receipts are
+relied upon, the shipped Gamma/Euler signatures are forgeable. Fold `blake3_anchor_v2`
+into any respin alongside `gf16_v2_*` / `bitnet_encoder_v2`.
 
 ## Checked and cleared (not respin drivers)
 
