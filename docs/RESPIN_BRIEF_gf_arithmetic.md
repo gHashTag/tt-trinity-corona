@@ -99,6 +99,22 @@ into any respin alongside `gf16_v2_*` / `bitnet_encoder_v2`.
 
 ## Checked and cleared (not respin drivers)
 
+- **Control / datapath mesh fabric** (instantiated on Gamma + Euler, audited
+  2026-06, `test/fabric_audit.py`): `trinity_router_2x2` CORRECT (forward one-hot
+  addressing to the dst tile + fair round-robin return), `trinity_mesh_2x2` CORRECT
+  (end-to-end LOAD/COMPUTE/READ of [1,2,3,4].[1,2,3,4] = 0x47C0 = 30.0),
+  `trinity_master_fsm` CORRECT (drives that path). One LATENT contract bug found in
+  `multi_tile_receipt`: its four per-tile `agg <= agg ^ tN` are non-blocking
+  assignments to the same register, so simultaneous distinct-tile receipts collapse
+  to the last (t3) -- the XOR-sum is wrong for >1 tile/cycle. **Benign on the
+  shipped dies:** all four tile ports are tied to ONE replicated source, so there
+  are no distinct simultaneous tiles to drop and the bug gives the desired
+  single-source XOR accumulate (a *correct* 4-tile XOR of four identical inputs
+  would instead give 0); `attested_mask`/`all_attested` are correct regardless.
+  `multi_tile_receipt_v2` folds all simultaneous contributions for future
+  distinct-tile reuse (NOT a drop-in under the current replicated hookup). Frozen
+  source untouched. (Also fixed a stale, non-CI testbench `tb_integration_mesh.v`
+  whose wrong local packet macros made it mis-fail.)
 - **Receipt / identity / nonce-path primitives** (instantiated on Gamma + Euler,
   audited 2026-06 against clean references, `test/receipt_path_audit.py`): all
   **CORRECT** -- `crc32_receipt` (CRC-32 IEEE 802.3; canonical "123456789" ->
