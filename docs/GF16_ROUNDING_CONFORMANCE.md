@@ -48,11 +48,20 @@ a numerical-accuracy risk.
   (`guard & (round_b | sticky | mant_out[0])`), verified 100% == a ties-to-even
   reference over all 262144 unit-exp products. This is the drop-in for a future
   regen/tapeout that wants strict IEEE conformance.
-- **Recommended t27-master cleanup (program action, needs the Zig build):** make
-  `gf16_encode_f32` actually round ties-to-even (add the kept-LSB term) so the code
-  matches its own comment and the stated standard; or, if half-up is the deliberate
-  encode convention, fix the comment. Either way the spec should not claim a mode it
-  does not implement.
+- **t27-master comment fixed (done, t27 2197e50e):** `gf16_encode_f32`'s comment no
+  longer claims "ties to even" -- it now states the actual half-up behavior and
+  cross-references this doc. Zero behavior change (a behavioral ties-to-even change
+  to the spec is a separate, test-gated decision since it would shift the conformance
+  goldens, and could not be validated here without the Zig build).
+- **Still flagged for the program (needs the Zig build to verify):** `gf16_round`
+  (integer round, line ~546) comments "ties to even" but its code is
+  `@round(a_val)`, which in Zig rounds ties AWAY from zero -- another comment-vs-code
+  mismatch worth confirming/fixing with the test suite (its own test
+  `gf16_round_half_up` asserts round(2.5)->2.0, which matches neither @round nor
+  half-up, so the test/comment/code triple needs reconciling).
+- **Behavioral path if strict IEEE conformance is wanted:** adopt `gf16_v3_mul`
+  (ties-to-even, verified) at the next regen and make `gf16_encode_f32` round
+  ties-to-even (add the kept-LSB term), re-generating the conformance goldens.
 
 ## Re-check
 
