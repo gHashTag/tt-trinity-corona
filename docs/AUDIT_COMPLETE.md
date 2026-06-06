@@ -45,6 +45,14 @@ claims to implement -- not just linted. Three recurring lessons:
 
 Fix-coverage invariant (every affected die carries its v2): `tools/fix_coverage_matrix.py` -> COMPLETE.
 
+**Respin-readiness of the staged fixes** (verified 2026-06): every `*_v2` module is
+R-SI-1 clean (no-star checker passes; the only `*` are constant loop-index/bit-select
+patterns, exempt and identical to the frozen originals), free of the harmful
+width-defect class (`width_gate.py` -- WIDTHTRUNC/SELRANGE -- passes on all dies), and
+has no inferred latches. The remaining verilator -Wall notes are benign WIDTHEXPAND
+(safe sign/zero extension, inherited from the shipped originals). So the fixes are
+drop-in-ready for a respin, not just functionally correct.
+
 ## Checked and CLEAR (no defect)
 
 - **Arithmetic:** whole GF ladder gf4..gf256 (add+mul), gf16_dot4 MAC, VSA
