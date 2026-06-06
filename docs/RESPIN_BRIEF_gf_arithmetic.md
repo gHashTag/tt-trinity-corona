@@ -20,9 +20,15 @@ washes out at argmax -- the sparse halving error only matters near decision
 boundaries. Net: it is **not a respin emergency** for the demo/research workloads the
 dies were validated on, but it is a genuine defect with a verified, free fix. If a
 next-shuttle slot is taken for any reason, fold in the staged `gf16_v2_*` (and
-`bitnet_encoder_v2`) fixes. (Caveat: the 0.24% is a synthetic-classifier proxy; a
-trained net's margins could differ -- a real-workload run, Option B in the loop
-reports, would sharpen it.)
+`bitnet_encoder_v2`) fixes. **The synthetic ~0.24% has now been confirmed on a
+TRAINED model (`gamma/test/impact_trained_gf16.py`): a LogisticRegression on sklearn
+digits (92.8% accuracy), with trained weights + test inputs quantized to gf16 and
+each logit run through the ACTUAL RTL, flips only 3/2250 = 0.13% of predictions
+shipped-vs-corrected, with a negligible accuracy delta (92.76% vs 92.80%) -- even
+though the defect is genuinely ACTIVE (73% of logits differ at the ULP level).
+Trained decision margins are wider than random ones, so the real-workload impact is
+if anything SMALLER than the synthetic proxy.** This closes the prior caveat: the
+gf16_mul defect is task-quiet on a trained classifier.
 
 ## Root cause fixed upstream (2026-06)
 
@@ -48,7 +54,14 @@ correct. The fabricated dies' frozen `src/gf16_mul.v` are deliberately NOT touch
 - **Task-level impact (`gamma/test/impact_task_gf16.py`, 5000 trials, 10-class linear
   classifier):** changes the predicted class on **~0.24%** of inputs vs corrected
   (the gf16 rounding floor alone flips ~0.12%). The ~11x MAC RMS mostly washes out at
-  argmax. (Synthetic-classifier proxy; a trained workload could differ.)
+  argmax.
+- **Trained-model task-level impact (`gamma/test/impact_trained_gf16.py`,
+  LogisticRegression on sklearn digits, 15 PCA + bias = one dot16, 5 splits / 2250
+  test samples, logits run through the ACTUAL RTL):** the defect is ACTIVE (73% of
+  logits differ shipped-vs-v2 at the ULP level) but flips only **3/2250 = 0.13%** of
+  predictions, with shipped accuracy 92.76% vs corrected 92.80% (a 1-sample delta).
+  The trained number is at/below the synthetic proxy -- wider trained margins absorb
+  the sparse halving error. Confirms: not a respin emergency for these workloads.
 - **On which dies:** Gamma, Phi, Euler -- `gf16_mul` is reached via `gf16_dot4` on
   every die's silicon top (the core MAC). This is on the validated MNIST/IGLA path.
 - **Fix:** `gf16_v2_mul.v` (correct M+1-bit `mant_rounded`), verified faithful
