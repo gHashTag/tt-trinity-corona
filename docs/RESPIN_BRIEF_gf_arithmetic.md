@@ -6,6 +6,10 @@ Corona = the conformance-oracle die). All findings are source-only; the fabricat
 GDS of every die is frozen. Two active on-silicon defects were found; both have
 verified drop-in fixes now staged on every affected die.
 
+> Full audit index (all four dies, every block, every script, re-run instructions):
+> [`AUDIT_COMPLETE.md`](AUDIT_COMPLETE.md). Fix-coverage invariant:
+> `tools/fix_coverage_matrix.py`.
+
 ## Recommendation
 
 **The gf16_mul defect is a real, on-path numerical regression (~11x dot-product RMS
