@@ -70,6 +70,12 @@ correct. The fabricated dies' frozen `src/gf16_mul.v` are deliberately NOT touch
   proxy level and the accuracy delta is **zero** (shipped 94.44% == corrected 94.44%
   == exact). So Defect 1 stays task-quiet with depth: more prediction churn, no net
   accuracy loss.
+- **Reusable artifact:** the trained gf16 model + eval set are committed at
+  `gamma/test/gf16_model/` (gf16 weights + 450-sample gf16 eval set + README);
+  `gamma/test/run_trained_gf16_eval.py` replays them through the actual RTL with no
+  sklearn (reproduces shipped==corrected==exact 95.11%, 0/450 flips on that set), and
+  `gamma/test/gen_gf16_model.py` regenerates them. This is the Defect-1 task lever in
+  re-runnable form for the program / a larger workload.
 - **On which dies:** Gamma, Phi, Euler -- `gf16_mul` is reached via `gf16_dot4` on
   every die's silicon top (the core MAC). This is on the validated MNIST/IGLA path.
 - **Fix:** `gf16_v2_mul.v` (correct M+1-bit `mant_rounded`), verified faithful
