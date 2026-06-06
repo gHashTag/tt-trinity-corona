@@ -53,12 +53,23 @@ a numerical-accuracy risk.
   cross-references this doc. Zero behavior change (a behavioral ties-to-even change
   to the spec is a separate, test-gated decision since it would shift the conformance
   goldens, and could not be validated here without the Zig build).
-- **Still flagged for the program (needs the Zig build to verify):** `gf16_round`
-  (integer round, line ~546) comments "ties to even" but its code is
-  `@round(a_val)`, which in Zig rounds ties AWAY from zero -- another comment-vs-code
-  mismatch worth confirming/fixing with the test suite (its own test
-  `gf16_round_half_up` asserts round(2.5)->2.0, which matches neither @round nor
-  half-up, so the test/comment/code triple needs reconciling).
+- **`gf16_round` comment + test fixed (done, t27 a68f84f4):** its comment claimed
+  "ties to even" but the code is Zig `@round` = ties-AWAY-from-zero (verified by
+  running `@round(2.5)=3`), and its test asserted `round(2.5)->2.0` (a value the code
+  never produces). Corrected the comment to ties-away and the test assertion to 3.0
+  (= the verified result, also half-up for positive, matching the test name).
+  Implementation unchanged; a strict ties-to-even integer round would require
+  replacing `@round` (separate test-gated decision).
+- **Software stack is consistently HALF-UP, by the numbers:** `gf16_encode_f32`
+  (spec) and `conformance/gf16_ref.py` both round half-up (verified:
+  `encode(1+0.5/512)` -> mant 1, not 0), and the golden vectors derive from that. So
+  the software conformance baseline is self-consistent; a ties-to-even switch is a
+  baseline POLICY change (would regenerate `gf16_ref.py` + `gf16_vectors.json` +
+  Corona goldens), not a bug fix -- left to the program.
+- **Separate flag (not gf16-specific):** the t27 Zig codegen output
+  (`gen/zig/specs/numeric/gf16.zig`) does not compile under zig 0.16.0
+  (`for (0..5) {` lacks a loop payload), so the generated-Zig test suite could not be
+  run here. Worth a codegen/zig-version pass.
 - **Behavioral path if strict IEEE conformance is wanted:** adopt `gf16_v3_mul`
   (ties-to-even, verified) at the next regen and make `gf16_encode_f32` round
   ties-to-even (add the kept-LSB term), re-generating the conformance goldens.
