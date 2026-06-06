@@ -62,6 +62,14 @@ correct. The fabricated dies' frozen `src/gf16_mul.v` are deliberately NOT touch
   predictions, with shipped accuracy 92.76% vs corrected 92.80% (a 1-sample delta).
   The trained number is at/below the synthetic proxy -- wider trained margins absorb
   the sparse halving error. Confirms: not a respin emergency for these workloads.
+- **Depth-robustness (`gamma/test/impact_trained_gf16_mlp.py`, 2-layer MLP
+  15->15 ReLU->10, both gf16 layers through the RTL, 3 splits / 1350 samples):** the
+  defect fires in BOTH layers (14802 hidden + 11313/13500 output logits differ
+  shipped-vs-v2), and depth modestly raises the argmax-flip rate to **0.22%** (from
+  0.13% single-layer) as error accumulates -- but it stays bounded at the synthetic
+  proxy level and the accuracy delta is **zero** (shipped 94.44% == corrected 94.44%
+  == exact). So Defect 1 stays task-quiet with depth: more prediction churn, no net
+  accuracy loss.
 - **On which dies:** Gamma, Phi, Euler -- `gf16_mul` is reached via `gf16_dot4` on
   every die's silicon top (the core MAC). This is on the validated MNIST/IGLA path.
 - **Fix:** `gf16_v2_mul.v` (correct M+1-bit `mant_rounded`), verified faithful
