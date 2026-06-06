@@ -99,6 +99,18 @@ into any respin alongside `gf16_v2_*` / `bitnet_encoder_v2`.
 
 ## Checked and cleared (not respin drivers)
 
+- **Shared neuromorphic / mesh blocks** (Gamma + Euler, audited 2026-06,
+  `test/shared_blocks_audit.py`): all CORRECT -- `d2d_holo_mesh` (4-port D2D stub:
+  TX map + layer-frozen SYNC gate + RX latch), `nca_entropy_monitor` (81-cell
+  nonzero popcount, in_band [31,80] + violation pulse), `holo_lut_pe` (binary MAP-B
+  VSA: bind/unbind=XOR self-inverse, bundle=OR, round-trip holds), `trinity_cortex_8col`
+  (spike_count == popcount(spike_vec) over 200 random cycles). (holo_lut_pe /
+  trinity_cortex_8col are Gamma-only.)
+- **Corona (conformance-oracle die):** all decoder/golden sweeps re-confirmed green
+  (the multi-format decoders mxfp8/fp6/nf4/lns8/posit8/bf16/tf32/bitnet/... were
+  exhaustively swept loops 75-77, 14 decoders / 1892 values cross-validated); full
+  Python test suite passes (the only non-runs locally are cocotb-gated, which run in
+  CI). Full-design verilator lint = 0 warnings.
 - **Phi (nano die) instantiated blocks** (audited 2026-06, `test/phi_audit.py`):
   `phi_anchor_post` CORRECT (Lucas-chain POST, passes clean + detects a corrupted
   value), `sacred_constants_rom` CORRECT (60-entry Q3.5 constant ROM -- all 59
