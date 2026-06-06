@@ -130,6 +130,14 @@ into any respin alongside `gf16_v2_*` / `bitnet_encoder_v2`.
 
 ## Checked and cleared (not respin drivers)
 
+- **gf16 multiply rounding mode** (`docs/GF16_ROUNDING_CONFORMANCE.md`,
+  `tools/gf16_rounding_conformance.py`): the spec intends IEEE roundTiesToEven, but
+  the RTL/silicon round ties-to-ZERO and the spec's own `gf16_encode_f32` rounds
+  half-UP -- a 3-way convention gap on exact-halfway cases only (744/262144 = 0.28%
+  of unit-exp products, 1 ULP each, task-immaterial per the Defect-1 studies).
+  Frozen silicon is ties-to-zero; `gamma/src/gf16_v3_mul.v` is a verified
+  ties-to-even (IEEE-conformant) variant staged for a future regen. The t27 master's
+  `gf16_encode_f32` comment-vs-code inconsistency is flagged for cleanup.
 - **Shared neuromorphic / mesh blocks** (Gamma + Euler, audited 2026-06,
   `test/shared_blocks_audit.py`): all CORRECT -- `d2d_holo_mesh` (4-port D2D stub:
   TX map + layer-frozen SYNC gate + RX latch), `nca_entropy_monitor` (81-cell
