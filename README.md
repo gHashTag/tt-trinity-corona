@@ -94,7 +94,7 @@ specs/corona/             # SSOT: chip spec in .t27 (Zig-like spec DSL)
 src/rtl/                  # 19 Verilog modules (top + ROM + 17 decoders)
 test/                     # cocotb (51) + SSOT/ROM/anchor/fmt_id + 17/17 decoders + post-silicon vectors + GLS
 formal/                   # SymbiYosys formal verification (19 configs, 57 tasks)
-tools/                    # ROM emitter (gen_rom.py)
+tools/                    # ROM emitter (gen_rom.py) + cross-checks
 docs/                     # design notes, loop reports, VERIFICATION.md; see docs/README.md (index)
 PLAN.md                   # full plan (also corona_plan.pdf, 23 pages)
 info.yaml                 # TinyTapeout chip metadata
@@ -180,6 +180,27 @@ drift.
   ([arXiv:2412.20273](https://arxiv.org/abs/2412.20273)) is the standing
   counterexample.
 - Author / contact email: admin@t27.ai. ORCID: 0009-0008-4294-6159.
+
+## External archival reference
+
+The GoldenFloat (GF) static-split floating-point family that defines the
+`GF ladder` cluster in the SSOT is archived on arXiv as
+[arXiv:2606.05017](https://arxiv.org/abs/2606.05017) (cs.AR, 2026-06-03).
+Corona is the registry chip for the catalog the paper describes; the
+arithmetic for the GF ladder lives on `gHashTag/tt-trinity-gamma` and is
+routed via D2D (see `specs/corona/d2d_routing.t27`).
+
+For the structural mapping between the 17 Corona Tier-1 decoders, the GF
+ladder rule from arXiv:2606.05017, and the OCP MX FP8 parameter dictionaries
+in `tenstorrent/tt-metal` (`tt_metal/api/tt-metalium/mxfp8.hpp`,
+`tt_metal/impl/data_format/mxfp8.cpp`), see
+[`docs/goldenfloat_ladder_crossreference.md`](docs/goldenfloat_ladder_crossreference.md).
+
+This cross-reference does NOT change the status of the FL-002 phi-ladder
+breadth-as-moat conjecture, which remains **[Open conjecture]**. Takum
+([arXiv:2412.20273](https://arxiv.org/abs/2412.20273)) remains the standing
+counterexample and is shipped in the Corona ROM, not suppressed (PLAN.md
+Section 7 R2).
 
 ## Document version
 
