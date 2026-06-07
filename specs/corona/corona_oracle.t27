@@ -131,6 +131,35 @@ module CoronaOracle {
     pub const ROM_TOTAL_BYTES_MAX : u16 = 1400;
 
     // ========================================================================
+    // 5b. GoldenFloat ladder -- ROM-overflowing rungs (spec-only)
+    // ========================================================================
+    //
+    // GF512 and GF1024 are rule-derived (e = round((N-1)/phi^2)) per t27
+    // SSOT FORMAT-SPEC-001 v1.2. Their (e, m) values exceed the u8 width
+    // of FIELD_TOTAL_BITS / FIELD_EXP_BITS / FIELD_MANT_BITS in the 80-bit
+    // ROM record, so they CANNOT live in this tapeout's ROM. They are
+    // canonical at the spec level and SHOULD appear in a future Corona
+    // ROM revision with widened fields (u16 for total_bits/exp/mant).
+    //
+    // STATUS: [Open conjecture] -- no RTL, no silicon, extrapolation of
+    //         the closed-form rule beyond the 4..256-bit demonstrated band.
+    //
+    // SSOT pointers:
+    //   gHashTag/t27 specs/numeric/gf512.t27
+    //   gHashTag/t27 specs/numeric/gf1024.t27
+    //   gHashTag/t27 conformance/FORMAT-SPEC-001.json v1.2
+    pub const GF_LADDER_EXTENDED = struct {
+        gf512_bits     : u16 = 512,
+        gf512_exp_bits : u16 = 195,
+        gf512_mant_bits: u16 = 316,
+        gf512_bias     : u64 = 0, // = 2^194 - 1; does not fit u64. See t27 spec.
+        gf1024_bits     : u16 = 1024,
+        gf1024_exp_bits : u16 = 391,
+        gf1024_mant_bits: u16 = 632,
+        // gf1024 bias = 2^390 - 1; tracked symbolically in t27 spec only.
+    };
+
+    // ========================================================================
     // 6. TIER-1 ON-DIE MODULE SET
     // ========================================================================
 

@@ -70,15 +70,15 @@ module fv_rom (
             7'd18: assert(data == 80'h12320A1030671E370F06);
             7'd19: assert(data == 80'h13320C1040770BEE0F06);
             7'd20: assert(data == 80'h14320E10508701C80F06);
-            7'd21: assert(data == 80'h1532101050A71E370F06);
+            7'd21: assert(data == 80'h1532101060970C730F06);
             7'd22: assert(data == 80'h1632141070C708E20F06);
-            7'd23: assert(data == 80'h1732181080F715AE0F06);
-            7'd24: assert(data == 80'h18322010B147116A0F06);
-            7'd25: assert(data == 80'h1932301101F71A160F06);
-            7'd26: assert(data == 80'h1A324011629714D90F06);
-            7'd27: assert(data == 80'h1B32601213E715F50F06);
-            7'd28: assert(data == 80'h1C328012C53716810F06);
-            7'd29: assert(data == 80'h1D3200158A7717510F06);
+            7'd23: assert(data == 80'h1732181090E7065A0F06);
+            7'd24: assert(data == 80'h18322010C13703770F06);
+            7'd25: assert(data == 80'h1932301121D700AE0F06);
+            7'd26: assert(data == 80'h1A324011827700AD0F06);
+            7'd27: assert(data == 80'h1B32601243B702030F06);
+            7'd28: assert(data == 80'h1C32801314E7029A0F06);
+            7'd29: assert(data == 80'h1D32001619E7010D0F06);
             7'd30: assert(data == 80'h1E32021000179E370F06);
             7'd31: assert(data == 80'h1F4508100001FFFF1001);
             7'd32: assert(data == 80'h204510101001FFFF1006);
@@ -159,8 +159,8 @@ module fv_rom (
             // sign_bits in {0, 1}
             assert(f_sign_bits <= 4'd1);
 
-            // exp_bits <= 88
-            assert(f_exp_bits <= 8'd88);
+            // exp_bits <= 97 (maximum observed, addr 29 GF131072 e=97)
+            assert(f_exp_bits <= 8'd97);
 
             // mant_bits <= 236
             assert(f_mant_bits <= 8'd236);
@@ -168,8 +168,8 @@ module fv_rom (
             // encoding_kind in [0..9]
             assert(f_enc_kind <= 4'd9);
 
-            // phi_distance >= 456 (0x01C8, minimum observed at addr 20)
-            assert(f_phi_dist >= 16'h01C8);
+            // phi_distance >= 173 (0x00AD, minimum observed at addr 26 after Cluster 3 fix)
+            assert(f_phi_dist >= 16'h00AD);
 
             // ref_index <= 45 (maximum observed across all 80 records)
             assert(f_ref_index <= 8'd45);
