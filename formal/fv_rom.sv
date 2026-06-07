@@ -159,8 +159,8 @@ module fv_rom (
             // sign_bits in {0, 1}
             assert(f_sign_bits <= 4'd1);
 
-            // exp_bits <= 88
-            assert(f_exp_bits <= 8'd88);
+            // exp_bits <= 97 (maximum observed, addr 29 GF131072 e=97)
+            assert(f_exp_bits <= 8'd97);
 
             // mant_bits <= 236
             assert(f_mant_bits <= 8'd236);
@@ -168,8 +168,8 @@ module fv_rom (
             // encoding_kind in [0..9]
             assert(f_enc_kind <= 4'd9);
 
-            // phi_distance >= 456 (0x01C8, minimum observed at addr 20)
-            assert(f_phi_dist >= 16'h01C8);
+            // phi_distance >= 173 (0x00AD, minimum observed at addr 26 after Cluster 3 fix)
+            assert(f_phi_dist >= 16'h00AD);
 
             // ref_index <= 45 (maximum observed across all 80 records)
             assert(f_ref_index <= 8'd45);
