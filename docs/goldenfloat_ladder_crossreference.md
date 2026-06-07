@@ -1,5 +1,17 @@
 # GoldenFloat ladder cross-reference (arXiv:2606.05017)
 
+> **v1.1 update (2026-06-07):** Corona ROM `tools/gen_rom.py` CATALOG
+> cluster 3 has been **rule-aligned** with the closed-form normative rule
+> `e = round((N - 1) / phi^2)` from t27 SSOT FORMAT-SPEC-001 v1.2.
+> Eight rungs were corrected (GF16, GF24, GF32, GF48, GF64, GF96, GF128,
+> GF256). The frozen-silicon anchor GF16 = 1+6+9 (tt-trinity-gamma
+> `src/gf16_v2_mul.v`) now matches the ROM. Symmetric audit:
+> claim-audit-lab CASE-09 (Conj + Fpath). GF512 and GF1024 are rule-derived
+> but overflow the 80-bit ROM record (u8 width on TOTAL_BITS/EXP/MANT);
+> tracked at oracle level (`specs/corona/corona_oracle.t27`
+> `GF_LADDER_EXTENDED`) and in t27 SSOT (`specs/numeric/gf512.t27`,
+> `gf1024.t27`).
+
 This document records the structural correspondence between three independent
 artefacts:
 

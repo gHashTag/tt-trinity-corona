@@ -124,6 +124,21 @@ def pack_record(fmt_id, cluster, status, total_bits, sign_bits,
 
 # 80 format records, ordered by format_index_id (0-79).
 # Fields: (fmt_id, cluster, status, total_bits, sign, exp, mant, enc_kind, ref_idx, flags)
+#
+# Cluster 3 (GoldenFloat) E/M widths derive from the closed-form rule
+# (NORMATIVE in gHashTag/t27 conformance/FORMAT-SPEC-001 v1.2):
+#     e = round((N - 1) / phi^2)
+#     m = N - 1 - e
+# Anchored at frozen silicon GF16 = 1+6+9 (tt-trinity-gamma/src/gf16_v2_mul.v).
+# Previous CATALOG values for GF16, GF24, GF32, GF48, GF64, GF96, GF128,
+# GF256 violated the rule; corrected here (claim-audit-lab CASE-09).
+#
+# GF512 and GF1024 (rule-derived) DO NOT FIT this 80-bit ROM record
+# because FIELD_TOTAL_BITS, FIELD_EXP_BITS, FIELD_MANT_BITS are u8 and
+# both formats exceed 255 in total_bits or mant_bits. They are tracked
+# at oracle level (specs/corona/corona_oracle.t27 GF_LADDER_EXTENDED)
+# and in t27 SSOT (specs/numeric/gf512.t27, gf1024.t27). A future
+# Corona ROM revision with widened fields can adopt them in silicon.
 CATALOG = [
     # Cluster 0: IEEE 754 binary (5)
     (0,  CL_IEEE_BIN, ST_SPEC,       16,  1,  5, 10, ENC_FP, 0, 0),           # fp16
@@ -146,22 +161,22 @@ CATALOG = [
     (13, CL_ML_LOW,   ST_SPEC,        4,  1,  2,  1, ENC_FP,13, FLAG_ON_DIE), # fp4 e2m1
     (14, CL_ML_LOW,   ST_EXPERIMENTAL,8,  1,  4,  3, ENC_FP,14, FLAG_ON_DIE), # fp8 e4m3 fnuz
 
-    # Cluster 3: GoldenFloat (16)
-    (15, CL_GOLDENFLOAT, ST_CONJECTURE, 4, 1, 1, 2, ENC_GF,15, FLAG_GAMMA|FLAG_D2D),  # GF4
-    (16, CL_GOLDENFLOAT, ST_CONJECTURE, 6, 1, 2, 3, ENC_GF,15, FLAG_GAMMA|FLAG_D2D),  # GF6
-    (17, CL_GOLDENFLOAT, ST_CONJECTURE, 8, 1, 3, 4, ENC_GF,15, FLAG_GAMMA|FLAG_D2D),  # GF8
-    (18, CL_GOLDENFLOAT, ST_CONJECTURE,10, 1, 3, 6, ENC_GF,15, FLAG_GAMMA|FLAG_D2D),  # GF10
-    (19, CL_GOLDENFLOAT, ST_CONJECTURE,12, 1, 4, 7, ENC_GF,15, FLAG_GAMMA|FLAG_D2D),  # GF12
-    (20, CL_GOLDENFLOAT, ST_CONJECTURE,14, 1, 5, 8, ENC_GF,15, FLAG_GAMMA|FLAG_D2D),  # GF14
-    (21, CL_GOLDENFLOAT, ST_CONJECTURE,16, 1, 5,10, ENC_GF,15, FLAG_GAMMA|FLAG_D2D),  # GF16
-    (22, CL_GOLDENFLOAT, ST_CONJECTURE,20, 1, 7,12, ENC_GF,15, FLAG_GAMMA|FLAG_D2D),  # GF20
-    (23, CL_GOLDENFLOAT, ST_CONJECTURE,24, 1, 8,15, ENC_GF,15, FLAG_GAMMA|FLAG_D2D),  # GF24
-    (24, CL_GOLDENFLOAT, ST_CONJECTURE,32, 1,11,20, ENC_GF,15, FLAG_GAMMA|FLAG_D2D),  # GF32
-    (25, CL_GOLDENFLOAT, ST_CONJECTURE,48, 1,16,31, ENC_GF,15, FLAG_GAMMA|FLAG_D2D),  # GF48
-    (26, CL_GOLDENFLOAT, ST_CONJECTURE,64, 1,22,41, ENC_GF,15, FLAG_GAMMA|FLAG_D2D),  # GF64
-    (27, CL_GOLDENFLOAT, ST_CONJECTURE,96, 1,33,62, ENC_GF,15, FLAG_GAMMA|FLAG_D2D),  # GF96
-    (28, CL_GOLDENFLOAT, ST_CONJECTURE,128,1,44,83, ENC_GF,15, FLAG_GAMMA|FLAG_D2D),  # GF128
-    (29, CL_GOLDENFLOAT, ST_CONJECTURE,256,1,88,167,ENC_GF,15, FLAG_GAMMA|FLAG_D2D),  # GF256
+    # Cluster 3: GoldenFloat (16, contiguous; +2 appended at fmt_id 80,81)
+    (15, CL_GOLDENFLOAT, ST_CONJECTURE, 4, 1, 1, 2, ENC_GF,15, FLAG_GAMMA|FLAG_D2D),  # GF4   (rule-derived)
+    (16, CL_GOLDENFLOAT, ST_CONJECTURE, 6, 1, 2, 3, ENC_GF,15, FLAG_GAMMA|FLAG_D2D),  # GF6   (rule-derived)
+    (17, CL_GOLDENFLOAT, ST_CONJECTURE, 8, 1, 3, 4, ENC_GF,15, FLAG_GAMMA|FLAG_D2D),  # GF8   (rule-derived)
+    (18, CL_GOLDENFLOAT, ST_CONJECTURE,10, 1, 3, 6, ENC_GF,15, FLAG_GAMMA|FLAG_D2D),  # GF10  (rule-derived)
+    (19, CL_GOLDENFLOAT, ST_CONJECTURE,12, 1, 4, 7, ENC_GF,15, FLAG_GAMMA|FLAG_D2D),  # GF12  (rule-derived)
+    (20, CL_GOLDENFLOAT, ST_CONJECTURE,14, 1, 5, 8, ENC_GF,15, FLAG_GAMMA|FLAG_D2D),  # GF14  (rule-derived)
+    (21, CL_GOLDENFLOAT, ST_CONJECTURE,16, 1, 6, 9, ENC_GF,15, FLAG_GAMMA|FLAG_D2D),  # GF16  (FROZEN SILICON; was 5,10)
+    (22, CL_GOLDENFLOAT, ST_CONJECTURE,20, 1, 7,12, ENC_GF,15, FLAG_GAMMA|FLAG_D2D),  # GF20  (rule-derived)
+    (23, CL_GOLDENFLOAT, ST_CONJECTURE,24, 1, 9,14, ENC_GF,15, FLAG_GAMMA|FLAG_D2D),  # GF24  (rule-fix; was 8,15)
+    (24, CL_GOLDENFLOAT, ST_CONJECTURE,32, 1,12,19, ENC_GF,15, FLAG_GAMMA|FLAG_D2D),  # GF32  (rule-fix; was 11,20)
+    (25, CL_GOLDENFLOAT, ST_CONJECTURE,48, 1,18,29, ENC_GF,15, FLAG_GAMMA|FLAG_D2D),  # GF48  (rule-fix; was 16,31)
+    (26, CL_GOLDENFLOAT, ST_CONJECTURE,64, 1,24,39, ENC_GF,15, FLAG_GAMMA|FLAG_D2D),  # GF64  (rule-fix; was 22,41)
+    (27, CL_GOLDENFLOAT, ST_CONJECTURE,96, 1,36,59, ENC_GF,15, FLAG_GAMMA|FLAG_D2D),  # GF96  (rule-fix; was 33,62)
+    (28, CL_GOLDENFLOAT, ST_CONJECTURE,128,1,49,78, ENC_GF,15, FLAG_GAMMA|FLAG_D2D),  # GF128 (rule-fix; was 44,83)
+    (29, CL_GOLDENFLOAT, ST_CONJECTURE,256,1,97,158,ENC_GF,15, FLAG_GAMMA|FLAG_D2D),  # GF256 (rule-fix; was 88,167)
     (30, CL_GOLDENFLOAT, ST_CONJECTURE, 2, 1, 0, 1, ENC_GF,15, FLAG_GAMMA|FLAG_D2D),  # GFTernary
 
     # Cluster 4: Posit / Unum III (8)
