@@ -17,9 +17,13 @@ configurable chaining value (state[0..7]), 64-bit counter, block_len, flags
 out[i+8]=state[i+8]^cv[i]). Verified bit-exact == the reference BLAKE3 `compress()`
 over random (cv,m,counter,block_len,flags) incl. the IV-root case
 (`test/blake3_anchor_v4_verify.py`); CI-gated, staged on Gamma + Euler. This is the
-keyed/tree-capable primitive -- multi-block / keyed / tree BLAKE3 is now just
-CV-chaining block-to-block + setting the CHUNK_START/CHUNK_END/ROOT/KEYED_HASH flag
-bits (a thin FSM wrapper over v4, a future wave).
+keyed/tree-capable primitive. **`blake3_hash_chunk`** then puts the FSM wrapper on
+top: it chains the CV block-to-block and sets CHUNK_START / CHUNK_END|ROOT flags to
+hash any message up to one BLAKE3 chunk (1024 bytes). Verified == a reference
+single-chunk BLAKE3 validated against the OFFICIAL BLAKE3 test vectors -- 19/19
+lengths (0,1,63,64,65,...,1023,1024), CI-gated, staged on Gamma + Euler. For
+receipt-sized inputs this is the COMPLETE BLAKE3 hash, not just compression.
+Remaining: multi-chunk tree mode (parent nodes, counters>0) for messages > 1024 B.
 
 ## Respin wave -- fold all staged fixes into the next tapeout
 
