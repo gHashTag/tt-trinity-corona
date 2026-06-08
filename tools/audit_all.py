@@ -24,6 +24,7 @@ for d in ("gamma","euler"):
         JOBS.append((f"{d}/{s}", die(d), ["python3", f"test/{s}.py"]))
 JOBS.append(("phi/phi_audit", die("phi"), ["python3", "test/phi_audit.py"]))
 JOBS.append(("corona/fix_coverage_matrix", CORONA, ["python3", "tools/fix_coverage_matrix.py"]))
+JOBS.append(("corona/gf_ladder_consistency", CORONA, ["python3", "tools/gf_ladder_consistency.py"]))
 
 def main():
     print("== TRI-NET post-silicon audit -- full re-validation (all four dies) ==\n")
