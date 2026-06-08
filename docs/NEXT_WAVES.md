@@ -23,7 +23,13 @@ hash any message up to one BLAKE3 chunk (1024 bytes). Verified == a reference
 single-chunk BLAKE3 validated against the OFFICIAL BLAKE3 test vectors -- 19/19
 lengths (0,1,63,64,65,...,1023,1024), CI-gated, staged on Gamma + Euler. For
 receipt-sized inputs this is the COMPLETE BLAKE3 hash, not just compression.
-Remaining: multi-chunk tree mode (parent nodes, counters>0) for messages > 1024 B.
+Finally **`blake3_hash`** adds the multi-chunk tree (parent nodes, counters>0, the
+chunk-stack merge rule with ROOT on the final parent) for arbitrary messages up to
+4 chunks (4096 B). Verified == the reference `blake3` package over all lengths
+0..4096 incl 1/2/3/4 chunks, power-of-2 and partials (17/17,
+`test/blake3_hash_verify.py`). The BLAKE3 line is now a complete arbitrary-length
+hash (compress core -> single chunk -> tree). Remaining: >4 chunks (deeper stack,
+mechanical) and keyed/derive-key modes (CV=key + flag bits, a thin variant).
 
 ## Respin wave -- fold all staged fixes into the next tapeout
 
