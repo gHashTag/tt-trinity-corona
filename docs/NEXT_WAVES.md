@@ -11,8 +11,15 @@ a reduced 4-round / no-permutation "mini"; **`blake3_anchor_v3` (this loop)** is
 Wave-5 target -- full **7 rounds + per-round message permutation**
 (PERM=[2,6,3,10,7,0,4,13,1,11,12,5,9,14,15,8]), verified == a real 7-round+permuted
 BLAKE3-G reference (`test/blake3_anchor_v3_verify.py`), staged on Gamma + Euler, CI-
-gated. Remaining for a later wave: keyed/tree mode (chaining value, counter, flags,
-block_len) for multi-block / full-spec BLAKE3.
+gated. **`blake3_anchor_v4`** then completes the real BLAKE3 **compression function**:
+configurable chaining value (state[0..7]), 64-bit counter, block_len, flags
+(state[12..15]), and the full 16-word output (out[i]=state[i]^state[i+8],
+out[i+8]=state[i+8]^cv[i]). Verified bit-exact == the reference BLAKE3 `compress()`
+over random (cv,m,counter,block_len,flags) incl. the IV-root case
+(`test/blake3_anchor_v4_verify.py`); CI-gated, staged on Gamma + Euler. This is the
+keyed/tree-capable primitive -- multi-block / keyed / tree BLAKE3 is now just
+CV-chaining block-to-block + setting the CHUNK_START/CHUNK_END/ROOT/KEYED_HASH flag
+bits (a thin FSM wrapper over v4, a future wave).
 
 ## Respin wave -- fold all staged fixes into the next tapeout
 
