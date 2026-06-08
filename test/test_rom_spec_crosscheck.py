@@ -67,6 +67,25 @@ SPEC_REFERENCE = {
     # Compression/quantization
     70: (4,   0,  0,  4),   # nf4 (LUT-based, no FP decomposition)
     71: (2,   1,  0,  1),   # bitnet ternary (1 sign + 1 value)
+    # GoldenFloat ladder -- SSOT FORMAT-SPEC-001 closed-form split:
+    # E = round((N-1)/phi^2), M = N-1-E (derived from the rule here, independent of
+    # gen_rom.py; GF16 is the frozen-silicon anchor 1+6+9).
+    15: (4,   1,  1,  2),   # GF4
+    16: (6,   1,  2,  3),   # GF6
+    17: (8,   1,  3,  4),   # GF8
+    18: (10,  1,  3,  6),   # GF10
+    19: (12,  1,  4,  7),   # GF12
+    20: (14,  1,  5,  8),   # GF14
+    21: (16,  1,  6,  9),   # GF16 (FROZEN SILICON)
+    22: (20,  1,  7, 12),   # GF20
+    23: (24,  1,  9, 14),   # GF24
+    24: (32,  1, 12, 19),   # GF32
+    25: (48,  1, 18, 29),   # GF48
+    26: (64,  1, 24, 39),   # GF64
+    27: (96,  1, 36, 59),   # GF96
+    28: (128, 1, 49, 78),   # GF128
+    29: (256, 1, 97, 158),  # GF256 (total_bits wraps to 0 in the 8-bit field)
+    30: (2,   1,  0,  1),   # GFTernary
 }
 
 
