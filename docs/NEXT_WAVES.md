@@ -50,9 +50,13 @@ All dead-code library units (none instantiated on a die top -> no silicon impact
   interface has no residual to form one. `stoch_round_v2` is the corrected unit:
   round up iff random byte < frac -> P(up)=frac/256 (verified unbiased, P tracks
   frac/256 across 0..255). CI-gated.
-- `spec_exit`/`drowsy_ret`/`null_pe`/`dfs_gate`/`subth_clk`/`fbb_active_path`:
-  present (Wave-39/42 + power gating), control/retention units with less standard
-  contracts -- remaining candidates for functional audit if reused.
+- `spec_exit` (Wave-39, exit==conf>=thresh), `null_pe` (gate==activate), `dfs_gate`
+  (skip==depth>16&&!visited), `subth_clk` (clk_freq==2^divider): all **CORRECT**.
+- **Opcode-width defect fixed:** `sparse_skip`(0xE1)/`subth_clk`(0xE5)/`fbb_active_path`
+  (0xF2) had `[3:0]` opcode ports truncating their 8-bit sacred opcodes to the low
+  nibble (collision risk); widened to `[7:0]` + full-opcode compare on all 3 dies,
+  verified. (`drowsy_ret` retention left for a reuse-time audit.)
+  ALL power/sparsity units now conform (`power_waves_audit.py`, 7 units + width gate).
 
 ## Recommended next-wave order
 
