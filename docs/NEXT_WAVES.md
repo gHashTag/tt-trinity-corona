@@ -1,0 +1,58 @@
+# TRI-NET next waves -- roadmap + status (2026-06)
+
+Forward work-stream plan, grounded in the in-repo "Wave-N" markers and the staged
+post-silicon fixes. Status as of this loop.
+
+## Wave 5 -- full-round BLAKE3 (TTIHP27a) -- DONE (staged + verified)
+
+The RECEIPT signer's hash. Trajectory: shipped `blake3_anchor` omitted all 4 XOR
+diffusion steps (Defect 3, near-linear); `blake3_anchor_v2` restored the XOR but was
+a reduced 4-round / no-permutation "mini"; **`blake3_anchor_v3` (this loop)** is the
+Wave-5 target -- full **7 rounds + per-round message permutation**
+(PERM=[2,6,3,10,7,0,4,13,1,11,12,5,9,14,15,8]), verified == a real 7-round+permuted
+BLAKE3-G reference (`test/blake3_anchor_v3_verify.py`), staged on Gamma + Euler, CI-
+gated. Remaining for a later wave: keyed/tree mode (chaining value, counter, flags,
+block_len) for multi-block / full-spec BLAKE3.
+
+## Respin wave -- fold all staged fixes into the next tapeout
+
+All post-silicon fixes are staged + verified (frozen dies untouched). Drop-in set for
+the next shuttle: `gf16_v2_mul`/`gf16_v2_add` (Defect 1), `bitnet_encoder_v2`
+(Defect 2), `blake3_anchor_v2`/**`v3`** (Defect 3 -- ship v3 for full diffusion),
+`multi_tile_receipt_v2`, `alu9_decoder_v2`, `phi_d2d_lite_v2` (RX framing), gf128
+split E49 M78. Go/no-go: `RESPIN_BRIEF_gf_arithmetic.md`; fix coverage:
+`tools/fix_coverage_matrix.py`; full re-validation: `tools/audit_all.py` (13/13).
+Optional: `gf16_v3_mul` (IEEE ties-to-even) if strict rounding conformance is wanted
+(`GF16_TIES_EVEN_PROPOSAL.md`).
+
+## Wave 7 -- Trinity SoC (host register access)
+
+`wishbone_full` (WB-lite, 16 regs) is in and verified (`leaf_audit.py`). Next:
+full Wishbone B4 compliance + a CPU-less host control path beyond the demo FSM.
+
+## GF ladder extension -- GF512 / GF1024 (in progress, other contributor)
+
+Specs landed (t27 `gf512.t27`/`gf1024.t27`, corona oracle GF_LADDER_EXTENDED); RTL
+units not yet present. When their RTL lands: add to `gf_add_sweep`/`gf_mul_sweep`
+RUNGS (the flog2 large-exponent path is ready), to `gf_ladder_consistency.py`, and
+the closed-form ids to `test_rom_spec_crosscheck.py` SPEC_REFERENCE. The whole GF
+ladder is now verified three ways (arithmetic <=1 ULP, structural consistency,
+standalone catalog oracle); extending it to 512/1024 is mechanical.
+
+## Power / sparsity waves (40/41/42) -- present, candidates for functional audit
+
+RTL referenced/present: `sparse_mask`/`sparse_skip` (Wave-40 channel sparsity),
+`stoch_round` (Wave-41 stochastic rounding), `drowsy_ret` (Wave-42 retention),
+`null_pe` (power gating), `spec_exit` (Wave-39 speculative exit). These were
+lint-triaged but not all functionally verified against a reference -- the same
+"audit instantiated logic vs its contract" method (which found Defects 1-3 +
+phi_d2d) applies: e.g. `stoch_round` vs an unbiased-rounding statistical reference,
+`sparse_skip` vs a zero-skip model.
+
+## Recommended next-wave order
+
+1. **Ship Wave-5 v3 in the respin set** (done/staged; highest security value).
+2. **Verify GF512/1024 RTL** when it lands (mechanical, infra ready).
+3. **Functionally audit the power/sparsity waves** (stoch_round / sparse_skip /
+   spec_exit) -- the last instantiated-ish logic not checked against a reference.
+4. **Wave 7 SoC** -- larger, design-led (host/CPU path), beyond source-only loops.
