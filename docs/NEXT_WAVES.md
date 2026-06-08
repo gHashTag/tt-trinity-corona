@@ -39,15 +39,20 @@ the closed-form ids to `test_rom_spec_crosscheck.py` SPEC_REFERENCE. The whole G
 ladder is now verified three ways (arithmetic <=1 ULP, structural consistency,
 standalone catalog oracle); extending it to 512/1024 is mechanical.
 
-## Power / sparsity waves (40/41/42) -- present, candidates for functional audit
+## Power / sparsity waves (39-42) -- AUDITED (`gamma/test/power_waves_audit.py`)
 
-RTL referenced/present: `sparse_mask`/`sparse_skip` (Wave-40 channel sparsity),
-`stoch_round` (Wave-41 stochastic rounding), `drowsy_ret` (Wave-42 retention),
-`null_pe` (power gating), `spec_exit` (Wave-39 speculative exit). These were
-lint-triaged but not all functionally verified against a reference -- the same
-"audit instantiated logic vs its contract" method (which found Defects 1-3 +
-phi_d2d) applies: e.g. `stoch_round` vs an unbiased-rounding statistical reference,
-`sparse_skip` vs a zero-skip model.
+All dead-code library units (none instantiated on a die top -> no silicon impact).
+- `sparse_skip` (Wave-40): **CORRECT** -- skip_count == popcount(sparse_mask),
+  active_lanes == ~sparse_mask (zero-skip equivalence). Minor: opcode port [3:0]
+  can't hold the contract opcode 0xE1 (works only via truncation to 0x1).
+- `stoch_round` (Wave-41): **DEFECT** -- not stochastic rounding; rounds up with
+  prob 0.5 only when LSB=1 (measured), unrelated to the fractional part, and the
+  interface has no residual to form one. `stoch_round_v2` is the corrected unit:
+  round up iff random byte < frac -> P(up)=frac/256 (verified unbiased, P tracks
+  frac/256 across 0..255). CI-gated.
+- `spec_exit`/`drowsy_ret`/`null_pe`/`dfs_gate`/`subth_clk`/`fbb_active_path`:
+  present (Wave-39/42 + power gating), control/retention units with less standard
+  contracts -- remaining candidates for functional audit if reused.
 
 ## Recommended next-wave order
 
