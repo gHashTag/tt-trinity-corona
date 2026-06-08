@@ -28,8 +28,12 @@ chunk-stack merge rule with ROOT on the final parent) for arbitrary messages up 
 4 chunks (4096 B). Verified == the reference `blake3` package over all lengths
 0..4096 incl 1/2/3/4 chunks, power-of-2 and partials (17/17,
 `test/blake3_hash_verify.py`). The BLAKE3 line is now a complete arbitrary-length
-hash (compress core -> single chunk -> tree). Remaining: >4 chunks (deeper stack,
-mechanical) and keyed/derive-key modes (CV=key + flag bits, a thin variant).
+hash (compress core -> single chunk -> tree). **`blake3_keyed_hash`** adds the keyed
+MAC mode (key replaces IV as the chunk/parent CV + KEYED_HASH flag on every
+compression) -- the DePIN receipt MAC; verified == `blake3.blake3(data, key=key)`
+over 0..4096 incl multi-chunk (10/10, `test/blake3_keyed_hash_verify.py`). BLAKE3 is
+now complete for both unkeyed hash and keyed MAC. Remaining: >4 chunks (deeper stack,
+mechanical) and derive_key (a two-pass context/material variant of the same engine).
 
 ## Respin wave -- fold all staged fixes into the next tapeout
 
