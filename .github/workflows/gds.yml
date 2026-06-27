@@ -15,6 +15,20 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Pre-create verilator-lint log (workaround for tt-gds-action upstream bug)
+        run: |
+          # tt-gds-action@ttgf26a Linter output step does
+          #   cat runs/wokwi/*-verilator-lint/verilator-lint.log
+          # but LibreLane does not always produce that file on this ref,
+          # which makes the whole job fail with exit 1.
+          # Pre-create a stub so the cat succeeds with empty content.
+          # Upstream issue:
+          # https://github.com/TinyTapeout/tt-gds-action (filed separately)
+          mkdir -p runs/wokwi/0-verilator-lint
+          : > runs/wokwi/0-verilator-lint/verilator-lint.log
+          echo "(stub log; see upstream tt-gds-action issue)" \
+            > runs/wokwi/0-verilator-lint/verilator-lint.log
+
       - name: Harden GDS (GF180MCU)
         uses: TinyTapeout/tt-gds-action@ttgf26a
         with:
