@@ -22,6 +22,10 @@ The fourth chip in the TRI-NET line, after Phi, Euler, and Gamma. Corona is a
 
 A silicon chip whose primary deliverable is a **~800-byte ROM encoding all
 80 numeric-format records** from the TRI-NET SSOT, plus **17 Tier-1 RTL
+<!-- NOTE: 80 = the SSOT snapshot frozen into this chip's ROM/GDS (PR #1028,
+     commit 18ae35a). The live t27 canon has since grown to 83 formats; the
+     stale gen JSON still reads 77. This is intentional provenance, not an
+     error -- see docs/FORMAT_COUNT_PROVENANCE.md. [Verified] -->
 decode modules** (covering 18 format families; FP8 E4M3 reuses the MXFP8 E4M3
 decoder) converting on-die formats to IEEE 754 FP32 (or INT32).
 A query arrives as a 7-bit format index on `ui_in[6:0]`; the chip
