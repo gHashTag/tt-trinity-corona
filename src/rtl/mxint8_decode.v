@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
-// tt-trinity-corona / src/rtl/mxint8_decode.v
+// Copied from gHashTag/tt-trinity-corona / src/rtl/mxint8_decode.v (separate repo,
+// NOT a submodule of trinity-fpga — fetched via gh api 2026-07-01).
 // MXINT8 -> FP32 decode. OCP MX 8-bit integer with implicit 2^(-6) scale.
-// Value = int8_val * 2^(-6). Range: [-127/64, +127/64]. -128 reserved.
+// Value = int8_val * 2^(-6). Range: [-127/64, +127/64]. -128 reserved (NaN).
 
 `default_nettype none
+`timescale 1ns / 1ps
 
 module mxint8_decode (
     input  wire [7:0]  mxint8_in,
@@ -36,7 +38,6 @@ module mxint8_decode (
     wire [7:0] fp32_exp = 8'd121 + {5'b0, lop};
 
     // FP32 mantissa: strip leading 1, left-align to 23 bits
-    // Shift abs_val left by (23 - lop), then mask off leading 1
     reg [22:0] fp32_mant;
     always @(*) begin
         case (lop)
@@ -61,3 +62,5 @@ module mxint8_decode (
     end
 
 endmodule
+
+`default_nettype wire

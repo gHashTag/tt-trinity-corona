@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
-// tt-trinity-corona / src/rtl/bitnet_decode.v
-// BitNet 1.58b ternary {-1, 0, +1} -> FP32 decode.
-// 2-bit input: 00=0, 01=+1, 10=-1, 11=reserved(NaN).
+// Copied from gHashTag/tt-trinity-corona / src/rtl/bitnet_decode.v (separate repo,
+// NOT a submodule of trinity-fpga — fetched via gh api 2026-07-01).
+// BitNet 1.58b ternary {-1,0,+1} -> FP32 decode.
+// 2-bit input: 00=0, 01=+1.0, 10=-1.0, 11=reserved(NaN).
 
 `default_nettype none
+`timescale 1ns / 1ps
 
 module bitnet_decode (
     input  wire [1:0]  ternary_in,
@@ -26,3 +28,5 @@ module bitnet_decode (
     end
 
 endmodule
+
+`default_nettype wire

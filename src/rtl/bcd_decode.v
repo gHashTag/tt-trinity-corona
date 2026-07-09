@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
-// tt-trinity-corona / src/rtl/bcd_decode.v
+// Copied from gHashTag/tt-trinity-corona / src/rtl/bcd_decode.v (separate repo,
+// NOT a submodule of trinity-fpga — fetched via gh api 2026-07-01).
 // 2-digit packed BCD -> 7-bit binary decode.
-// bcd_in = {tens[7:4], ones[3:0]}, bin_out = tens*10 + ones.
+// bcd_in = {tens[7:4], ones[3:0]}, bin_out = tens*10 + ones (0..99).
+// valid = 1 only when both nibbles are 0..9.
 
 `default_nettype none
+`timescale 1ns / 1ps
 
 module bcd_decode (
     input  wire [7:0] bcd_in,
@@ -23,3 +26,5 @@ module bcd_decode (
     assign valid = (tens <= 4'd9) && (ones <= 4'd9);
 
 endmodule
+
+`default_nettype wire

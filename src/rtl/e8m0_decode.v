@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
-// tt-trinity-corona / src/rtl/e8m0_decode.v
+// Copied from gHashTag/tt-trinity-corona / src/rtl/e8m0_decode.v (separate repo,
+// NOT a submodule of trinity-fpga — fetched via gh api 2026-07-01).
 // E8M0 -> FP32 decode. OCP MX shared scale factor: 8-bit exponent-only.
 // Value = 2^(e - 127). No sign bit. 0xFF = NaN. 0x00 = 2^(-127).
 
 `default_nettype none
+`timescale 1ns / 1ps
 
 module e8m0_decode (
     input  wire [7:0]  e8m0_in,
@@ -23,3 +25,4 @@ module e8m0_decode (
     end
 
 endmodule
+`default_nettype wire
