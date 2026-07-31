@@ -10,8 +10,8 @@ The fourth chip in the TRI-NET line, after Phi, Euler, and Gamma. Corona is a
 | Field | Value |
 | --- | --- |
 | Shuttle | TTGF26a (TinyTapeout, GF180MCU 180nm) |
-| Submission target | 2026-06-22 (TTGF26a close) |
-| Expected silicon | 2026-10 to 2026-11 |
+| Submission target | NOT SUBMITTED — the TTGF26a window closed without a submission |
+| Expected silicon | NONE — this design was never submitted, so no die exists or is expected |
 | Tile size | 4x4 (16 tiles) |
 | Document status | Submission-ready (17 decoders, 51 tests PASS, GDS+precheck PASS) |
 | SSOT | `gHashTag/t27 specs/numeric/formats_catalog.t27` (PR #1028, issue #1029) |
