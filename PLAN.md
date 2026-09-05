@@ -2,10 +2,11 @@
 
 Project repo: gHashTag/tt-trinity-corona
 Target shuttle: TTGF26a (GlobalFoundries GF180MCU, 180nm)
-Target submission: 2026-06-22 (TTGF26a shuttle close)
-Expected silicon delivery: 2026-10-01 (approximately 4 months post-submission)
+Target submission: 2026-06-22 (TTGF26a shuttle close) -- NOT SUBMITTED; the window closed without a submission of this design
+Expected silicon delivery: NONE -- the design was never submitted, so no die exists or is expected; the earlier estimate (2026-10-01) is withdrawn
 Document status: SUBMISSION-READY (19 RTL modules, CI green, GDS+precheck+GL PASS, 57 formal tasks, 51 cocotb tests)
 Document version: corona_plan-v1.0 (merged from corona_plan_skeleton.md and corona_research.md)
+Status note (2026-09-05): the TTGF26a window closed on 2026-06-22 without a submission of this design; no die exists or is expected. Dates and phases below that assume a submission are the plan as written, not a live schedule.
 
 Claim-status key used throughout: [Verified], [Empirical fit], [Open conjecture], [Risk], [Retracted], [Experimental], [Historical], [Spec].
 NOTE: References to "OpenLane2" below predate its rebrand to LibreLane 3.x (FOSSi Foundation, July 2025). The actual GDS flow is LibreLane.
@@ -277,7 +278,7 @@ Per the [TinyTapeout chips page](https://tinytapeout.com/chips/), TTGF26a target
 
 Key dates to confirm before Phase F:
 - TTGF26a tape-out submission cutoff (exact calendar date).
-- Expected silicon return date.
+- Expected silicon return date (not applicable to the closed TTGF26a window: this design was not submitted; no die is expected).
 - PDK freeze date for GF180MCU (after which cell-library changes are locked).
 - Whether a no-change resubmission (same GDS, next shuttle) is possible if Phase F misses the target window.
 
