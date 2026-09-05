@@ -20,11 +20,12 @@ The fourth chip in the TRI-NET line, after Phi, Euler, and Gamma. Corona is a
 
 ## What Corona is
 
-A silicon chip whose primary deliverable is a **~800-byte ROM encoding all
+A chip design (never fabricated -- see "Expected silicon" above) whose primary
+deliverable is a **~800-byte ROM encoding all
 80 numeric-format records** from the TRI-NET SSOT, plus **17 Tier-1 RTL
 <!-- NOTE: 80 = the SSOT snapshot frozen into this chip's ROM/GDS (PR #1028,
-     commit 18ae35a). The live t27 canon has since grown to 83 formats; the
-     stale gen JSON still reads 77. This is intentional provenance, not an
+     commit 18ae35a). The live t27 canon has since grown to 109 formats (83 at 2026-06); a
+     stale gen JSON read 77 until t27 untracked it on 2026-06-14. This is intentional provenance, not an
      error -- see docs/FORMAT_COUNT_PROVENANCE.md. [Verified] -->
 decode modules** (covering 18 format families; FP8 E4M3 reuses the MXFP8 E4M3
 decoder) converting on-die formats to IEEE 754 FP32 (or INT32).
@@ -34,9 +35,9 @@ over N read cycles. Synthesizes to 2,308 cells (~1% of 4x4 site budget).
 
 The second function of Corona is to serve as the **17th output language** of
 `tools/gen_formats_catalog.py` in `gHashTag/t27`. The Verilog ROM emitter
-(produced as a PR to `t27`) is the primary toolchain artifact; the silicon
-chip is its validation. This makes the chain SSOT -> codegen -> RTL ->
-silicon end-to-end mechanical.
+(produced as a PR to `t27`) is the primary toolchain artifact; the chip
+design (GDS, not fabricated) is its validation. This makes the chain
+SSOT -> codegen -> RTL -> GDS end-to-end mechanical.
 
 ## What Corona is NOT (honest disclaimers)
 
@@ -70,9 +71,9 @@ Claim status of the sentence itself: **[Open conjecture]**.
 
 | Chip | Repo | Shuttle / PDK | Tile | Role | Status |
 | --- | --- | --- | --- | --- | --- |
-| Phi | `gHashTag/tt-trinity-phi` | TTSKY26b / SKY130A | 1x1 | Identity baseline | [Verified] |
-| Euler | `gHashTag/tt-trinity-euler` | TTSKY26b / SKY130A | 8x2 | Safety boundary | [Empirical fit] |
-| Gamma | `gHashTag/tt-trinity-gamma` | TTSKY26b / SKY130A | 8x4 | Ternary mesh compute (submitted 2026-05-17) | [Empirical fit] |
+| Phi | `gHashTag/tt-trinity-phi` | TTSKY26b / SKY130A (submission withdrawn before fabrication; no die) | 1x1 | Identity baseline | [Verified in sim] |
+| Euler | `gHashTag/tt-trinity-euler` | TTSKY26b / SKY130A (submission withdrawn before fabrication; no die) | 8x2 | Safety boundary | [Empirical fit] |
+| Gamma | `gHashTag/tt-trinity-gamma` | TTSKY26b / SKY130A (submission withdrawn before fabrication; no die) | 8x4 | Ternary mesh compute (submitted 2026-05-17, later withdrawn) | [Empirical fit] |
 | **Corona** | `gHashTag/tt-trinity-corona` | **TTGF26a / GF180MCU** | 4x4 | Format-completeness oracle | **[Empirical fit]** |
 
 ## The TG-TRIAD-X cross-die anchor

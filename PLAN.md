@@ -2,10 +2,11 @@
 
 Project repo: gHashTag/tt-trinity-corona
 Target shuttle: TTGF26a (GlobalFoundries GF180MCU, 180nm)
-Target submission: 2026-06-22 (TTGF26a shuttle close)
-Expected silicon delivery: 2026-10-01 (approximately 4 months post-submission)
+Target submission: 2026-06-22 (TTGF26a shuttle close) -- NOT SUBMITTED; the window closed without a submission of this design
+Expected silicon delivery: NONE -- the design was never submitted, so no die exists or is expected; the earlier estimate (2026-10-01) is withdrawn
 Document status: SUBMISSION-READY (19 RTL modules, CI green, GDS+precheck+GL PASS, 57 formal tasks, 51 cocotb tests)
 Document version: corona_plan-v1.0 (merged from corona_plan_skeleton.md and corona_research.md)
+Status note (2026-09-05): the TTGF26a window closed on 2026-06-22 without a submission of this design; no die exists or is expected. Dates and phases below that assume a submission are the plan as written, not a live schedule.
 
 Claim-status key used throughout: [Verified], [Empirical fit], [Open conjecture], [Risk], [Retracted], [Experimental], [Historical], [Spec].
 NOTE: References to "OpenLane2" below predate its rebrand to LibreLane 3.x (FOSSi Foundation, July 2025). The actual GDS flow is LibreLane.
@@ -16,7 +17,7 @@ ASCII only. No smart quotes. No em-dashes (use `--`). No Cyrillic. No banned wor
 ## 0. TL;DR
 
 - Corona is the fourth chip in the TRI-NET line (after Phi, Euler, Gamma), targeting the GlobalFoundries 180MCU process on the TTGF26a shuttle. Its role is format-conformance oracle, not compute accelerator. [Spec]
-- The on-die ROM stores all 80 format records from the SSOT snapshot in gHashTag/t27 specs/numeric/formats_catalog.t27 (PR #1028, commit 18ae35a, issue #1029). NOTE: 80 is the frozen snapshot baked into this chip's GDS; the live t27 canon has since grown to 83 (the stale gen JSON reads 77). This is intentional provenance, not a defect -- see docs/FORMAT_COUNT_PROVENANCE.md. [Verified] Each record encodes bit-layout fields, cluster membership, claim-status, and phi-distance in Q16 fixed point. [Spec]
+- The on-die ROM stores all 80 format records from the SSOT snapshot in gHashTag/t27 specs/numeric/formats_catalog.t27 (PR #1028, commit 18ae35a, issue #1029). NOTE: 80 is the frozen snapshot baked into this chip's GDS; the live t27 canon has since grown to 109 formats (83 at 2026-06; a stale gen JSON read 77 until t27 untracked it on 2026-06-14). This is intentional provenance, not a defect -- see docs/FORMAT_COUNT_PROVENANCE.md. [Verified] Each record encodes bit-layout fields, cluster membership, claim-status, and phi-distance in Q16 fixed point. [Spec]
 - The TG-TRIAD-X cross-die anchor `{uio_out, uo_out} == 16'h47C0`, derived from `dot4(1,2,3,4)` over GF16 implied by `phi^2 + phi^-2 = 3 = L_2`, carries forward unchanged from Phi/Euler/Gamma to Corona; it is the mechanical sameness-check across all four dice. [Verified in sim; Open until all four dice measured together]
 - Corona reuses the T27 module library without duplicating Gamma's 40 RTL modules. The two-die Gamma+Corona D2D assembly is the first configuration in the line at which a single board answers oracle queries for all 80 SSOT format indices. [Spec]
 - The FL-002 phi-ladder breadth-as-moat conjecture in gHashTag/trios-trainer-igla src/ledger.rs stays [Open conjecture]. Corona being a registry chip does not promote it. Takum (Hunhold 2024, [arXiv:2412.20273](https://arxiv.org/abs/2412.20273)) remains the standing counterexample and ships in the Corona ROM as a Tier-2 record, not suppressed. [Open conjecture]
@@ -60,7 +61,7 @@ The table below shows all four chips in the TRI-NET line. Shuttle and PDK assign
 | Gamma  | gHashTag/tt-trinity-gamma     | TTSKY26b | SKY130A  | 8x4       | Compute (ternary mesh)      | Can ~40 format-conversion modules coexist in one tile DRC-clean?       | [Empirical fit] |
 | Corona | gHashTag/tt-trinity-corona    | TTGF26a  | GF180MCU | 4x4 (16 tiles) | Format-completeness oracle  | Does a silicon ROM faithfully emit all 80 SSOT records bit-exact?      | [Spec]          |
 
-TTSKY26b precedent dates: Gamma was submitted 2026-05-17 (8x4 tile, 103 RTL modules of which ~40 are format-related). [Spec] TTGF26a dates remain to be confirmed at the calendar level. Per the [TinyTapeout chips page](https://tinytapeout.com/chips/), TTGF26a closes in 2026 Q4 with chips expected early 2027. The preceding test shuttle TTGF0p2 (52 designs, closed 2025-11-24) is described on [the TTGF0p2 page](https://tinytapeout.com/chips/ttgf0p2/) as using the gf180mcuD 180nm open-source PDK via wafer.space; TTGF26a was expected to deliver chips by 2026-11-15 per the chips page. The 5-6 month close-to-delivery interval is the basis for the early-2027 Corona delivery estimate. The exact TTGF26a close date should be verified against the TinyTapeout shuttle index near 2026 Q3. [Open conjecture]
+TTSKY26b precedent dates: Gamma was submitted 2026-05-17 (8x4 tile, 103 RTL modules of which ~40 are format-related). [Spec] TTGF26a dates remain to be confirmed at the calendar level. Per the [TinyTapeout chips page](https://tinytapeout.com/chips/), TTGF26a closes in 2026 Q4 with chips expected early 2027. The preceding test shuttle TTGF0p2 (52 designs, closed 2025-11-24) is described on [the TTGF0p2 page](https://tinytapeout.com/chips/ttgf0p2/) as using the gf180mcuD 180nm open-source PDK via wafer.space; TTGF26a was expected to deliver chips by 2026-11-15 per the chips page. The 5-6 month close-to-delivery interval was the basis for the early-2027 Corona delivery estimate in the plan as written. The window closed on 2026-06-22 without a Corona submission, so no Corona die is expected (see the status note at the top). [Historical]
 
 Escalation of SKU questions through the line: Phi answers "does the substrate work?"; Euler answers "are the safety semantics correct?"; Gamma answers "can multiple formats coexist in silicon?"; Corona answers "can the full catalog be mechanically traced from SSOT to silicon?". [Spec] Each chip is necessary but not sufficient; the complete answer to "does the TRI-NET toolchain hold together across all 80 formats?" requires all four dice plus a Gamma+Corona D2D assembly. [Open conjecture]
 
@@ -273,11 +274,11 @@ D2D latency model: Corona receives `format_index`, asserts D2D_REQ on `uio_out[0
 
 ### 5.1 Submission Window and Delivery Estimate
 
-Per the [TinyTapeout chips page](https://tinytapeout.com/chips/), TTGF26a targets a 2026 Q4 submission close with chips expected in early 2027. [Open conjecture] The preceding test shuttle TTGF0p2 (52 designs, closed 2025-11-24, chips expected May 2026) used the `gf180mcuD` 180nm open-source PDK via wafer.space, per [the TTGF0p2 page](https://tinytapeout.com/chips/ttgf0p2/). The TTGF26a shuttle (WS-2606, closed 2026-06-22) was expected to deliver chips by 2026-11-15, giving a 5-6 month close-to-delivery interval that the Corona plan assumes for TTGF26a. [Open conjecture] The exact TTGF26a calendar date will be confirmed via the [GF GlobalShuttle MPW schedule](https://gf.com/manufacturing-services/multi-project-wafer-program/) and the TinyTapeout shuttle index near 2026 Q3. [Spec]
+Per the [TinyTapeout chips page](https://tinytapeout.com/chips/), TTGF26a targets a 2026 Q4 submission close with chips expected in early 2027. [Open conjecture] The preceding test shuttle TTGF0p2 (52 designs, closed 2025-11-24, chips expected May 2026) used the `gf180mcuD` 180nm open-source PDK via wafer.space, per [the TTGF0p2 page](https://tinytapeout.com/chips/ttgf0p2/). The TTGF26a shuttle (WS-2606, closed 2026-06-22) was expected to deliver chips by 2026-11-15, giving a 5-6 month close-to-delivery interval that the Corona plan assumes for TTGF26a. [Open conjecture] The exact TTGF26a calendar date was to be confirmed via the [GF GlobalShuttle MPW schedule](https://gf.com/manufacturing-services/multi-project-wafer-program/) and the TinyTapeout shuttle index near 2026 Q3. [Spec] Status (2026-09-05): the window closed on 2026-06-22 without a Corona submission; the delivery estimate above is the plan as written and no Corona die is expected. [Historical]
 
 Key dates to confirm before Phase F:
 - TTGF26a tape-out submission cutoff (exact calendar date).
-- Expected silicon return date.
+- Expected silicon return date (not applicable to the closed TTGF26a window: this design was not submitted; no die is expected).
 - PDK freeze date for GF180MCU (after which cell-library changes are locked).
 - Whether a no-change resubmission (same GDS, next shuttle) is possible if Phase F misses the target window.
 
@@ -287,7 +288,7 @@ If the shuttle window is earlier than 2026 Q3, the Phase A-F plan requires immed
 
 The standard TT tile size per the [TinyTapeout FAQ](https://tinytapeout.com/faq/) is 160 x 100 um and provides approximately 1,000 standard cells per tile at 55-60% utilization on SKY130A. On GF180MCU, the [vlsitechnology.org density table](https://www.vlsitechnology.org/html/lib_densities.html) gives approximately 52 kGates/mm^2 vs approximately 110 kGates/mm^2 for SKY130A -- a ratio of approximately 2.1x. Applied to the 0.016 mm^2 tile, this yields approximately **480-520 gates per tile at 55% utilization** on GF180MCU. [Open conjecture] No official TinyTapeout GF180MCU gate count per tile has been published; the estimate must be replaced with the actual measurement from TTGF0p2 / TTGF26a returns when available. [Risk]
 
-Per the [early TinyTapeout technical paper (TechRxiv 2024)](https://d197for5662m48.cloudfront.net/documents/publicationstatus/212580/preprint_pdf/d39c8459714cce99c57003adea344a94.pdf), the maximum project size historically was 8x2 tiles (1359 x 225 um, around 20,000 logic cells on SKY130A); later shuttles supported 8x4 and an experimental 5x4 colossal tile. For TTGF26a, assume 8x4 tiles as the plausible maximum; confirm with the TinyTapeout team before submission. [Open conjecture]
+Per the [TinyTapeout technical paper (Venn, IEEE Solid-State Circuits Magazine 16(2):20-29, 2024)](https://doi.org/10.1109/MSSC.2024.3381097) (also as TechRxiv preprint doi:10.36227/techrxiv.172055642.27780676/v1), the maximum project size historically was 8x2 tiles (1359 x 225 um, around 20,000 logic cells on SKY130A); later shuttles supported 8x4 and an experimental 5x4 colossal tile. For TTGF26a, assume 8x4 tiles as the plausible maximum; confirm with the TinyTapeout team before submission. [Open conjecture]
 
 GF180MCU process notes:
 - 6 metal layers total (Metal1-Metal5 + MetalTop, up to 3.035 um thick).
@@ -630,7 +631,7 @@ The CI pipeline for gHashTag/tt-trinity-corona mirrors Gamma and Euler, with Cor
 | status_id             | 4-bit ROM field encoding the claim-status of each format record (0 = Verified ... 7 = Spec); generated from SSOT, not hand-written.                    |
 | T27 module library    | The shared RTL module repository in gHashTag/t27; Gamma and Corona pull RTL from here; no module is duplicated between chips.                          |
 | TTSKY26b              | The TinyTapeout shuttle used by Phi, Euler, and Gamma; targets SKY130A PDK.                                                                            |
-| TTGF26a               | The TinyTapeout shuttle used by Corona; targets GF180MCU PDK; closes 2026-06-22, chips expected late 2026.                                              |
+| TTGF26a               | The TinyTapeout shuttle targeted by the Corona plan; GF180MCU PDK; closed 2026-06-22 without a Corona submission, so no Corona die is expected.          |
 | GF180MCU              | GlobalFoundries 180nm MCU process node; the PDK for TTGF26a; open-source under Apache 2.0.                                                              |
 | Posit Standard 2022   | The Posit Arithmetic Standard published by [posithub.org](https://posithub.org/docs/posit_standard-2.pdf) in 2022; reference for posit8/16/32/64.       |
 | OCP MX                | Open Compute Project Microscaling spec ([Rouhani et al. arXiv:2310.10537](https://arxiv.org/abs/2310.10537)); MXFP8, MXFP6, MXFP4, MXINT8.              |
