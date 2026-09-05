@@ -92,14 +92,15 @@ result streams over 4 STATUS cycles:
 | 3 bytes | TF32 | 6 cycles | 9 cycles |
 
 The anchor probe responds combinationally (same cycle). Nominal clock is 25 MHz;
-the maximum clock frequency (Fmax) and critical-path decoder will be measured
-post-silicon by sweeping the demo-board clock (`post_silicon/characterize_timing.py`):
+the maximum clock frequency (Fmax) and critical-path decoder were to be measured
+on a die by sweeping the demo-board clock (`post_silicon/characterize_timing.py`);
+no die exists, so both remain unmeasured:
 
 | Metric | Value |
 | --- | --- |
 | Nominal clock | 25 MHz |
-| Fmax (all decoders) | TBD (post-silicon) |
-| Critical-path decoder | TBD (post-silicon) |
+| Fmax (all decoders) | not measured (no die exists) |
+| Critical-path decoder | not measured (no die exists) |
 
 ## External hardware
 
@@ -108,7 +109,8 @@ functional using only the TinyTapeout demo board and a USB connection for
 clock and I/O.
 
 **D2D is deferred this shuttle** (`docs/adr/0006`): the description below is the
-future Gamma+Corona two-die plan, not active in the shipped silicon. For that
+future Gamma+Corona two-die plan, not implemented in this design; no die was
+fabricated. For that
 future **D2D operation** (routing queries to the companion Gamma die), the
 following would be needed:
 
