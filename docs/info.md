@@ -82,7 +82,8 @@ exhaustive sweeps for all sub-8-bit and 8-bit format decoders.
 ## Timing
 
 Decode latency is fixed by Protocol v2 and the input byte count (deterministic;
-confirmed on silicon). From CMD1, the result streams over 4 STATUS cycles:
+confirmed in simulation, cocotb and gate-level -- no die exists). From CMD1, the
+result streams over 4 STATUS cycles:
 
 | Input width | Formats | First result byte | Full 32-bit result |
 | --- | --- | ---: | ---: |

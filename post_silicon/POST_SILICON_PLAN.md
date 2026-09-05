@@ -2,8 +2,13 @@
 
 ## Timeline
 
-- Chip expected: ~2026-10-01
-- Delivery to participants: ~2026-11-15
+Status (2026-09-05): no Corona die exists. The design was not submitted to
+TTGF26a (the window closed on 2026-06-22 without a submission), so no chip is
+expected and no delivery date applies. The timeline below is the original plan,
+kept for reference; it is not a forecast.
+
+- Chip expected: ~2026-10-01 (original plan, not a forecast)
+- Delivery to participants: ~2026-11-15 (original plan, not a forecast)
 - Packaging: chip-on-board (COB), bonded directly to PCB
 
 ## Hardware
