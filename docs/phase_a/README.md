@@ -1,5 +1,12 @@
 # Phase A: measured GF180MCU design fit
 
+The historical GDS workflow is retained byte-for-byte in
+`gds-workflow-source.yml`, under its original provenance hash. The current
+workflow differs only by the guard that publishes Pages from canonical `main`.
+Fork PRs still execute hardening, precheck and gate-level simulation; they cannot
+publish Pages because GitHub withholds the OIDC write token. The receipt gate
+rejects any workflow change outside this exact publication guard.
+
 Issue: [#1](https://github.com/gHashTag/tt-trinity-corona/issues/1).
 Acceptance policy: [phase_a.t27](../../specs/corona/phase_a.t27).
 Evidence retrieved and checked on 2026-10-03 by dmitrii-f-t27.
@@ -91,12 +98,48 @@ rustc --crate-type lib /tmp/corona-phase-a.rs
 
 Compiler pin: `gHashTag/t27@db870cdf292272f373037fb40b607c4134f59474`,
 Zig 0.16.0. The Rust backend emits declarations and policy; the Zig backend
-executes all four spec test blocks. A successful parse or Rust compilation
+executes all six spec test blocks. A successful parse or Rust compilation
 alone does not establish that the tests ran. The receipt gate rejects changed
 RTL/inventory, area drift, precheck failures and nonempty DRC results.
 
 Retrieve originals with `gh run view RUN_ID --log` and
 `gh run download 35509472314 -n precheck_reports -R gHashTag/tt-trinity-corona`.
 CI also runs the GDS workflow against the proposed PR head.
+
+## Executable proof chain (issue #12)
+
+The measured design accepted in [PR #11](https://github.com/gHashTag/tt-trinity-corona/pull/11)
+is unchanged. [Issue #12](https://github.com/gHashTag/tt-trinity-corona/issues/12)
+adds a repeatable source/seal/vector check for `specs/corona/phase_a.t27`:
+
+```sh
+# T27_ROOT is a clean checkout at the compiler pin above; Zig 0.16.0 is on PATH.
+make t27-test T27_ROOT=/path/to/pinned/t27
+```
+
+This builds the compiler from the pinned source, checks complete parsing and
+types, executes six generated Zig tests, verifies the native seal under
+`.trinity/seals/`, and compiles a Rust consumer that replays every committed
+vector in `conformance/corona_phase_a.json`. The boundary matrix contains
+4 cell counts x 10 independently classified area pairs x 3 DRC counts x
+2 precheck states x 4 anchors x 2 lint states = **1,920 vectors**. Decimal
+strings preserve exact u64 extremes in JSON. Rust compilation by itself is
+not counted as replay.
+
+Four typechecked, compiled source mutants (area equality, nonzero DRC,
+missing precheck and inverted anchor) must fail the same runtime consumer.
+A flipped vector expectation must fail it too; a copied seal over changed
+source must fail the native verifier. The original receipt gate still runs.
+CI invokes this same target and uploads `phase-a-proof` with the result and logs.
+
+After an intentional source or vector-boundary change, regenerate vectors with
+`python3 tools/phase_a_conformance.py --write-vectors`, then run the complete
+gate with `--compiler-root /path/to/pinned/t27 --save-seal`. The gate invokes
+the native `t27c seal --save` only after executable checks pass; normal
+`make t27-test` verifies without changing committed vectors or seals.
+
+This proof covers Phase A only. It does not claim executable coverage of the
+other five descriptive Corona specs, timing signoff, fabricated silicon, or
+game reward payment. The game must ingest the accepted evidence separately.
 
 phi^2 + phi^-2 = 3 | TRINITY

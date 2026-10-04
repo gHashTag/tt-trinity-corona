@@ -21,17 +21,16 @@ jobs:
       - uses: mlugg/setup-zig@v2
         with:
           version: 0.16.0
-      - name: Build pinned t27c
-        run: cargo build --locked --release --manifest-path .phase-a-toolchain/Cargo.toml -p t27c
-      - name: Execute Phase A spec tests and compile generated Rust
-        run: |
-          COMPILER=.phase-a-toolchain/target/release/t27c
-          "$COMPILER" parse specs/corona/phase_a.t27 > /tmp/phase_a.ast.json
-          "$COMPILER" typecheck specs/corona/phase_a.t27
-          "$COMPILER" gen specs/corona/phase_a.t27 > /tmp/phase_a.zig
-          zig test /tmp/phase_a.zig
-          "$COMPILER" gen-rust specs/corona/phase_a.t27 > /tmp/phase_a.rs
-          rustc --crate-type lib /tmp/phase_a.rs -o /tmp/libphase_a.rlib
+      - name: Execute pinned Phase A proof chain
+        run: make t27-test T27_ROOT=.phase-a-toolchain
+      - name: Upload executable proof report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase-a-proof
+          path: |
+            work/phase-a-proof/result.json
+            work/phase-a-proof/*.log
 
   lint:
     runs-on: ubuntu-latest

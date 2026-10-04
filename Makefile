@@ -5,6 +5,12 @@
 
 all: lint verilator-lint
 
+# Phase A scope only: the other five descriptive specs are not claimed here.
+T27_ROOT ?= .phase-a-toolchain
+.PHONY: t27-test
+t27-test:
+	python3 tools/phase_a_conformance.py --compiler-root "$(T27_ROOT)"
+
 verify:
 	@echo "--- Standalone verification gates (auto-discovered) ---"
 	python3 tools/run_verification_gates.py

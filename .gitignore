@@ -1,5 +1,6 @@
 # tt-support-tools (cloned locally, not committed)
 tt/
+.phase-a-toolchain/
 
 # OpenLane2 + flow artefacts
 runs/

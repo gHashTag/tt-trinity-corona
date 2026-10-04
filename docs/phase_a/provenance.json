@@ -1,5 +1,6 @@
 {
   "source_commit": "2a5eefc43ab28e74a07831cb56a77489a99c59d3",
+  "source_workflow_snapshot": "docs/phase_a/gds-workflow-source.yml",
   "gds_run": 35509472314,
   "ci_run": 35509472285,
   "artifact_id": 10605055371,

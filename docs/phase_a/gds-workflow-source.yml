@@ -61,9 +61,6 @@ jobs:
 
   viewer:
     needs: gds
-    # Fork PRs have no Pages/OIDC write token. Validate their GDS above and
-    # publish the viewer only from the canonical accepted default branch.
-    if: github.event_name != 'pull_request' && github.repository == 'gHashTag/tt-trinity-corona' && github.ref == 'refs/heads/main'
     permissions:
       pages: write
       id-token: write

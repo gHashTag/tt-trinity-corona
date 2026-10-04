@@ -19,7 +19,19 @@ EVIDENCE = ROOT / "docs/phase_a"
 
 def validate(root, provenance, receipts):
     for rel, digest in provenance["sha256"].items():
-        assert hashlib.sha256((root / rel).read_bytes()).hexdigest() == digest, rel
+        path = provenance["source_workflow_snapshot"] if rel == ".github/workflows/gds.yml" else rel
+        assert hashlib.sha256((root / path).read_bytes()).hexdigest() == digest, rel
+    original_workflow = (root / provenance["source_workflow_snapshot"]).read_text()
+    # Preserve the historical workflow hash. The ONLY accepted current delta is
+    # withholding a Pages deployment token from unaccepted/fork source.
+    viewer_guard = (
+        "    # Fork PRs have no Pages/OIDC write token. Validate their GDS above and\n"
+        "    # publish the viewer only from the canonical accepted default branch.\n"
+        "    if: github.event_name != 'pull_request' && github.repository == 'gHashTag/tt-trinity-corona' && github.ref == 'refs/heads/main'\n"
+    )
+    expected_workflow = original_workflow.replace("  viewer:\n    needs: gds\n", "  viewer:\n    needs: gds\n" + viewer_guard)
+    assert expected_workflow != original_workflow, "viewer guard was not applied"
+    assert (root / ".github/workflows/gds.yml").read_text() == expected_workflow, "GDS workflow drift outside publication guard"
     actual_rtl = {str(p.relative_to(root)) for p in (root / "src/rtl").glob("*.v")}
     pinned_rtl = {p for p in provenance["sha256"] if p.startswith("src/rtl/")}
     assert actual_rtl == pinned_rtl, "RTL inventory drift"
